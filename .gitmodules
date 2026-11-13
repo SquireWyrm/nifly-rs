@@ -1,0 +1,3 @@
+[submodule "nifly-sys/vendor/nifly"]
+	path = nifly-sys/vendor/nifly
+	url = https://github.com/ousnius/nifly
