@@ -33,7 +33,7 @@ fn same_block_as_shared_form() {
     let set = ptr::from_ref(nif.block(9).unwrap());
     assert_eq!(shader_index, 8);
 
-    assert_eq!(addr(nif.root_node_mut()), Some(root));
+    assert_eq!(nif.root_node_mut().map(|mut r| ptr::from_ref(&*r.block())), Some(root));
     assert_eq!(addr(nif.find_block_by_name_mut::<NiShape>("Suzanne:6")), Some(named));
     let mut shape_edit = nif.edit::<NiShape>(shape).unwrap();
     assert_eq!(ptr::from_ref(&*shape_edit.shader().unwrap().block()), shader);

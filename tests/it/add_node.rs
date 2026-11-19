@@ -134,3 +134,26 @@ fn added_nodes_survive_save() {
     assert_eq!(names, ["Scene Root", "Arm", "Hand"]);
     assert_eq!(saved.node_transform_to_parent("Hand"), Some(translate(0.0, 2.0, 0.0)));
 }
+
+#[test]
+fn add_child_from_handles() {
+    use nifly::nodes::NiSwitchNode;
+
+    let mut nif = cube();
+    let before = nif.blocks().count();
+    let arm = nif.root_node_mut().unwrap().add_child("Arm", translate(1.0, 2.0, 3.0));
+    assert_eq!(arm, before, "appended to the block list");
+    nif.edit::<NiNode>(arm).unwrap().add_child_of::<NiSwitchNode, _>("Switch", translate(0.0, 1.0, 0.0));
+
+    let root = nif.root_node().unwrap();
+    assert_eq!(child_names(&nif, root.get()), ["Cube", "Arm"], "the last child");
+
+    let mut cur = Cursor::new(Vec::new());
+    nif.save(&mut cur, None).unwrap();
+    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    let root = saved.root_node().unwrap();
+    let arm = root.children_of::<NiNode, _>().views().find(|c| c.name() == "Arm").unwrap();
+    assert_eq!(arm.transform(), translate(1.0, 2.0, 3.0));
+    let switch_node = arm.children_of::<NiSwitchNode, _>().next().unwrap();
+    assert_eq!((switch_node.name(), switch_node.transform()), ("Switch".into(), translate(0.0, 1.0, 0.0)));
+}

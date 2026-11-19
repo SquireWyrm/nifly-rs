@@ -742,10 +742,10 @@ impl NifFile {
         self.view::<NiNode>(0).or_else(|| self.nodes().views().next())
     }
 
-    /// Like [`root_node`](Self::root_node), but mutable.
-    pub fn root_node_mut(&mut self) -> Option<Pin<&mut NiNode>> {
-        // SAFETY: the node came from this file.
-        unsafe { self.pin_block(|f| f.root_node().map(|root| root.get())) }
+    /// Like [`root_node`](Self::root_node), for editing.
+    pub fn root_node_mut(&mut self) -> Option<Edit<'_, NiNode>> {
+        let index = self.root_node()?.index();
+        self.edit(index)
     }
 
     /// The root node's translation relative to its parent, or `None` if there's no root node
@@ -772,6 +772,7 @@ impl NifFile {
     /// `parent` is `None` and the file has no root node.
     ///
     /// The new node is appended to the block list, so existing block indices stay valid.
+    /// [`Edit::add_child`] does the same from a node's handle.
     ///
     /// ```no_run
     /// # use nifly::{file::NifFile, object3d::Transform};
@@ -1033,6 +1034,36 @@ impl<T: NiType> Edit<'_, T> {
     {
         let node = self.index() as u32;
         index_from_ffi(nif_ffi::clone_node(self.file_mut().inner.pin_mut(), node)).expect("the block is a node")
+    }
+
+    /// Adds a new `NiNode` named `name` with the given transform to its parent as the node's
+    /// last child, and returns its index. It's added at the end, so existing block indices don't
+    /// change.
+    ///
+    /// ```
+    /// # use nifly::{file::{NifFile, NifVersion}, nodes::{NiNode, NiSwitchNode}, object3d::Transform};
+    /// let mut nif = NifFile::create(NifVersion::OBLIVION);
+    /// let arm = nif.root_node_mut().unwrap().add_child("Arm", Transform::default());
+    /// let mut arm = nif.edit::<NiNode>(arm).unwrap();
+    /// let switch = arm.add_child_of::<NiSwitchNode, _>("Switch", Transform::default());
+    /// nif.block_of_mut::<NiSwitchNode>(switch).unwrap().set_active_index(1);
+    /// ```
+    pub fn add_child<I>(&mut self, name: impl AsRef<[u8]>, transform: Transform) -> Index
+    where
+        T: IsA<NiNode, I>,
+    {
+        self.add_child_of::<NiNode, I>(name, transform)
+    }
+
+    /// Like [`add_child`](Self::add_child), but adds an `N` with default settings. Doesn't check
+    /// that the file's game uses `N`.
+    pub fn add_child_of<N: NewNode, I>(&mut self, name: impl AsRef<[u8]>, transform: Transform) -> Index
+    where
+        T: IsA<NiNode, I>,
+    {
+        let parent = self.index() as u32;
+        index_from_ffi(N::add(self.file_mut().inner.pin_mut(), name.as_ref(), transform.to_ffi(), parent))
+            .expect("the block is a node")
     }
 }
 
