@@ -1,0 +1,13 @@
+
+pub mod effects;
+pub mod extra_data;
+pub mod extra_data_types;
+pub mod geometry;
+pub mod nif_file;
+pub mod nodes;
+pub mod object_3d;
+pub mod objects;
+pub mod read_bridge;
+pub mod shaders;
+pub mod skin;
+pub mod write_bridge;

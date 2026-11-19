@@ -1,0 +1,11 @@
+[package]
+name = "nifly-sys"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cxx = "1.0"
+
+[build-dependencies]
+cxx-build = "1.0"
+build-deps = "0.1.4"

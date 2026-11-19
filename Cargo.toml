@@ -1,0 +1,19 @@
+[package]
+name = "nifly"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bstr = { version = "1.13", default-features = false, features = ["std"] }
+cxx = "1.0.205"
+int-enum = "1.3.0"
+mint = { version = "0.5.9", optional = true }
+nifly-sys = { version = "0.1.0", path = "nifly-sys" }
+ref-cast = "1.0.27"
+thiserror = "2.0.21"
+
+[workspace]
+members = ["nifly-sys"]
+
+[dev-dependencies]
+rayon = "1.12.0"
