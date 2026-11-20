@@ -49,26 +49,6 @@ impl Hierarchy {
         }
         lines
     }
-
-    fn render_tree(
-        &self,
-        module: &str,
-        class: usize,
-        depth: usize,
-        members: &dyn Fn(usize) -> bool,
-        lines: &mut Vec<String>,
-    ) {
-        lines.push(format!(
-            "{}- {}",
-            "  ".repeat(depth),
-            self.link(module, class)
-        ));
-        for &child in &self.classes[class].children {
-            if members(child) {
-                self.render_tree(module, child, depth + 1, members, lines);
-            }
-        }
-    }
 }
 
 #[test]

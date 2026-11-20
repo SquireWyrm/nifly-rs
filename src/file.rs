@@ -35,20 +35,116 @@ pub struct NifVersion {
 
 impl NifVersion {
     /// Morrowind: 4.0.0.2.
+    ///
+    /// | | Usual types |
+    /// |---|---|
+    /// | Shapes | [`NiTriBasedGeom`](crate::geometry::NiTriBasedGeom) |
+    /// | Shaders | [`NiTexturingProperty`](crate::shaders::NiTexturingProperty), [`NiMaterialProperty`](crate::shaders::NiMaterialProperty) and other [`NiProperty`](crate::shaders::NiProperty)s |
+    /// | Textures | [`NiSourceTexture`](crate::shaders::NiSourceTexture) |
+    /// | Skin | [`NiSkinInstance`](crate::skin::NiSkinInstance) |
+    /// | Collision | [`RootCollisionNode`](crate::nodes::RootCollisionNode), [`NiCollisionData`](crate::collision::NiCollisionData) |
+    /// | Particles | [`NiParticles`](crate::geometry::NiParticles) with an [`NiParticleSystemController`](crate::particles::NiParticleSystemController) |
+    /// | Animation | [`NiSequenceStreamHelper`](crate::animation::NiSequenceStreamHelper) as the `.kf` root, controllers with key data ([`HasKeyData`](crate::animation::HasKeyData)) |
+    /// | Effects | [`NiDynamicEffect`](crate::effects::NiDynamicEffect), its affected nodes as [addresses](crate::effects::NiDynamicEffect::affected_node_pointers) |
+    /// | Other | [`AvoidNode`](crate::nodes::AvoidNode) |
     pub const MORROWIND: Self = Self::new(0x04000002, 0, 0);
     /// Oblivion: 20.0.0.5, user version 11, stream 11.
+    ///
+    /// | | Usual types |
+    /// |---|---|
+    /// | Shapes | [`NiTriBasedGeom`](crate::geometry::NiTriBasedGeom) |
+    /// | Shaders | [`NiTexturingProperty`](crate::shaders::NiTexturingProperty), [`NiMaterialProperty`](crate::shaders::NiMaterialProperty) and other [`NiProperty`](crate::shaders::NiProperty)s |
+    /// | Textures | [`NiSourceTexture`](crate::shaders::NiSourceTexture) |
+    /// | Skin | [`NiSkinInstance`](crate::skin::NiSkinInstance) |
+    /// | Collision | [`BhkCollisionObject`](crate::collision::BhkCollisionObject), [`NiCollisionData`](crate::collision::NiCollisionData) |
+    /// | Particles | [`NiParticleSystem`](crate::particles::NiParticleSystem); also the older [`NiParticles`](crate::geometry::NiParticles) |
+    /// | Animation | [`NiControllerManager`](crate::animation::NiControllerManager), [`NiControllerSequence`](crate::animation::NiControllerSequence), [`NiInterpolator`](crate::animation::NiInterpolator) |
+    /// | Effects | [`NiDynamicEffect`](crate::effects::NiDynamicEffect) |
     pub const OBLIVION: Self = Self::new(0x14000005, 11, 11);
     /// Fallout 3 and New Vegas: 20.2.0.7, user version 11, stream 34.
+    ///
+    /// | | Usual types |
+    /// |---|---|
+    /// | Shapes | [`NiTriBasedGeom`](crate::geometry::NiTriBasedGeom) |
+    /// | Shaders | [`BsShaderProperty`](crate::shaders::BsShaderProperty), with [`NiMaterialProperty`](crate::shaders::NiMaterialProperty) and other [`NiProperty`](crate::shaders::NiProperty)s |
+    /// | Shader flags | [`Fallout3ShaderFlags1`](crate::shaders::Fallout3ShaderFlags1), [`Fallout3ShaderFlags2`](crate::shaders::Fallout3ShaderFlags2) |
+    /// | Textures | [`BsShaderTextureSet`](crate::shaders::BsShaderTextureSet) |
+    /// | Skin | [`NiSkinInstance`](crate::skin::NiSkinInstance) |
+    /// | Collision | [`BhkCollisionObject`](crate::collision::BhkCollisionObject) |
+    /// | Particles | [`NiParticleSystem`](crate::particles::NiParticleSystem) |
+    /// | Animation | [`NiControllerManager`](crate::animation::NiControllerManager), [`NiControllerSequence`](crate::animation::NiControllerSequence), [`NiInterpolator`](crate::animation::NiInterpolator) |
+    /// | Effects | [`NiDynamicEffect`](crate::effects::NiDynamicEffect) |
+    /// | Other | [`BsPackedAdditionalGeometryData`](crate::geometry::BsPackedAdditionalGeometryData) |
     pub const FALLOUT_3: Self = Self::new(0x14020007, 11, 34);
     /// Skyrim (LE): 20.2.0.7, user version 12, stream 83.
+    ///
+    /// | | Usual types |
+    /// |---|---|
+    /// | Shapes | [`NiTriBasedGeom`](crate::geometry::NiTriBasedGeom) |
+    /// | Shaders | [`BsShaderProperty`](crate::shaders::BsShaderProperty) |
+    /// | Shader flags | [`SkyrimShaderFlags1`](crate::shaders::SkyrimShaderFlags1), [`SkyrimShaderFlags2`](crate::shaders::SkyrimShaderFlags2) |
+    /// | Textures | [`BsShaderTextureSet`](crate::shaders::BsShaderTextureSet) |
+    /// | Skin | [`NiSkinInstance`](crate::skin::NiSkinInstance) |
+    /// | Collision | [`BhkCollisionObject`](crate::collision::BhkCollisionObject) |
+    /// | Particles | [`NiParticleSystem`](crate::particles::NiParticleSystem) |
+    /// | Animation | [`NiControllerManager`](crate::animation::NiControllerManager), [`NiControllerSequence`](crate::animation::NiControllerSequence), [`NiInterpolator`](crate::animation::NiInterpolator) |
+    /// | Effects | [`NiDynamicEffect`](crate::effects::NiDynamicEffect) |
+    /// | Other | [`BsTreeNode`](crate::nodes::BsTreeNode), [`BsFurnitureMarkerNode`](crate::extra_data::BsFurnitureMarkerNode) |
     pub const SKYRIM: Self = Self::new(0x14020007, 12, 83);
     /// Skyrim Special Edition: 20.2.0.7, user version 12, stream 100.
+    ///
+    /// | | Usual types |
+    /// |---|---|
+    /// | Shapes | [`BsTriShape`](crate::geometry::BsTriShape) |
+    /// | Shaders | [`BsShaderProperty`](crate::shaders::BsShaderProperty) |
+    /// | Shader flags | [`SkyrimShaderFlags1`](crate::shaders::SkyrimShaderFlags1), [`SkyrimShaderFlags2`](crate::shaders::SkyrimShaderFlags2) |
+    /// | Textures | [`BsShaderTextureSet`](crate::shaders::BsShaderTextureSet) |
+    /// | Skin | [`NiSkinInstance`](crate::skin::NiSkinInstance) |
+    /// | Collision | [`BhkCollisionObject`](crate::collision::BhkCollisionObject) |
+    /// | Particles | [`NiParticleSystem`](crate::particles::NiParticleSystem) |
+    /// | Animation | [`NiControllerManager`](crate::animation::NiControllerManager), [`NiControllerSequence`](crate::animation::NiControllerSequence), [`NiInterpolator`](crate::animation::NiInterpolator) |
+    /// | Effects | [`NiDynamicEffect`](crate::effects::NiDynamicEffect) |
+    /// | Other | [`BsTreeNode`](crate::nodes::BsTreeNode), [`BsFurnitureMarkerNode`](crate::extra_data::BsFurnitureMarkerNode) |
     pub const SKYRIM_SE: Self = Self::new(0x14020007, 12, 100);
     /// Fallout 4: 20.2.0.7, user version 12, stream 130.
+    ///
+    /// | | Usual types |
+    /// |---|---|
+    /// | Shapes | [`BsTriShape`](crate::geometry::BsTriShape) |
+    /// | Shaders | [`BsShaderProperty`](crate::shaders::BsShaderProperty) |
+    /// | Shader flags | [`Fallout4ShaderFlags1`](crate::shaders::Fallout4ShaderFlags1), [`Fallout4ShaderFlags2`](crate::shaders::Fallout4ShaderFlags2) |
+    /// | Textures | [`BsShaderTextureSet`](crate::shaders::BsShaderTextureSet) |
+    /// | Skin | [`BsSkinInstance`](crate::skin::BsSkinInstance) |
+    /// | Collision | [`BhkNpCollisionObject`](crate::collision::BhkNpCollisionObject) |
+    /// | Particles | [`NiParticleSystem`](crate::particles::NiParticleSystem) |
+    /// | Animation | [`NiControllerManager`](crate::animation::NiControllerManager), [`NiControllerSequence`](crate::animation::NiControllerSequence), [`NiInterpolator`](crate::animation::NiInterpolator) |
+    /// | Effects | [`NiDynamicEffect`](crate::effects::NiDynamicEffect), without effect lists |
+    /// | Other | [`BsExtraData`](crate::extra_data::BsExtraData) (cloth, connect points), [`BsPackedCombinedSharedGeomDataExtra`](crate::extra_data::BsPackedCombinedSharedGeomDataExtra) |
     pub const FALLOUT_4: Self = Self::new(0x14020007, 12, 130);
     /// Fallout 76: 20.2.0.7, user version 12, stream 155.
+    ///
+    /// | | Usual types |
+    /// |---|---|
+    /// | Shapes | [`BsTriShape`](crate::geometry::BsTriShape) |
+    /// | Shaders | [`BsShaderProperty`](crate::shaders::BsShaderProperty), named after the material file that holds its settings |
+    /// | Shader flags | [`crc_flags_1`](crate::shaders::BsShaderProperty::crc_flags_1), [`crc_flags_2`](crate::shaders::BsShaderProperty::crc_flags_2) |
+    /// | Skin | [`BsSkinInstance`](crate::skin::BsSkinInstance), [`SkinAttach`](crate::extra_data::SkinAttach) |
+    /// | Collision | [`BhkNpCollisionObject`](crate::collision::BhkNpCollisionObject) |
+    /// | Particles | [`NiParticleSystem`](crate::particles::NiParticleSystem) |
+    /// | Animation | [`NiControllerManager`](crate::animation::NiControllerManager), [`NiControllerSequence`](crate::animation::NiControllerSequence), [`NiInterpolator`](crate::animation::NiInterpolator) |
+    /// | Effects | [`NiDynamicEffect`](crate::effects::NiDynamicEffect), without effect lists |
+    /// | Other | [`BsDistantObjectInstancedNode`](crate::nodes::BsDistantObjectInstancedNode), [`BsExtraData`](crate::extra_data::BsExtraData), [`BsPackedCombinedSharedGeomDataExtra`](crate::extra_data::BsPackedCombinedSharedGeomDataExtra) |
     pub const FALLOUT_76: Self = Self::new(0x14020007, 12, 155);
     /// Starfield: 20.2.0.7, user version 12, stream 172.
+    ///
+    /// | | Usual types |
+    /// |---|---|
+    /// | Shapes | [`BsGeometry`](crate::geometry::BsGeometry) |
+    /// | Shaders | [`BsShaderProperty`](crate::shaders::BsShaderProperty), named after the material file that holds its settings |
+    /// | Shader flags | [`crc_flags_1`](crate::shaders::BsShaderProperty::crc_flags_1), [`crc_flags_2`](crate::shaders::BsShaderProperty::crc_flags_2) |
+    /// | Skin | [`BsSkinInstance`](crate::skin::BsSkinInstance), [`SkinAttach`](crate::extra_data::SkinAttach) |
+    /// | Collision | [`BhkNpCollisionObject`](crate::collision::BhkNpCollisionObject) |
+    /// | Other | [`BsWeakReferenceNode`](crate::nodes::BsWeakReferenceNode), [`BsExtraData`](crate::extra_data::BsExtraData) |
     pub const STARFIELD: Self = Self::new(0x14020007, 12, 172);
 
     /// A version from its file version, user version and stream.
@@ -174,7 +270,7 @@ pub type Index = usize;
 /// change the file take blocks by [`Index`].
 ///
 /// ```
-/// # use nifly::{file::NifFile, nodes::NiNode, shaders::NiMaterialProperty};
+/// # use nifly::{NifFile, nodes::NiNode, shaders::NiMaterialProperty};
 /// # use std::{fs::File, io::Cursor};
 /// let mut nif = NifFile::load(
 ///     File::open("nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_MW.nif")?,
@@ -186,7 +282,7 @@ pub type Index = usize;
 /// let index = nif.blocks_of::<NiMaterialProperty>().indices().next().unwrap();
 /// nif.block_of_mut::<NiMaterialProperty>(index).unwrap().set_alpha(0.5);
 /// nif.save(Cursor::new(Vec::new()), None)?;
-/// # Ok::<(), nifly::error::Error>(())
+/// # Ok::<(), nifly::Error>(())
 /// ```
 ///
 /// # Methods by topic

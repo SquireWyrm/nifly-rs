@@ -132,6 +132,33 @@ impl Hierarchy {
         modules
     }
 
+    /// `class` and its descendants in `members`, as nested list items starting at `depth`.
+    pub fn render_tree(
+        &self,
+        module: &str,
+        class: usize,
+        depth: usize,
+        members: &dyn Fn(usize) -> bool,
+        lines: &mut Vec<String>,
+    ) {
+        lines.push(format!(
+            "{}- {}",
+            "  ".repeat(depth),
+            self.link(module, class)
+        ));
+        for &child in &self.classes[class].children {
+            if members(child) {
+                self.render_tree(module, child, depth + 1, members, lines);
+            }
+        }
+    }
+
+    /// How many descendants `class` has.
+    pub fn descendants(&self, class: usize) -> usize {
+        let children = &self.classes[class].children;
+        children.len() + children.iter().map(|&c| self.descendants(c)).sum::<usize>()
+    }
+
     /// A doc link to `class` from `module`'s docs.
     pub fn link(&self, module: &str, class: usize) -> String {
         let c = &self.classes[class];
