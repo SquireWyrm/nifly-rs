@@ -275,7 +275,8 @@ pub mod ffi {
         // index, with validation
         // GetShapeMaxBonesPerVertex: not bound
         // GetShapeBonesPerVertex: not bound
-        // SetShapeBonesPerVertex: not bound
+        // SetShapeBonesPerVertex: reimplemented as `BsGeometryMeshData::set_weights_per_vertex`
+        //   (shim), on the mesh data rather than the selected mesh, with validation
         // GetShapeSegments: bound as `View::segments` (shim), flattened
         // SetShapeSegments: bound as `Edit::set_segments` (shim), flattened, with validation
         // GetShapePartitions: reimplemented as `View::partitions` (shim), on a copy of the partition

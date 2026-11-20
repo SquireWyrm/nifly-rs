@@ -393,6 +393,7 @@ pub mod ffi {
             flat: &[u16],
             per: u32,
         ) -> bool;
+        fn set_mesh_data_weights_per_vertex(d: Pin<&mut BSGeometryMeshData>, count: u32) -> bool;
         fn mesh_data_lod_count(d: &BSGeometryMeshData) -> usize;
         fn mesh_data_lod(d: &BSGeometryMeshData, i: usize) -> &[u16];
         fn set_mesh_data_lods(

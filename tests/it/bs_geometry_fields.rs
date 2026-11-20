@@ -115,6 +115,8 @@ fn internal_mesh_data_round_trips() {
     assert!(!mesh.set_tangent_ws(&vec![4; tangents]));
     assert!(mesh.set_tangent_ws(&vec![2; tangents]));
     assert!(!mesh.set_skin_weights(&weights[1..]));
+    let nine = vec![vec![MeshWeight { bone: 0, weight: 0 }; 9]; n];
+    assert!(!mesh.set_skin_weights(&nine), "more than 8");
     assert!(mesh.set_skin_weights(&weights));
     assert!(!mesh.set_lods(&[vec![[0, 1, n as u16]]]));
     assert!(mesh.set_lods(&lods));
@@ -141,6 +143,57 @@ fn internal_mesh_data_round_trips() {
         n,
         "set on save"
     );
+}
+
+#[test]
+fn weights_per_vertex() {
+    let w = |bone, weight| MeshWeight { bone, weight };
+    let (mut nif, index) = internal();
+    let n = geometry(&nif, index).mesh(0).unwrap().vertex_count();
+    // The first vertex drops only a weight of 0; the others drop a weight of 10000.
+    let mut weights = vec![vec![w(0, 10000), w(1, 40000), w(2, 15535)]; n];
+    weights[0] = vec![w(0, 0), w(1, 65535), w(2, 0)];
+
+    let mesh = nif
+        .block_of_mut::<BsGeometry>(index)
+        .unwrap()
+        .mesh_mut(0)
+        .unwrap();
+    assert!(mesh.set_skin_weights::<Vec<MeshWeight>>(&[]));
+    assert_eq!(mesh.weights_per_vertex(), 0);
+    assert!(!mesh.set_weights_per_vertex(2), "no weights");
+    assert!(mesh.set_skin_weights(&weights));
+    assert_eq!(mesh.weights_per_vertex(), 3);
+    assert!(!mesh.set_weights_per_vertex(0));
+    assert!(!mesh.set_weights_per_vertex(9));
+    assert_eq!(
+        mesh.skin_weights(),
+        weights,
+        "rejected calls change nothing"
+    );
+
+    assert!(mesh.set_weights_per_vertex(2));
+    let kept = mesh.skin_weights();
+    assert_eq!(
+        kept[0],
+        [w(1, 65535), w(0, 0)],
+        "strongest first, ties in order"
+    );
+    assert_eq!(kept[1].iter().map(|w| w.bone).collect::<Vec<_>>(), [1, 2]);
+    let sum: u32 = kept[1].iter().map(|w| u32::from(w.weight)).sum();
+    assert!(sum.abs_diff(65535) <= 1, "{sum}");
+    assert!(kept[1][0].weight > 40000, "rescaled");
+
+    assert!(mesh.set_weights_per_vertex(4));
+    assert_eq!(mesh.weights_per_vertex(), 4);
+    let grown = mesh.skin_weights();
+    assert_eq!(grown[1][..2], kept[1][..]);
+    assert_eq!(grown[1][2..], [w(0, 0), w(0, 0)]);
+
+    let saved = reload(&mut nif);
+    let mesh = geometry(&saved, index).mesh(0).unwrap();
+    assert_eq!(mesh.weights_per_vertex(), 4);
+    assert_eq!(mesh.skin_weights(), grown);
 }
 
 #[test]

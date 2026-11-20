@@ -218,7 +218,7 @@ impl BsGeometryMeshData {
     }
 
     /// Replaces the [skin weights](Self::skin_weights). Returns `false`, changing nothing,
-    /// unless it's empty or has a list per vertex, all the same, nonzero length.
+    /// unless it's empty or has a list per vertex, all the same length, from 1 to 8.
     pub fn set_skin_weights<S: AsRef<[MeshWeight]>>(&mut self, weights: &[S]) -> bool {
         let per = weights.first().map_or(0, |w| w.as_ref().len());
         if weights.iter().any(|w| w.as_ref().len() != per) {
@@ -229,6 +229,23 @@ impl BsGeometryMeshData {
             .flat_map(|w| w.as_ref().iter().flat_map(|w| [w.bone, w.weight]))
             .collect();
         ffi::set_mesh_data_skin_weights(self.ffi_mut(), &flat, per as u32)
+    }
+
+    /// How many bones each vertex is weighted to: the length of each list in
+    /// [`skin_weights`](Self::skin_weights), or 0 without weights.
+    pub fn weights_per_vertex(&self) -> usize {
+        ffi::mesh_data_weights_per_vertex(&self.0) as usize
+    }
+
+    /// Sets how many bones each vertex is weighted to, from 1 to 8. A vertex with more weights
+    /// keeps its strongest ones, rescaled so they still sum to 65535 if a dropped weight was
+    /// nonzero. One with fewer gets weights of 0 added.
+    ///
+    /// Returns `false`, changing nothing, unless `count` is from 1 to 8 and the mesh has
+    /// [skin weights](Self::skin_weights).
+    pub fn set_weights_per_vertex(&mut self, count: usize) -> bool {
+        u32::try_from(count)
+            .is_ok_and(|count| ffi::set_mesh_data_weights_per_vertex(self.ffi_mut(), count))
     }
 
     /// Lower-detail triangle lists over the same vertices.

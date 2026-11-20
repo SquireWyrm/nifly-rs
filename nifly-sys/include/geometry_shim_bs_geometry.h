@@ -292,15 +292,17 @@ mesh_data_skin_weights(const nifly::BSGeometryMeshData& d) {
     return out;
 }
 
-// Replaces the skin weights, `per` per vertex for every vertex, or none.
-// False, changing nothing, otherwise.
+// Replaces the skin weights, `per` (1 to MaxWeightsPerVert) per vertex for
+// every vertex, or none. False, changing nothing, otherwise.
 inline bool set_mesh_data_skin_weights(
     nifly::BSGeometryMeshData& d,
     rust::Slice<const uint16_t> flat,
     uint32_t per
 ) {
     const size_t n = d.vertices.size();
-    if (!flat.empty() && (per == 0 || flat.size() != n * per * 2))
+    if (!flat.empty()
+        && (per == 0 || per > nifly::BSGeometryMeshData::MaxWeightsPerVert
+            || flat.size() != n * per * 2))
         return false;
     d.skinWeights.clear();
     d.nWeightsPerVert = flat.empty() ? 0 : per;
@@ -313,6 +315,42 @@ inline bool set_mesh_data_skin_weights(
         d.skinWeights.push_back(std::move(weights));
     }
     d.nTotalWeights = static_cast<uint32_t>(d.skinWeights.size() * per);
+    return true;
+}
+
+// NifFile::SetShapeBonesPerVertex, reimplemented on the mesh data rather than
+// a shape's selected mesh. Vertices with more weights keep the strongest
+// (stable for ties), rescaled to sum to 65535 when some dropped weight was
+// nonzero; vertices with fewer get zeroed slots. Upstream clamps the count and
+// ignores unskinned shapes; this returns false, changing nothing, unless
+// `count` is 1 to MaxWeightsPerVert and the mesh has skin weights.
+inline bool
+set_mesh_data_weights_per_vertex(nifly::BSGeometryMeshData& d, uint32_t count) {
+    if (count < 1 || count > nifly::BSGeometryMeshData::MaxWeightsPerVert
+        || d.skinWeights.empty())
+        return false;
+    for (auto& vw : d.skinWeights) {
+        if (vw.size() > count) {
+            std::stable_sort(
+                vw.begin(),
+                vw.end(),
+                [](const auto& a, const auto& b) { return a.weight > b.weight; }
+            );
+            uint32_t kept = 0;
+            uint32_t dropped = 0;
+            for (size_t i = 0; i < vw.size(); i++)
+                (i < count ? kept : dropped) += vw[i].weight;
+            vw.resize(count);
+            if (dropped > 0 && kept > 0)
+                for (auto& w : vw)
+                    w.weight = static_cast<uint16_t>(
+                        std::lround(w.weight * 65535.0 / kept)
+                    );
+        } else
+            vw.resize(count);
+    }
+    d.nWeightsPerVert = count;
+    d.nTotalWeights = static_cast<uint32_t>(d.skinWeights.size() * count);
     return true;
 }
 
