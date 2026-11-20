@@ -175,7 +175,7 @@ pub mod ffi {
         /// `BSLightingShaderProperty::SetShaderType`, in the internal numbering (Parallax is 3).
         fn set_lighting_shader_type(shader: Pin<&mut BSLightingShaderProperty>, shader_type: u32);
         /// `BSLightingShaderProperty` fields. Colors are r, g, b in x, y, z; the field
-        /// names are in `shaders_shim.h`. Not bound: the virtual getters, which read the
+        /// names are in `shaders_shim_bethesda.h`. Not bound: the virtual getters, which read the
         /// same fields.
         fn lighting_texture_clamp_mode(s: &BSLightingShaderProperty) -> u32;
         fn set_lighting_texture_clamp_mode(s: Pin<&mut BSLightingShaderProperty>, value: u32);
@@ -280,7 +280,7 @@ pub mod ffi {
         fn add_lighting_texture_array(s: Pin<&mut BSLightingShaderProperty>);
         fn push_lighting_texture_array_path(s: Pin<&mut BSLightingShaderProperty>, path: &[u8]);
 
-        /// `BSEffectShaderProperty` fields; the field names are in `shaders_shim.h`. Not bound:
+        /// `BSEffectShaderProperty` fields; the field names are in `shaders_shim_bethesda.h`. Not bound:
         /// the fields of unknown meaning (`unkFloat`, `unkBytes`, `unkFloats`, `unkByte1`).
         /// `textureClampMode` is passed whole: four bytes, split in the safe crate.
         fn effect_texture_clamp_bytes(s: &BSEffectShaderProperty) -> u32;
@@ -545,7 +545,7 @@ pub mod ffi {
         fn set_palette_colors(p: Pin<&mut NiPalette>, rgba: &[u8]) -> bool;
 
         /// Fallout 3 and New Vegas shader fields, and those of `BSWaterShaderProperty` and
-        /// `BSSkyShaderProperty`; the field names are in `shaders_shim.h`. Enums are passed as
+        /// `BSSkyShaderProperty`; the field names are in `shaders_shim_properties.h`. Enums are passed as
         /// `u32`, `NiString`s as bytes.
         fn shader_legacy_type(s: &BSShaderProperty) -> u32;
         fn set_shader_legacy_type(s: Pin<&mut BSShaderProperty>, value: u32);

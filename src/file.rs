@@ -3,7 +3,8 @@ use std::{io, pin::Pin};
 use bstr::BString;
 use cxx::UniquePtr;
 use nifly_sys::{
-    nif_file::ffi::{self, RefList},
+    nif_file::ffi,
+    nif_file_refs::ffi::RefList,
     objects::ffi as objects_ffi,
     read_bridge::RustReader,
     write_bridge::RustWriter,

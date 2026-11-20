@@ -373,7 +373,7 @@ pub mod ffi {
         fn assign_bhk_ragdoll_system(file: Pin<&mut NifFile>, collision: u32) -> u32;
 
         /// Fields of world objects, rigid bodies, phantoms and actions; the field names are in
-        /// `collision_shim.h`. Vectors are `Vector4`s, rotations `QuaternionXYZW`s (x, y, z, w)
+        /// `collision_shim_bodies.h`. Vectors are `Vector4`s, rotations `QuaternionXYZW`s (x, y, z, w)
         /// and the phantom transform a `Matrix4`'s 16 values. The response type is raw.
         fn world_object_unknown_int(o: &bhkWorldObject) -> i32;
         fn set_world_object_unknown_int(o: Pin<&mut bhkWorldObject>, v: i32);
@@ -486,7 +486,8 @@ pub mod ffi {
         fn add_bhk_liquid_action(file: Pin<&mut NifFile>) -> u32;
         fn add_bhk_orient_hinged_body_action(file: Pin<&mut NifFile>) -> u32;
 
-        /// Shape fields; the field names are in `collision_shim.h`. Materials go through
+        /// Shape fields; the field names are in `collision_shim_shapes.h` and
+        /// `collision_shim_mesh_shapes.h`. Materials go through
         /// `GetMaterial`/`SetMaterial` where the class overrides them. Vector3s are `Vec3`s,
         /// Vector4s `[f32; 4]` and the transform a `Matrix4`'s 16 values.
         fn height_field_material(o: &bhkHeightFieldShape) -> u32;

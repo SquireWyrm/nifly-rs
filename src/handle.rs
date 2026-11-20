@@ -86,7 +86,7 @@
 
 use std::{fmt, marker::PhantomData, ops::Deref, pin::Pin};
 
-use nifly_sys::nif_file::ffi::{self as nif_ffi, RefKind, RefList};
+use nifly_sys::nif_file_refs::ffi::{self as refs_ffi, RefKind, RefList};
 
 use crate::{
     file::{Index, NifFile, block_index_to_ffi, index_from_ffi, optional_index_to_ffi},
@@ -153,12 +153,12 @@ impl<'a, T: NiType> View<'a, T> {
 
     /// The block in this block's `kind` ref, if it's a `U`.
     pub(crate) fn follow<U: NiType>(&self, kind: RefKind) -> Option<View<'a, U>> {
-        self.resolve(index_from_ffi(nif_ffi::block_ref(&self.file.inner, self.index as u32, kind)))
+        self.resolve(index_from_ffi(refs_ffi::block_ref(&self.file.inner, self.index as u32, kind)))
     }
 
     /// The blocks in this block's `list` refs that are a `U`.
     pub(crate) fn follow_list<U: NiType>(&self, list: RefList) -> BlockIter<'a, U, RefIndices> {
-        BlockIter::new(self.file, RefIndices::new(nif_ffi::block_ref_list(&self.file.inner, self.index as u32, list)))
+        BlockIter::new(self.file, RefIndices::new(refs_ffi::block_ref_list(&self.file.inner, self.index as u32, list)))
     }
 }
 
@@ -238,7 +238,7 @@ impl<'a, T: NiType> Edit<'a, T> {
 
     /// The block in this block's `kind` ref, if it's a `U`, for editing.
     pub(crate) fn follow<U: NiType>(&mut self, kind: RefKind) -> Option<Edit<'_, U>> {
-        let index = index_from_ffi(nif_ffi::block_ref(&self.file.inner, self.index as u32, kind));
+        let index = index_from_ffi(refs_ffi::block_ref(&self.file.inner, self.index as u32, kind));
         self.resolve(index)
     }
 
@@ -247,7 +247,7 @@ impl<'a, T: NiType> Edit<'a, T> {
         let Some(target) = optional_index_to_ffi(target) else {
             return false;
         };
-        nif_ffi::set_block_ref(self.file.inner.pin_mut(), self.index as u32, kind, target)
+        refs_ffi::set_block_ref(self.file.inner.pin_mut(), self.index as u32, kind, target)
     }
 
     /// Replaces this block's `list` refs. `false` if the shim rejects them.
@@ -255,7 +255,7 @@ impl<'a, T: NiType> Edit<'a, T> {
         let Some(targets) = targets.iter().map(|&i| block_index_to_ffi(i)).collect::<Option<Vec<_>>>() else {
             return false;
         };
-        nif_ffi::set_block_ref_list(self.file.inner.pin_mut(), self.index as u32, list, &targets)
+        refs_ffi::set_block_ref_list(self.file.inner.pin_mut(), self.index as u32, list, &targets)
     }
 }
 

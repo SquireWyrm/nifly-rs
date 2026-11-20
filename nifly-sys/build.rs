@@ -30,6 +30,8 @@ fn main() {
         "src/extra_data_types.rs",
         "src/geometry.rs",
         "src/nif_file.rs",
+        "src/nif_file_extra_data.rs",
+        "src/nif_file_refs.rs",
         "src/nodes.rs",
         "src/object_3d.rs",
         "src/objects.rs",

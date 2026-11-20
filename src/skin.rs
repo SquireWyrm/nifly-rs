@@ -5,7 +5,8 @@ use std::{collections::BTreeMap, pin::Pin};
 use bitflags::bitflags;
 use bstr::BString;
 use nifly_sys::{
-    nif_file::ffi::{self as nif_ffi, RefKind, RefList},
+    nif_file::ffi as nif_ffi,
+    nif_file_refs::ffi::{RefKind, RefList},
     skin::ffi,
 };
 
