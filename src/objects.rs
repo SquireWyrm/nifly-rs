@@ -7,14 +7,19 @@
 //! ```
 //!
 //! This means base-class methods are callable on any subclass, e.g.
-//! `node.name()` or `node.block_name()`. Downcasting goes through
+//! `node.name()` or `node.block_name()`, and through a `&mut` block their
+//! setters too, e.g. `node.set_name("Root")`. Downcasting goes through
 //! [`NiObject::downcast`].
 //!
 //! All of these types are only ever handed out as references borrowed from a
 //! [`NifFile`](crate::file::NifFile), so they can't outlive the file or
-//! observe it being mutated.
+//! observe it being mutated. Blocks can't be moved out of the file: swapping
+//! two blocks with [`std::mem::swap`] does nothing.
 
-use std::{ops::Deref, pin::Pin};
+use std::{
+    ops::{Deref, DerefMut},
+    pin::Pin,
+};
 
 use bstr::{BStr, ByteSlice};
 
@@ -42,7 +47,7 @@ impl NiObject {
         T::downcast_from(self)
     }
 
-    /// Like [`downcast`](Self::downcast), for a pinned mutable block.
+    /// Like [`downcast`](Self::downcast), for a mutable block.
     ///
     /// ```
     /// # use nifly::{file::NifFile, shaders::NiMaterialProperty};
@@ -54,7 +59,7 @@ impl NiObject {
     ///     material.set_alpha(0.5);
     /// }
     /// ```
-    pub fn downcast_mut<T: NiType>(self: Pin<&mut Self>) -> Option<Pin<&mut T>> {
+    pub fn downcast_mut<T: NiType>(&mut self) -> Option<&mut T> {
         reborrow_mut(self, |obj| obj.downcast::<T>())
     }
 
@@ -67,13 +72,13 @@ impl NiObject {
         ffi::group_id(&self.0)
     }
 
-    pub fn set_group_id(self: Pin<&mut Self>, id: u32) {
+    pub fn set_group_id(&mut self, id: u32) {
         ffi::set_group_id(self.ffi_mut(), id);
     }
 
-    fn ffi_mut(self: Pin<&mut Self>) -> Pin<&mut ffi::NiObject> {
-        // SAFETY: structural pin projection onto the only field of a `repr(transparent)` struct.
-        unsafe { self.map_unchecked_mut(|s| &mut s.0) }
+    fn ffi_mut(&mut self) -> Pin<&mut ffi::NiObject> {
+        // SAFETY: the C++ object never moves (see `assert_zero_sized`).
+        unsafe { Pin::new_unchecked(&mut self.0) }
     }
 
     /// The block's name if it has one (it is an [`NiObjectNet`] or an
@@ -102,9 +107,9 @@ impl NiObjectNet {
     }
 
     /// Renames the object. Names are stored as given; saving adds them to the string table.
-    pub fn set_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
-        // SAFETY: structural pin projection onto the only field of a `repr(transparent)` struct.
-        let inner = unsafe { self.map_unchecked_mut(|s| &mut s.0) };
+    pub fn set_name(&mut self, name: impl AsRef<[u8]>) {
+        // SAFETY: the C++ object never moves (see `assert_zero_sized`).
+        let inner = unsafe { Pin::new_unchecked(&mut self.0) };
         ffi::set_object_net_name(inner, name.as_ref());
     }
 }
@@ -117,15 +122,26 @@ impl Deref for NiObjectNet {
     }
 }
 
-/// Reborrows the pinned block as the `U` that `f` finds for it (the same C++ object seen as a base
-/// or derived class), or `None` if `f` finds none. Backs `upcast_mut` and
+/// Fails the build unless `T` is zero-sized. Every block wrapper is, because the bridge's C++
+/// types are opaque and zero-sized on the Rust side. So safe code can't move a C++ object
+/// through a `&mut` to it (`mem::swap` and `mem::replace` copy nothing), and handing out
+/// `&mut` blocks is sound although C++ objects must not move.
+pub(crate) const fn assert_zero_sized<T>() {
+    assert!(size_of::<T>() == 0, "block wrappers must be zero-sized");
+}
+
+const _: () = assert_zero_sized::<NiObject>();
+const _: () = assert_zero_sized::<NiObjectNet>();
+const _: () = assert_zero_sized::<NiAvObject>();
+
+/// Reborrows the block as the `U` that `f` finds for it (the same C++ object seen as a base
+/// or derived class), or `None` if `f` finds none. Backs each type's `DerefMut` and
 /// [`NiObject::downcast_mut`].
 ///
 /// `f` only locates the object: its address is applied to the `&mut`'s own pointer, so the
 /// result keeps that pointer's provenance and no `&mut` is made from a shared reference.
-pub(crate) fn reborrow_mut<T, U>(this: Pin<&mut T>, f: impl FnOnce(&T) -> Option<&U>) -> Option<Pin<&mut U>> {
-    // SAFETY: only the address is used, not moved out of.
-    let this: *mut T = unsafe { this.get_unchecked_mut() };
+pub(crate) fn reborrow_mut<T, U>(this: &mut T, f: impl FnOnce(&T) -> Option<&U>) -> Option<&mut U> {
+    let this: *mut T = this;
     // SAFETY: `this` is valid for the duration of the call, and no `&mut` to it is live.
     let found: *const U = f(unsafe { &*this })?;
     // Where the shim puts the other class (the same address under single inheritance).
@@ -133,28 +149,22 @@ pub(crate) fn reborrow_mut<T, U>(this: Pin<&mut T>, f: impl FnOnce(&T) -> Option
     let found = this.cast::<u8>().wrapping_offset(offset).cast::<U>();
     // SAFETY: `found` is the same C++ object, so the exclusive borrow of `this` carries over to
     // it. The object is only accessed through C++ and never moves.
-    Some(unsafe { Pin::new_unchecked(&mut *found) })
+    Some(unsafe { &mut *found })
 }
 
-/// [`Deref`] for a pinned mutable block: the same object as its direct base type. Backs each
-/// type's `upcast_mut`.
-pub(crate) fn upcast_mut<T: Deref<Target: Sized>>(this: Pin<&mut T>) -> Pin<&mut T::Target> {
+/// [`DerefMut`] for a block: the same object as its direct base type.
+pub(crate) fn upcast_mut<T: Deref<Target: Sized>>(this: &mut T) -> &mut T::Target {
     reborrow_mut(this, |t| Some(&**t)).expect("an upcast always succeeds")
 }
 
-impl NiObjectNet {
-    /// This object as an [`NiObject`], for its setters. See
-    /// [`NiAvObject::upcast_mut`] for chaining.
-    pub fn upcast_mut(self: Pin<&mut Self>) -> Pin<&mut NiObject> {
+impl DerefMut for NiObjectNet {
+    fn deref_mut(&mut self) -> &mut NiObject {
         upcast_mut(self)
     }
 }
 
-impl NiAvObject {
-    /// This object as an [`NiObjectNet`], its direct base type, for that type's setters. Every
-    /// block type has one, returning the same type as [`Deref`]; chain them to reach further
-    /// bases.
-    pub fn upcast_mut(self: Pin<&mut Self>) -> Pin<&mut NiObjectNet> {
+impl DerefMut for NiAvObject {
+    fn deref_mut(&mut self) -> &mut NiObjectNet {
         upcast_mut(self)
     }
 }
@@ -176,7 +186,7 @@ impl NiAvObject {
     /// Sets the transform to the parent. See also
     /// [`NifFile::set_node_transform_to_parent`](crate::file::NifFile::set_node_transform_to_parent),
     /// which finds a node by name.
-    pub fn set_transform(self: Pin<&mut Self>, transform: Transform) {
+    pub fn set_transform(&mut self, transform: Transform) {
         ffi::set_transform(self.ffi_mut(), transform.to_ffi());
     }
 
@@ -185,7 +195,7 @@ impl NiAvObject {
     }
 
     /// Sets the flags. Files before Fallout 3 save only the low 16 bits.
-    pub fn set_raw_flags(self: Pin<&mut Self>, flags: u32) {
+    pub fn set_raw_flags(&mut self, flags: u32) {
         ffi::set_flags(self.ffi_mut(), flags);
     }
 
@@ -194,7 +204,7 @@ impl NiAvObject {
         Vec3::from_ffi(ffi::velocity(&self.0))
     }
 
-    pub fn set_velocity(self: Pin<&mut Self>, velocity: Vec3) {
+    pub fn set_velocity(&mut self, velocity: Vec3) {
         ffi::set_velocity(self.ffi_mut(), velocity.to_ffi());
     }
 
@@ -205,7 +215,7 @@ impl NiAvObject {
     }
 
     /// Sets the bounding volume, or removes it with `None`.
-    pub fn set_bounding_volume(self: Pin<&mut Self>, volume: Option<&BoundingVolume>) {
+    pub fn set_bounding_volume(&mut self, volume: Option<&BoundingVolume>) {
         let mut records = Vec::new();
         if let Some(volume) = volume {
             volume.to_ffi(&mut records);
@@ -213,9 +223,9 @@ impl NiAvObject {
         assert!(ffi::set_bounding_volume(self.ffi_mut(), &records), "records of one volume");
     }
 
-    fn ffi_mut(self: Pin<&mut Self>) -> Pin<&mut ffi::NiAVObject> {
-        // SAFETY: structural pin projection onto the only field of a `repr(transparent)` struct.
-        unsafe { self.map_unchecked_mut(|s| &mut s.0) }
+    fn ffi_mut(&mut self) -> Pin<&mut ffi::NiAVObject> {
+        // SAFETY: the C++ object never moves (see `assert_zero_sized`).
+        unsafe { Pin::new_unchecked(&mut self.0) }
     }
 }
 

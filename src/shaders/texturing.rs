@@ -21,7 +21,7 @@ impl NiTexturingProperty {
         ApplyMode::try_from(ffi::texturing_apply_mode(&self.0)).ok()
     }
 
-    pub fn set_apply_mode(self: Pin<&mut Self>, mode: ApplyMode) {
+    pub fn set_apply_mode(&mut self, mode: ApplyMode) {
         ffi::set_texturing_apply_mode(self.ffi_mut(), mode.into());
     }
 
@@ -108,39 +108,39 @@ impl NiTexturingProperty {
             .then(|| TextureTransform::from_ffi(out))
     }
 
-    pub fn set_map_clamp_mode(self: Pin<&mut Self>, map: impl Into<MapSlot>, mode: ClampMode) -> bool {
+    pub fn set_map_clamp_mode(&mut self, map: impl Into<MapSlot>, mode: ClampMode) -> bool {
         ffi::set_texturing_map_clamp_mode(self.ffi_mut(), map.into().to_ffi(), mode.into())
     }
 
-    pub fn set_map_filter_mode(self: Pin<&mut Self>, map: impl Into<MapSlot>, mode: FilterMode) -> bool {
+    pub fn set_map_filter_mode(&mut self, map: impl Into<MapSlot>, mode: FilterMode) -> bool {
         ffi::set_texturing_map_filter_mode(self.ffi_mut(), map.into().to_ffi(), mode.into())
     }
 
-    pub fn set_map_uv_set(self: Pin<&mut Self>, map: impl Into<MapSlot>, uv_set: u32) -> bool {
+    pub fn set_map_uv_set(&mut self, map: impl Into<MapSlot>, uv_set: u32) -> bool {
         ffi::set_texturing_map_uv_set(self.ffi_mut(), map.into().to_ffi(), uv_set)
     }
 
-    pub fn set_map_raw_flags(self: Pin<&mut Self>, map: impl Into<MapSlot>, flags: u16) -> bool {
+    pub fn set_map_raw_flags(&mut self, map: impl Into<MapSlot>, flags: u16) -> bool {
         ffi::set_texturing_map_flags(self.ffi_mut(), map.into().to_ffi(), flags.into())
     }
 
-    pub fn set_map_max_anisotropy(self: Pin<&mut Self>, map: impl Into<MapSlot>, value: u16) -> bool {
+    pub fn set_map_max_anisotropy(&mut self, map: impl Into<MapSlot>, value: u16) -> bool {
         ffi::set_texturing_map_max_anisotropy(self.ffi_mut(), map.into().to_ffi(), value.into())
     }
 
-    pub fn set_map_ps2(mut self: Pin<&mut Self>, map: impl Into<MapSlot>, [l, k]: [i16; 2]) -> bool {
+    pub fn set_map_ps2(&mut self, map: impl Into<MapSlot>, [l, k]: [i16; 2]) -> bool {
         let map = map.into().to_ffi();
-        ffi::set_texturing_map_ps2_l(self.as_mut().ffi_mut(), map, l as u32)
+        ffi::set_texturing_map_ps2_l(self.ffi_mut(), map, l as u32)
             && ffi::set_texturing_map_ps2_k(self.ffi_mut(), map, k as u32)
     }
 
-    pub fn set_map_unknown(self: Pin<&mut Self>, map: impl Into<MapSlot>, value: u16) -> bool {
+    pub fn set_map_unknown(&mut self, map: impl Into<MapSlot>, value: u16) -> bool {
         ffi::set_texturing_map_unknown(self.ffi_mut(), map.into().to_ffi(), value.into())
     }
 
     /// Gives `map` a texture coordinate transform, or removes it with `None`.
     pub fn set_map_transform(
-        self: Pin<&mut Self>,
+        &mut self,
         map: impl Into<MapSlot>,
         transform: Option<TextureTransform>,
     ) -> bool {
@@ -155,7 +155,7 @@ impl NiTexturingProperty {
 
     /// Changes the number of shader maps. New ones are unused; give them a texture with
     /// [`Edit::set_map_source`].
-    pub fn set_shader_map_count(self: Pin<&mut Self>, count: usize) {
+    pub fn set_shader_map_count(&mut self, count: usize) {
         ffi::set_texturing_shader_map_count(self.ffi_mut(), count);
     }
 
@@ -167,7 +167,7 @@ impl NiTexturingProperty {
     }
 
     /// Returns `false`, changing nothing, if shader map `index` is unused or out of range.
-    pub fn set_shader_map_id(self: Pin<&mut Self>, index: usize, id: u32) -> bool {
+    pub fn set_shader_map_id(&mut self, index: usize, id: u32) -> bool {
         ffi::set_texturing_shader_map_id(self.ffi_mut(), index, id)
     }
 

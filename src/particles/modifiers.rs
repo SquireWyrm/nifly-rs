@@ -375,7 +375,7 @@ impl NiPSysEmitterCtlrData {
 
     /// Replaces [`keys`](Self::keys). Returns `false`, changing nothing, if the group has keys but
     /// no interpolation.
-    pub fn set_keys(self: Pin<&mut Self>, keys: &KeyGroup<f32>) -> bool {
+    pub fn set_keys(&mut self, keys: &KeyGroup<f32>) -> bool {
         ffi::set_emitter_ctlr_data_keys(self.ffi_mut(), &group_to_ffi(keys))
     }
 
@@ -385,7 +385,7 @@ impl NiPSysEmitterCtlrData {
     }
 
     /// Replaces [`visibility_keys`](Self::visibility_keys).
-    pub fn set_visibility_keys(self: Pin<&mut Self>, keys: &[Key<bool>]) {
+    pub fn set_visibility_keys(&mut self, keys: &[Key<bool>]) {
         let keys: Vec<_> = keys.iter().map(key_to_ffi).collect();
         ffi::set_emitter_ctlr_data_visibility_keys(self.ffi_mut(), &keys);
     }
@@ -398,7 +398,7 @@ impl NiPSysModifier {
     }
 
     /// Sets [`name`](Self::name).
-    pub fn set_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+    pub fn set_name(&mut self, name: impl AsRef<[u8]>) {
         ffi::set_psys_modifier_name(self.ffi_mut(), name.as_ref());
     }
 }
@@ -410,7 +410,7 @@ impl BsPSysSimpleColorModifier {
     }
 
     /// Sets [`unknown_shorts`](Self::unknown_shorts).
-    pub fn set_unknown_shorts(self: Pin<&mut Self>, values: [u16; 26]) {
+    pub fn set_unknown_shorts(&mut self, values: [u16; 26]) {
         ffi::set_simple_color_modifier_unknown_shorts(self.ffi_mut(), values);
     }
 }
@@ -422,7 +422,7 @@ impl BsPSysScaleModifier {
     }
 
     /// Replaces [`scales`](Self::scales).
-    pub fn set_scales(self: Pin<&mut Self>, scales: &[f32]) {
+    pub fn set_scales(&mut self, scales: &[f32]) {
         ffi::set_scale_modifier_scales(self.ffi_mut(), scales);
     }
 }

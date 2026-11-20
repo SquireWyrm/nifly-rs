@@ -98,7 +98,7 @@ impl BsPackedCombinedSharedGeomDataExtra {
     }
 
     /// Sets the [totals](Self::totals).
-    pub fn set_totals(self: Pin<&mut Self>, totals: PackedGeomTotals) {
+    pub fn set_totals(&mut self, totals: PackedGeomTotals) {
         ffi::set_packed_shared_header(self.ffi_mut(), totals.to_ffi());
     }
 
@@ -123,7 +123,7 @@ impl BsPackedCombinedSharedGeomDataExtra {
     }
 
     /// Replaces the [objects](Self::objects). The [totals](Self::totals) aren't updated.
-    pub fn set_objects(self: Pin<&mut Self>, objects: &[PackedGeomObject]) {
+    pub fn set_objects(&mut self, objects: &[PackedGeomObject]) {
         let (objects, instances) = packed_objects_ffi(objects);
         let ok = ffi::set_packed_shared_objects(self.ffi_mut(), &objects, &instances);
         debug_assert!(ok, "instance counts match their floats");

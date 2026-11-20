@@ -74,7 +74,7 @@ fn set_scene() {
     assert_eq!(edit.view().scene().map(|s| s.index()), Some(0));
 
     assert!(edit.set_scene(Some(48)));
-    edit.scene().unwrap().block().upcast_mut().set_name("Scene");
+    edit.scene().unwrap().set_name("Scene");
     assert_eq!(nif.view::<NiDefaultAvObjectPalette>(PALETTE).unwrap().scene().unwrap().name(), "Scene");
     let saved = reload(&mut nif, KEEP);
     assert_eq!(saved.view::<NiDefaultAvObjectPalette>(PALETTE).unwrap().scene().map(|s| s.index()), Some(48));

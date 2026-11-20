@@ -42,7 +42,7 @@ fn pose_values() {
     nif.block_of_mut::<NiFloatInterpolator>(f).unwrap().set_value(Some(0.5));
     nif.block_of_mut::<NiPoint3Interpolator>(p).unwrap().set_value(Some(Vec3::X));
     nif.block_of_mut::<NiTransformInterpolator>(t).unwrap().set_transform(POSE);
-    nif.block_of_mut::<NiBoolTimelineInterpolator>(unset_b).unwrap().upcast_mut().set_value(None);
+    nif.block_of_mut::<NiBoolTimelineInterpolator>(unset_b).unwrap().set_value(None);
     nif.block_of_mut::<NiFloatInterpolator>(unset_f).unwrap().set_value(None);
     nif.block_of_mut::<NiPoint3Interpolator>(unset_p).unwrap().set_value(None);
 
@@ -96,12 +96,12 @@ fn path_interpolator() {
         let points = nif.add_animation_data::<NiPosData>();
         let floats = nif.add_animation_data::<NiFloatData>();
         let flags = PathFlags::CURVE_TYPE_OPEN | PathFlags::FOLLOW | PathFlags::from_bits_retain(1 << 15);
-        let mut p = nif.block_of_mut::<NiPathInterpolator>(path).unwrap();
+        let p = nif.block_of_mut::<NiPathInterpolator>(path).unwrap();
         assert_eq!(p.flags(), PathFlags::CV_DATA_NEEDS_UPDATE | PathFlags::CURVE_TYPE_OPEN, "new block");
-        p.as_mut().set_flags(flags);
-        p.as_mut().set_bank_direction(-1);
-        p.as_mut().set_max_bank_angle(0.5);
-        p.as_mut().set_smoothing(0.25);
+        p.set_flags(flags);
+        p.set_bank_direction(-1);
+        p.set_max_bank_angle(0.5);
+        p.set_smoothing(0.25);
         p.set_follow_axis(2);
         let mut edit = nif.edit::<NiPathInterpolator>(path).unwrap();
         assert!(!edit.set_path_data(Some(floats)) && !edit.set_percent_data(Some(points)));
@@ -123,10 +123,10 @@ fn look_at_interpolator() {
         let point = nif.add_interpolator::<NiPoint3Interpolator>();
         let roll = nif.add_interpolator::<NiFloatInterpolator>();
         let scale = nif.add_interpolator::<NiFloatInterpolator>();
-        let mut l = nif.block_of_mut::<NiLookAtInterpolator>(look).unwrap();
-        l.as_mut().set_flags(LookAtFlags::FLIP | LookAtFlags::Z_AXIS);
-        l.as_mut().set_look_at_name("Target");
-        l.as_mut().set_transform(POSE);
+        let l = nif.block_of_mut::<NiLookAtInterpolator>(look).unwrap();
+        l.set_flags(LookAtFlags::FLIP | LookAtFlags::Z_AXIS);
+        l.set_look_at_name("Target");
+        l.set_transform(POSE);
         l.set_transform_valid([true, false, true]);
         let mut edit = nif.edit::<NiLookAtInterpolator>(look).unwrap();
         assert!(!edit.set_look_at_node(Some(point)), "not a node");
@@ -162,12 +162,12 @@ fn blend_items() {
 
     // Managed blends don't save their items, so the array size stays.
     let mut edit = nif.edit::<NiBlendFloatInterpolator>(blend).unwrap();
-    edit.block().upcast_mut().set_array_size(2);
+    edit.set_array_size(2);
     assert!(edit.set_blend_items(&[item(a, 1.0)]));
     assert_eq!(edit.view().array_size(), 2);
 
     let mut edit = nif.edit::<NiBlendFloatInterpolator>(blend).unwrap();
-    edit.block().upcast_mut().set_flags(BlendFlags::empty());
+    edit.set_flags(BlendFlags::empty());
     assert!(!edit.set_blend_items(&[item(data, 1.0)]), "not an interpolator");
     assert!(!edit.set_blend_items(&[item(blend, 1.0)]), "itself");
     assert!(!edit.set_blend_items(&vec![BlendItem::default(); 256]), "a byte holds the count");
@@ -180,7 +180,7 @@ fn blend_items() {
     let mut edit = nif.edit::<NiBlendFloatInterpolator>(blend).unwrap();
     assert!(edit.set_blend_items(&items));
     assert_eq!(edit.view().array_size(), 3);
-    edit.block().set_value(Some(0.5));
+    edit.set_value(Some(0.5));
 
     assert_eq!((nif.block_ref_count(a, false), nif.block_ref_count(b, false)), (1, 1), "items are child refs");
 
@@ -208,18 +208,18 @@ fn old_blend_fields() {
     let mut edit = nif.edit::<NiBlendTransformInterpolator>(blend).unwrap();
     assert!(edit.set_blend_items(&[item(single, 1.0)]));
     assert!(edit.set_single_interpolator(Some(single)));
-    let mut b = edit.block();
-    b.as_mut().set_transform(POSE);
-    b.as_mut().set_transform_valid([true, true, false]);
-    let mut base = b.upcast_mut();
-    base.as_mut().set_manager_controlled(true);
-    base.as_mut().set_only_use_highest_weight(true);
-    base.as_mut().set_weight_threshold(0.125);
-    base.as_mut().set_array_grow_by(4);
-    base.as_mut().set_interpolator_count(1);
-    base.as_mut().set_single_index_16(0);
-    base.as_mut().set_high_priority_32(-5);
-    base.as_mut().set_next_high_priority_32(-6);
+    let b = &mut *edit;
+    b.set_transform(POSE);
+    b.set_transform_valid([true, true, false]);
+    let base = b;
+    base.set_manager_controlled(true);
+    base.set_only_use_highest_weight(true);
+    base.set_weight_threshold(0.125);
+    base.set_array_grow_by(4);
+    base.set_interpolator_count(1);
+    base.set_single_index_16(0);
+    base.set_high_priority_32(-5);
+    base.set_next_high_priority_32(-6);
     base.set_single_time(1.5);
     nif.block_of_mut::<NiBlendBoolInterpolator>(others[0]).unwrap().set_value(Some(true));
     nif.block_of_mut::<NiBlendPoint3Interpolator>(others[1]).unwrap().set_value(Some(Vec3::Y));
@@ -243,20 +243,20 @@ fn bspline_interpolators() {
     let transform = nif.add_interpolator::<NiBSplineCompTransformInterpolator>();
     let data = nif.add_animation_data::<NiBSplineData>();
     let basis = nif.add_animation_data::<NiBSplineBasisData>();
-    let mut f = nif.block_of_mut::<NiBSplineCompFloatInterpolator>(float).unwrap();
-    f.as_mut().set_base(1.0);
-    f.as_mut().set_offset(4);
-    f.as_mut().set_bias(0.5);
-    f.as_mut().set_multiplier(2.0);
-    let mut s = f.upcast_mut().upcast_mut();
-    s.as_mut().set_start_time(0.25);
+    let f = nif.block_of_mut::<NiBSplineCompFloatInterpolator>(float).unwrap();
+    f.set_base(1.0);
+    f.set_offset(4);
+    f.set_bias(0.5);
+    f.set_multiplier(2.0);
+    let s = f;
+    s.set_start_time(0.25);
     s.set_stop_time(3.0);
-    let mut t = nif.block_of_mut::<NiBSplineCompTransformInterpolator>(transform).unwrap();
-    t.as_mut().set_rotation_bias(0.5);
-    t.as_mut().set_scale_multiplier(3.0);
-    let mut base = t.upcast_mut();
-    base.as_mut().set_transform(POSE);
-    base.as_mut().set_rotation_offset(8);
+    let t = nif.block_of_mut::<NiBSplineCompTransformInterpolator>(transform).unwrap();
+    t.set_rotation_bias(0.5);
+    t.set_scale_multiplier(3.0);
+    let base = t;
+    base.set_transform(POSE);
+    base.set_rotation_offset(8);
     base.set_scale_offset(u32::MAX);
     let mut edit = nif.edit::<NiBSplineCompFloatInterpolator>(float).unwrap();
     assert!(!edit.set_spline_data(Some(basis)) && !edit.set_spline_basis(Some(data)));
@@ -301,23 +301,23 @@ fn upstream_round_trip() {
             let d = e.view().key_data().map(|d| d.index());
             assert!(e.set_key_data(d));
             let v = e.view().value();
-            e.block().set_value(v);
+            e.set_value(v);
         } else if let Some(mut e) = nif.edit::<NiBoolInterpolator>(i) {
             let d = e.view().key_data().map(|d| d.index());
             assert!(e.set_key_data(d));
             let v = e.view().value();
-            e.block().set_value(v);
+            e.set_value(v);
         } else if let Some(mut e) = nif.edit::<NiTransformInterpolator>(i) {
             let d = e.view().key_data().map(|d| d.index());
             assert!(e.set_key_data(d));
             let t = e.view().transform();
-            e.block().set_transform(t);
+            e.set_transform(t);
         } else if let Some(mut e) = nif.edit::<NiBlendInterpolator>(i) {
             let items = e.view().blend_items();
             assert!(e.set_blend_items(&items));
             let (f, s) = (e.view().flags(), e.view().array_size());
-            let mut b = e.block();
-            b.as_mut().set_flags(f);
+            let b = &mut *e;
+            b.set_flags(f);
             b.set_array_size(s);
         }
     }

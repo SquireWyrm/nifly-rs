@@ -168,9 +168,9 @@ fn segmented_tri_shape() {
     assert_eq!(saved.block_of::<BsSegmentedTriShape>(shape).unwrap().segments(), segments);
 
     // Past the last triangle.
-    let mut s = nif.block_of_mut::<BsSegmentedTriShape>(shape).unwrap();
-    assert!(!s.as_mut().set_segments(&[GeometrySegment { raw_flags: 0, index: 3, triangle_count: 2 }]));
-    assert!(!s.as_mut().set_segments(&[GeometrySegment { raw_flags: 0, index: u32::MAX, triangle_count: u32::MAX }]));
+    let s = nif.block_of_mut::<BsSegmentedTriShape>(shape).unwrap();
+    assert!(!s.set_segments(&[GeometrySegment { raw_flags: 0, index: 3, triangle_count: 2 }]));
+    assert!(!s.set_segments(&[GeometrySegment { raw_flags: 0, index: u32::MAX, triangle_count: u32::MAX }]));
     assert_eq!(s.segments(), segments);
 }
 
@@ -185,9 +185,9 @@ fn lines_data() {
     let index = nif.blocks_of::<NiLinesData>().indices().next().unwrap();
     assert_eq!(nif.block_of::<NiLinesData>(index).unwrap().line_flags(), [true, true, true, false]);
 
-    let mut data = nif.block_of_mut::<NiLinesData>(index).unwrap();
-    assert!(data.as_mut().set_line_flags(&[false, true, false, true]));
-    assert!(!data.as_mut().set_line_flags(&[true]));
+    let data = nif.block_of_mut::<NiLinesData>(index).unwrap();
+    assert!(data.set_line_flags(&[false, true, false, true]));
+    assert!(!data.set_line_flags(&[true]));
     let saved = reload(&mut nif);
     assert_eq!(saved.block_of::<NiLinesData>(index).unwrap().line_flags(), [false, true, false, true]);
 }
@@ -215,14 +215,14 @@ fn screen_elements_data() {
 
     let half = ScreenPolygon { vertex_count: 3, vertex_offset: 0, triangle_count: 1, triangle_offset: 0 };
     let other = ScreenPolygon { vertex_offset: 1, triangle_offset: 1, ..half };
-    let mut data = nif.block_of_mut::<NiScreenElementsData>(index).unwrap();
-    assert!(data.as_mut().set_polygons(&[half, other], &[0, 1]));
-    assert!(data.as_mut().set_polygon_count(2));
-    data.as_mut().set_max_indices(9);
+    let data = nif.block_of_mut::<NiScreenElementsData>(index).unwrap();
+    assert!(data.set_polygons(&[half, other], &[0, 1]));
+    assert!(data.set_polygon_count(2));
+    data.set_max_indices(9);
     // Mismatched lengths, fewer slots than the polygon count, a count above the slots.
-    assert!(!data.as_mut().set_polygons(&[half], &[0, 1]));
-    assert!(!data.as_mut().set_polygons(&[half], &[0]));
-    assert!(!data.as_mut().set_polygon_count(3));
+    assert!(!data.set_polygons(&[half], &[0, 1]));
+    assert!(!data.set_polygons(&[half], &[0]));
+    assert!(!data.set_polygon_count(3));
 
     let saved = reload(&mut nif);
     let data = saved.block_of::<NiScreenElementsData>(index).unwrap();

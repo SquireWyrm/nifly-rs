@@ -62,12 +62,12 @@ macro_rules! switch_property {
                 ffi::$get(&self.0)
             }
 
-            pub fn set_enabled(self: Pin<&mut Self>, enabled: bool) {
+            pub fn set_enabled(&mut self, enabled: bool) {
                 let flags = (self.raw_flags() & !1) | u16::from(enabled);
                 self.set_raw_flags(flags);
             }
 
-            pub fn set_raw_flags(self: Pin<&mut Self>, flags: u16) {
+            pub fn set_raw_flags(&mut self, flags: u16) {
                 ffi::$set(self.ffi_mut(), flags);
             }
         }
@@ -102,12 +102,12 @@ impl NiFogProperty {
         FogFunction::try_from(get_bits(self.raw_flags(), Self::FUNCTION)).ok()
     }
 
-    pub fn set_enabled(self: Pin<&mut Self>, enabled: bool) {
+    pub fn set_enabled(&mut self, enabled: bool) {
         let flags = (self.raw_flags() & !1) | u16::from(enabled);
         self.set_raw_flags(flags);
     }
 
-    pub fn set_function(self: Pin<&mut Self>, function: FogFunction) {
+    pub fn set_function(&mut self, function: FogFunction) {
         let flags = set_bits(self.raw_flags(), Self::FUNCTION, function.into());
         self.set_raw_flags(flags);
     }
@@ -143,15 +143,15 @@ impl NiVertexColorProperty {
         LightingMode::try_from(ffi::vertex_color_lighting_mode(&self.0)).ok()
     }
 
-    pub fn set_flags(self: Pin<&mut Self>, flags: VertexColorFlags) {
+    pub fn set_flags(&mut self, flags: VertexColorFlags) {
         ffi::set_vertex_color_flags(self.ffi_mut(), flags.bits());
     }
 
-    pub fn set_vertex_mode(self: Pin<&mut Self>, mode: VertexColorMode) {
+    pub fn set_vertex_mode(&mut self, mode: VertexColorMode) {
         ffi::set_vertex_color_vertex_mode(self.ffi_mut(), mode.into());
     }
 
-    pub fn set_lighting_mode(self: Pin<&mut Self>, mode: LightingMode) {
+    pub fn set_lighting_mode(&mut self, mode: LightingMode) {
         ffi::set_vertex_color_lighting_mode(self.ffi_mut(), mode.into());
     }
 }
@@ -232,11 +232,11 @@ impl NiZBufferProperty {
         DepthTest::try_from(ffi::z_buffer_function(&self.0)).ok()
     }
 
-    pub fn set_flags(self: Pin<&mut Self>, flags: ZBufferFlags) {
+    pub fn set_flags(&mut self, flags: ZBufferFlags) {
         ffi::set_z_buffer_flags(self.ffi_mut(), flags.bits());
     }
 
-    pub fn set_function(self: Pin<&mut Self>, function: DepthTest) {
+    pub fn set_function(&mut self, function: DepthTest) {
         ffi::set_z_buffer_function(self.ffi_mut(), function.into());
     }
 }

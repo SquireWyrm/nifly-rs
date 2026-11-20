@@ -21,8 +21,8 @@ fn pose_array() {
             BoneTransform { rotation: [0.0, 0.0, 1.0, 0.0], scale: Vec3::new(2.0, 2.0, 2.0), ..Default::default() },
         ]
     };
-    let mut p = nif.block_of_mut::<BhkPoseArray>(poses).unwrap();
-    p.as_mut().set_bones(["Bip01 Pelvis", "Bip01 Spine"]);
+    let p = nif.block_of_mut::<BhkPoseArray>(poses).unwrap();
+    p.set_bones(["Bip01 Pelvis", "Bip01 Spine"]);
     p.set_poses(&[pose(1.0), pose(2.0), vec![]]);
 
     let saved = reload(&mut nif);
@@ -59,14 +59,14 @@ fn ragdoll_template() {
         assert!(!edit.set_ragdoll_bones(&[root]), "not template data");
         assert!(edit.set_ragdoll_bones(&bones));
 
-        let mut d = nif.block_of_mut::<BhkRagdollTemplateData>(bones[0]).unwrap();
+        let d = nif.block_of_mut::<BhkRagdollTemplateData>(bones[0]).unwrap();
         assert_eq!((d.mass(), d.material(), d.joint_constraints()), (9.0, 7, vec![]), "new block defaults");
-        d.as_mut().set_name("Bip01 Head");
-        d.as_mut().set_mass(4.0);
-        d.as_mut().set_restitution(0.5);
-        d.as_mut().set_friction(0.25);
-        d.as_mut().set_radius(0.125);
-        d.as_mut().set_material(3);
+        d.set_name("Bip01 Head");
+        d.set_mass(4.0);
+        d.set_restitution(0.5);
+        d.set_friction(0.25);
+        d.set_radius(0.125);
+        d.set_material(3);
         d.set_joint_constraints(&[ragdoll, spring]);
 
         let saved = reload(&mut nif);

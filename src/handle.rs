@@ -84,7 +84,11 @@
 //! println!("{} at index {}", root.name(), root.index());
 //! ```
 
-use std::{fmt, marker::PhantomData, ops::Deref, pin::Pin};
+use std::{
+    fmt,
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+};
 
 use nifly_sys::nif_file_refs::ffi::{self as refs_ffi, RefKind, RefList};
 
@@ -179,9 +183,9 @@ impl<T: NiType> fmt::Debug for View<'_, T> {
     }
 }
 
-/// A block of type `T` in a file borrowed mutably, from [`NifFile::edit`]. Derefs to the block.
-/// Methods that change other blocks, or check blocks they're given, go here; the block's own
-/// setters are on [`block`](Self::block), and the [`View`] methods on [`view`](Self::view).
+/// A block of type `T` in a file borrowed mutably, from [`NifFile::edit`]. Derefs mutably to the
+/// block, for its setters. Methods that change other blocks, or check blocks they're given, go
+/// here; the [`View`] methods are on [`view`](Self::view).
 pub struct Edit<'a, T: NiType> {
     file: &'a mut NifFile,
     index: Index,
@@ -202,11 +206,6 @@ impl<'a, T: NiType> Edit<'a, T> {
     /// The block, for reading.
     pub fn view(&self) -> View<'_, T> {
         View::new(self.file, self.index).expect("the block was checked when the edit was made")
-    }
-
-    /// The block, for its own setters.
-    pub fn block(&mut self) -> Pin<&mut T> {
-        self.file.block_of_mut::<T>(self.index).expect("the block was checked when the edit was made")
     }
 
     /// The same block as a `U`, or the edit back if it isn't one. Works for base and derived
@@ -264,6 +263,12 @@ impl<T: NiType> Deref for Edit<'_, T> {
 
     fn deref(&self) -> &T {
         self.file.block_of::<T>(self.index).expect("the block was checked when the edit was made")
+    }
+}
+
+impl<T: NiType> DerefMut for Edit<'_, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        self.file.block_of_mut::<T>(self.index).expect("the block was checked when the edit was made")
     }
 }
 

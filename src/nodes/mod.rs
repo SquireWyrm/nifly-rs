@@ -125,7 +125,7 @@ macro_rules! fields {
         }
 
         #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: $ty) {
+        pub fn $set(&mut self, value: $ty) {
             ffi::$ffi_set(self.ffi_mut(), value);
         }
     )*};
@@ -140,7 +140,7 @@ macro_rules! vec3_fields {
         }
 
         #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: Vec3) {
+        pub fn $set(&mut self, value: Vec3) {
             ffi::$ffi_set(self.ffi_mut(), value.to_ffi());
         }
     )*};

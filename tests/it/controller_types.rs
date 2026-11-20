@@ -37,12 +37,12 @@ fn path_controller() {
         let mut e = nif.edit::<NiPathController>(c).unwrap();
         assert!(!e.set_path_data(Some(float)));
         assert!(e.set_path_data(Some(pos)) && e.set_percent_data(Some(float)));
-        let mut b = nif.block_of_mut::<NiPathController>(c).unwrap();
-        b.as_mut().set_path_flags(PathFlags::FOLLOW | PathFlags::BANK);
-        b.as_mut().set_bank_direction(-1);
-        b.as_mut().set_max_bank_angle(0.5);
-        b.as_mut().set_smoothing(0.25);
-        b.as_mut().set_follow_axis(2);
+        let b = nif.block_of_mut::<NiPathController>(c).unwrap();
+        b.set_path_flags(PathFlags::FOLLOW | PathFlags::BANK);
+        b.set_bank_direction(-1);
+        b.set_max_bank_angle(0.5);
+        b.set_smoothing(0.25);
+        b.set_follow_axis(2);
 
         let nif = reload_in_place(&mut nif);
         let v = nif.view::<NiPathController>(c).unwrap();
@@ -81,10 +81,10 @@ fn uv_and_flip_controllers() {
     let uv = root.add_controller::<NiUvController, _>();
     let flip = root.add_controller::<NiFlipController, _>();
     nif.block_of_mut::<NiUvController>(uv).unwrap().set_uv_set(1);
-    let mut b = nif.block_of_mut::<NiFlipController>(flip).unwrap();
-    b.as_mut().set_texture_map(TextureMap::Glow);
-    b.as_mut().set_accum_time(1.5);
-    b.as_mut().set_delta(0.1);
+    let b = nif.block_of_mut::<NiFlipController>(flip).unwrap();
+    b.set_texture_map(TextureMap::Glow);
+    b.set_accum_time(1.5);
+    b.set_delta(0.1);
     let mut e = nif.edit::<NiFlipController>(flip).unwrap();
     assert!(!e.set_sources(&[uv]));
     assert!(e.set_sources(&[texture, texture]));
@@ -101,17 +101,17 @@ fn uv_and_flip_controllers() {
 fn texture_transform_controller() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let c = nif.root_node_mut().unwrap().add_controller::<NiTextureTransformController, _>();
-    let mut b = nif.block_of_mut::<NiTextureTransformController>(c).unwrap();
+    let b = nif.block_of_mut::<NiTextureTransformController>(c).unwrap();
     assert_eq!(b.map(), Some(MapSlot::Map(TextureMap::Base)));
-    assert!(b.as_mut().set_map(MapSlot::Shader(3)));
-    b.as_mut().set_operation(TransformMember::ScaleV);
+    assert!(b.set_map(MapSlot::Shader(3)));
+    b.set_operation(TransformMember::ScaleV);
     let nif2 = reload_in_place(&mut nif);
     let v = nif2.block_of::<NiTextureTransformController>(c).unwrap();
     assert_eq!(v.map(), Some(MapSlot::Shader(3)));
     assert_eq!(v.operation(), Some(TransformMember::ScaleV));
 
-    let mut b = nif.block_of_mut::<NiTextureTransformController>(c).unwrap();
-    assert!(b.as_mut().set_map(TextureMap::Detail));
+    let b = nif.block_of_mut::<NiTextureTransformController>(c).unwrap();
+    assert!(b.set_map(TextureMap::Detail));
     assert_eq!(b.map(), Some(MapSlot::Map(TextureMap::Detail)));
 }
 
@@ -199,10 +199,10 @@ fn geom_morpher_controller() {
         assert!(!e.set_morph_interpolators(&items(a, data)));
         assert!(e.set_morph_interpolators(&items(a, b)));
         assert_eq!(e.view().morph_interpolators(), items(a, b), "kept in memory");
-        let mut block = nif.block_of_mut::<NiGeomMorpherController>(c).unwrap();
-        block.as_mut().set_morpher_flags(GeomMorpherFlags::UPDATE_NORMALS);
-        block.as_mut().set_always_update(true);
-        block.as_mut().set_unknown_ints(&[7, 8]);
+        let block = nif.block_of_mut::<NiGeomMorpherController>(c).unwrap();
+        block.set_morpher_flags(GeomMorpherFlags::UPDATE_NORMALS);
+        block.set_always_update(true);
+        block.set_unknown_ints(&[7, 8]);
 
         let nif = reload_in_place(&mut nif);
         let v = nif.view::<NiGeomMorpherController>(c).unwrap();
@@ -246,10 +246,10 @@ fn lightning_controller() {
     assert!(!e.set_lightning_interpolator(LightningInterpolator::Width, Some(shader)));
     assert!(e.set_lightning_interpolator(LightningInterpolator::Width, Some(width)));
     assert!(e.set_lightning_interpolator(LightningInterpolator::ArcOffset, Some(arc)));
-    let mut b = nif.block_of_mut::<BsProceduralLightningController>(c).unwrap();
-    b.as_mut().set_branch_count(3);
-    b.as_mut().set_child_width_multiplier(0.75);
-    b.as_mut().set_fade_child_bolts(true);
+    let b = nif.block_of_mut::<BsProceduralLightningController>(c).unwrap();
+    b.set_branch_count(3);
+    b.set_child_width_multiplier(0.75);
+    b.set_fade_child_bolts(true);
 
     let nif = reload_in_place(&mut nif);
     let v = nif.view::<BsProceduralLightningController>(c).unwrap();
@@ -284,9 +284,9 @@ fn other_controllers() {
     let blend = root.add_controller::<BhkBlendController, _>();
     let fov = root.add_controller::<BsFrustumFovController, _>();
     let interpolator = nif.add_interpolator::<NiFloatInterpolator>();
-    let mut b = nif.block_of_mut::<BsLagBoneController>(lag).unwrap();
-    b.as_mut().set_linear_velocity(3.0);
-    b.as_mut().set_linear_rotation(1.0);
+    let b = nif.block_of_mut::<BsLagBoneController>(lag).unwrap();
+    b.set_linear_velocity(3.0);
+    b.set_linear_rotation(1.0);
     nif.block_of_mut::<BhkBlendController>(blend).unwrap().set_keys(4);
     assert!(nif.edit::<BsFrustumFovController>(fov).unwrap().set_interpolator(Some(interpolator)));
 

@@ -42,13 +42,13 @@ fn reads_stored_values() {
 fn setters_round_trip() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let (index, _) = material(&nif);
-    let mut m = nif.block_of_mut::<NiMaterialProperty>(index).unwrap();
-    m.as_mut().set_ambient([0.1, 0.2, 0.3]);
-    m.as_mut().set_diffuse([0.4, 0.5, 0.6]);
-    m.as_mut().set_specular([0.7, 0.8, 0.9]);
-    m.as_mut().set_emissive([1.0, 0.5, 0.0]);
-    m.as_mut().set_glossiness(42.0);
-    m.as_mut().set_alpha(0.25);
+    let m = nif.block_of_mut::<NiMaterialProperty>(index).unwrap();
+    m.set_ambient([0.1, 0.2, 0.3]);
+    m.set_diffuse([0.4, 0.5, 0.6]);
+    m.set_specular([0.7, 0.8, 0.9]);
+    m.set_emissive([1.0, 0.5, 0.0]);
+    m.set_glossiness(42.0);
+    m.set_alpha(0.25);
     m.set_emissive_multiple(3.0);
 
     let check = |m: &NiMaterialProperty, multiple: f32| {
@@ -77,9 +77,9 @@ fn black_clears_the_flags() {
     let mut nif = upstream("TestNifFile_Static_MW");
     let (index, m) = material(&nif);
     assert!(m.has_specular());
-    let mut m = nif.block_of_mut::<NiMaterialProperty>(index).unwrap();
-    m.as_mut().set_specular([0.0; 3]);
-    m.as_mut().set_emissive([0.0, 0.0, 0.001]);
+    let m = nif.block_of_mut::<NiMaterialProperty>(index).unwrap();
+    m.set_specular([0.0; 3]);
+    m.set_emissive([0.0, 0.0, 0.001]);
     assert!(!m.has_specular());
     assert!(m.is_emissive());
 }

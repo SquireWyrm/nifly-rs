@@ -26,8 +26,8 @@ impl BhkPlaneShape {
     }
 
     /// Sets the [plane](Self::plane).
-    pub fn set_plane(mut self: Pin<&mut Self>, plane: Plane) {
-        ffi::set_plane_shape_normal(self.as_mut().ffi_mut(), plane.normal.to_ffi());
+    pub fn set_plane(&mut self, plane: Plane) {
+        ffi::set_plane_shape_normal(self.ffi_mut(), plane.normal.to_ffi());
         ffi::set_plane_shape_constant(self.ffi_mut(), plane.constant);
     }
 
@@ -65,7 +65,7 @@ impl BhkMultiSphereShape {
         ffi::multi_sphere_spheres(&self.0).into_iter().map(BoundingSphere::from_ffi).collect()
     }
 
-    pub fn set_spheres(self: Pin<&mut Self>, spheres: &[BoundingSphere]) {
+    pub fn set_spheres(&mut self, spheres: &[BoundingSphere]) {
         let spheres: Vec<_> = spheres.iter().map(|s| s.to_ffi()).collect();
         ffi::set_multi_sphere_spheres(self.ffi_mut(), &spheres);
     }
@@ -87,7 +87,7 @@ impl BhkConvexVerticesShape {
         ffi::convex_vertices_list(&self.0, false).as_chunks::<4>().0.to_vec()
     }
 
-    pub fn set_vertices(self: Pin<&mut Self>, vertices: &[[f32; 4]]) {
+    pub fn set_vertices(&mut self, vertices: &[[f32; 4]]) {
         ffi::set_convex_vertices_list(self.ffi_mut(), false, vertices.as_flattened());
     }
 
@@ -98,7 +98,7 @@ impl BhkConvexVerticesShape {
         ffi::convex_vertices_list(&self.0, true).as_chunks::<4>().0.to_vec()
     }
 
-    pub fn set_normals(self: Pin<&mut Self>, normals: &[[f32; 4]]) {
+    pub fn set_normals(&mut self, normals: &[[f32; 4]]) {
         ffi::set_convex_vertices_list(self.ffi_mut(), true, normals.as_flattened());
     }
 }
@@ -179,7 +179,7 @@ impl BhkListShape {
 
     /// Replaces the [filters](Self::filters). Returns `false`, changing nothing, unless there's
     /// one per sub-shape.
-    pub fn set_filters(self: Pin<&mut Self>, filters: &[HavokFilter]) -> bool {
+    pub fn set_filters(&mut self, filters: &[HavokFilter]) -> bool {
         let filters: Vec<_> = filters.iter().map(|f| f.to_ffi()).collect();
         ffi::set_list_shape_filters(self.ffi_mut(), &filters)
     }
@@ -216,7 +216,7 @@ impl BhkMoppBvTreeShape {
         ffi::mopp_code(&self.0)
     }
 
-    pub fn set_mopp_code(self: Pin<&mut Self>, code: &[u8]) {
+    pub fn set_mopp_code(&mut self, code: &[u8]) {
         ffi::set_mopp_code(self.ffi_mut(), code);
     }
 

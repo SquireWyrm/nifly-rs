@@ -91,7 +91,7 @@ impl AdditionalGeomData {
     }
 
     /// Sets the [vertex count](Self::vertex_count).
-    pub fn set_vertex_count(self: Pin<&mut Self>, count: u16) {
+    pub fn set_vertex_count(&mut self, count: u16) {
         ffi::set_agd_vertex_count(self.ffi_mut(), count);
     }
 
@@ -100,7 +100,7 @@ impl AdditionalGeomData {
     }
 
     /// Replaces the [channels](Self::channels). They aren't checked against the blocks.
-    pub fn set_channels(self: Pin<&mut Self>, channels: &[DataChannel]) {
+    pub fn set_channels(&mut self, channels: &[DataChannel]) {
         let channels: Vec<_> = channels.iter().map(|c| c.to_ffi()).collect();
         ffi::set_agd_channels(self.ffi_mut(), &channels);
     }
@@ -127,25 +127,25 @@ impl NiAdditionalGeometryData {
 
     /// Replaces the [blocks](Self::blocks). Returns `false`, changing nothing, if a block's
     /// `data` and `data_sizes` lengths differ or an item of `data` isn't `block_size` bytes.
-    pub fn set_blocks(mut self: Pin<&mut Self>, blocks: &[Option<AdditionalDataBlock>]) -> bool {
+    pub fn set_blocks(&mut self, blocks: &[Option<AdditionalDataBlock>]) -> bool {
         let valid = |b: &AdditionalDataBlock| {
             b.data.len() == b.data_sizes.len() && b.data.iter().all(|d| d.len() == b.block_size as usize)
         };
         if !blocks.iter().flatten().all(valid) {
             return false;
         }
-        ffi::clear_agd_blocks(self.as_mut().ffi_mut());
+        ffi::clear_agd_blocks(self.ffi_mut());
         for block in blocks {
             match block {
                 Some(b) => ffi::push_agd_block(
-                    self.as_mut().ffi_mut(),
+                    self.ffi_mut(),
                     true,
                     b.block_size,
                     &b.block_offsets,
                     &b.data_sizes,
                     &b.data.concat(),
                 ),
-                None => ffi::push_agd_block(self.as_mut().ffi_mut(), false, 0, &[], &[], &[]),
+                None => ffi::push_agd_block(self.ffi_mut(), false, 0, &[], &[], &[]),
             }
         }
         true
@@ -173,13 +173,13 @@ impl BsPackedAdditionalGeometryData {
     }
 
     /// Replaces the [blocks](Self::blocks).
-    pub fn set_blocks(mut self: Pin<&mut Self>, blocks: &[PackedDataBlock]) {
-        ffi::clear_packed_agd_blocks(self.as_mut().ffi_mut());
+    pub fn set_blocks(&mut self, blocks: &[PackedDataBlock]) {
+        ffi::clear_packed_agd_blocks(self.ffi_mut());
         for b in blocks {
             let empty = PackedData::default();
             let data = b.data.as_ref().unwrap_or(&empty);
             ffi::push_packed_agd_block(
-                self.as_mut().ffi_mut(),
+                self.ffi_mut(),
                 b.data.is_some(),
                 &data.block_offsets,
                 &data.atom_sizes,

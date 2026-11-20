@@ -1,7 +1,7 @@
 //! Tests for the fixed-function properties and NifFile::add_property.
 
 use crate::common::{UPSTREAM, reload};
-use std::{fs, pin::Pin};
+use std::fs;
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
@@ -25,7 +25,7 @@ fn first<T: NiType>(nif: &NifFile) -> &T {
     nif.blocks_of::<T>().next().unwrap()
 }
 
-fn add<T: nifly::shaders::NewProperty>(nif: &mut NifFile, target: Index) -> Pin<&mut T> {
+fn add<T: nifly::shaders::NewProperty>(nif: &mut NifFile, target: Index) -> &mut T {
     let i = nif.edit::<nifly::objects::NiAvObject>(target).map(|mut e| e.add_property::<T, _>()).unwrap();
     nif.block_of_mut::<T>(i).unwrap()
 }
@@ -51,16 +51,16 @@ fn oblivion_round_trip() {
     add::<NiSpecularProperty>(&mut nif, shape).set_enabled(true);
     add::<NiDitherProperty>(&mut nif, shape).set_enabled(true);
     add::<NiWireframeProperty>(&mut nif, shape).set_raw_flags(1);
-    let mut fog = add::<NiFogProperty>(&mut nif, shape);
-    fog.as_mut().set_enabled(true);
-    fog.as_mut().set_function(FogFunction::RangeSquared);
-    fog.as_mut().set_depth(2.5);
+    let fog = add::<NiFogProperty>(&mut nif, shape);
+    fog.set_enabled(true);
+    fog.set_function(FogFunction::RangeSquared);
+    fog.set_depth(2.5);
     fog.set_color([0.25, 0.5, 0.75]);
-    let mut vc = add::<NiVertexColorProperty>(&mut nif, shape);
-    vc.as_mut().set_vertex_mode(VertexColorMode::Emissive);
+    let vc = add::<NiVertexColorProperty>(&mut nif, shape);
+    vc.set_vertex_mode(VertexColorMode::Emissive);
     vc.set_lighting_mode(LightingMode::Emissive);
-    let mut z = add::<NiZBufferProperty>(&mut nif, shape);
-    z.as_mut().set_flags(ZBufferFlags::from_bits(0).with_testing(true));
+    let z = add::<NiZBufferProperty>(&mut nif, shape);
+    z.set_flags(ZBufferFlags::from_bits(0).with_testing(true));
     z.set_function(DepthTest::Greater);
 
     let saved = reload(&mut nif);
@@ -94,14 +94,14 @@ fn fallout_3_saves_packed_flags_only() {
     let flags = VertexColorFlags::from_bits(0)
         .with_vertex_mode(VertexColorMode::AmbientDiffuse)
         .with_lighting_mode(LightingMode::EmissiveAmbientDiffuse);
-    let mut vc = add::<NiVertexColorProperty>(&mut nif, root);
-    vc.as_mut().set_flags(flags);
+    let vc = add::<NiVertexColorProperty>(&mut nif, root);
+    vc.set_flags(flags);
     // Not saved from Fallout 3 on.
     vc.set_vertex_mode(VertexColorMode::Emissive);
 
     let flags = ZBufferFlags::from_bits(0).with_testing(true).with_writing(true).with_function(DepthTest::Less);
-    let mut z = add::<NiZBufferProperty>(&mut nif, root);
-    z.as_mut().set_flags(flags);
+    let z = add::<NiZBufferProperty>(&mut nif, root);
+    z.set_flags(flags);
     // Not saved from Fallout 3 on.
     z.set_function(DepthTest::Never);
 

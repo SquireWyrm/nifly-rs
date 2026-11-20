@@ -64,7 +64,7 @@ fn assign_and_remove() {
     // Replacing it adds a new block.
     let packed = edit.assign_additional_data::<BsPackedAdditionalGeometryData, _>();
     assert_eq!(packed, count + 1);
-    edit.additional_data().unwrap().block().set_vertex_count(5);
+    edit.additional_data().unwrap().set_vertex_count(5);
     assert_eq!(nif.view::<BsPackedAdditionalGeometryData>(packed).unwrap().vertex_count(), 5);
 
     let mut edit = nif.edit::<NiGeometryData>(data).unwrap();
@@ -87,10 +87,10 @@ fn fields_survive_save() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let data = first_data(&nif);
     let extra = nif.edit::<NiGeometryData>(data).unwrap().assign_additional_data::<NiAdditionalGeometryData, _>();
-    let mut block = nif.block_of_mut::<NiAdditionalGeometryData>(extra).unwrap();
-    block.as_mut().upcast_mut().set_vertex_count(3);
-    block.as_mut().upcast_mut().set_channels(&channels());
-    assert!(block.as_mut().set_blocks(&blocks()));
+    let block = nif.block_of_mut::<NiAdditionalGeometryData>(extra).unwrap();
+    block.set_vertex_count(3);
+    block.set_channels(&channels());
+    assert!(block.set_blocks(&blocks()));
 
     let saved = reload(&mut nif, KEEP);
     let view = saved.view::<NiGeometryData>(data).unwrap().additional_data().unwrap();
@@ -98,9 +98,9 @@ fn fields_survive_save() {
     assert_eq!((view.vertex_count(), view.channels()), (3, channels()));
     assert_eq!(view.cast::<NiAdditionalGeometryData>().unwrap().blocks(), blocks());
     // A large data type keeps its value.
-    let mut block = nif.block_of_mut::<NiAdditionalGeometryData>(extra).unwrap();
+    let block = nif.block_of_mut::<NiAdditionalGeometryData>(extra).unwrap();
     let big = [DataChannel { data_type: u32::MAX, ..DataChannel::default() }];
-    block.as_mut().upcast_mut().set_channels(&big);
+    block.set_channels(&big);
     // Saving again keeps the block indices.
     assert_eq!(reload(&mut nif, KEEP).block_of::<AdditionalGeomData>(extra).unwrap().channels(), big);
 }
@@ -110,14 +110,14 @@ fn set_blocks_checks_sizes() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let data = first_data(&nif);
     let extra = nif.edit::<NiGeometryData>(data).unwrap().assign_additional_data::<NiAdditionalGeometryData, _>();
-    let mut block = nif.block_of_mut::<NiAdditionalGeometryData>(extra).unwrap();
-    assert!(block.as_mut().set_blocks(&blocks()));
+    let block = nif.block_of_mut::<NiAdditionalGeometryData>(extra).unwrap();
+    assert!(block.set_blocks(&blocks()));
 
     let good = AdditionalDataBlock { block_size: 2, block_offsets: vec![], data_sizes: vec![2], data: vec![vec![1, 2]] };
     let short_item = AdditionalDataBlock { data: vec![vec![1]], ..good.clone() };
     let missing_size = AdditionalDataBlock { data_sizes: vec![], ..good.clone() };
     for bad in [short_item, missing_size] {
-        assert!(!block.as_mut().set_blocks(&[Some(good.clone()), Some(bad)]));
+        assert!(!block.set_blocks(&[Some(good.clone()), Some(bad)]));
     }
     assert_eq!(block.blocks(), blocks());
 }
@@ -136,9 +136,9 @@ fn packed_blocks_survive_save() {
         // The two numbers are kept without data.
         PackedDataBlock { data: None, shader_index: 2, total_size: 3 },
     ];
-    let mut block = nif.block_of_mut::<BsPackedAdditionalGeometryData>(extra).unwrap();
-    block.as_mut().upcast_mut().set_channels(&channels());
-    block.as_mut().set_blocks(&blocks);
+    let block = nif.block_of_mut::<BsPackedAdditionalGeometryData>(extra).unwrap();
+    block.set_channels(&channels());
+    block.set_blocks(&blocks);
 
     let saved = reload(&mut nif, KEEP);
     let view = saved.view::<NiGeometryData>(data).unwrap().additional_data().unwrap();

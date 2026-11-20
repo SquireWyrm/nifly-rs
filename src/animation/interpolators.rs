@@ -37,7 +37,7 @@ macro_rules! transform_fields {
         }
 
         #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: QuatTransform) {
+        pub fn $set(&mut self, value: QuatTransform) {
             ffi::$ffi_set(self.ffi_mut(), &value.to_ffi());
         }
     )*};
@@ -163,7 +163,7 @@ impl NiLookAtInterpolator {
         ffi::look_at_name(&self.0).as_bstr()
     }
 
-    pub fn set_look_at_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+    pub fn set_look_at_name(&mut self, name: impl AsRef<[u8]>) {
         ffi::set_look_at_name(self.ffi_mut(), name.as_ref());
     }
 
@@ -306,7 +306,7 @@ impl BsTreadTransfInterpolator {
             .collect()
     }
 
-    pub fn set_treads(self: Pin<&mut Self>, treads: &[Tread]) {
+    pub fn set_treads(&mut self, treads: &[Tread]) {
         let treads: Vec<_> = treads
             .iter()
             .map(|t| ffi::TreadFfi {

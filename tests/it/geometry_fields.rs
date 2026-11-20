@@ -27,12 +27,12 @@ fn arrays() {
     let tangents = vec![Vec3::new(1.0, 0.0, 0.0); n];
     let colors = vec![[0.5, 0.25, 1.0, 1.0]; n];
 
-    let mut block = nif.block_of_mut::<NiGeometryData>(index).unwrap();
-    assert!(!block.as_mut().set_vertices(&vertices[1..]));
-    assert!(block.as_mut().set_vertices(&vertices));
-    assert!(block.as_mut().set_tangents(&tangents));
-    assert!(block.as_mut().set_bitangents(&tangents));
-    assert!(block.as_mut().set_vertex_colors(&colors));
+    let block = nif.block_of_mut::<NiGeometryData>(index).unwrap();
+    assert!(!block.set_vertices(&vertices[1..]));
+    assert!(block.set_vertices(&vertices));
+    assert!(block.set_tangents(&tangents));
+    assert!(block.set_bitangents(&tangents));
+    assert!(block.set_vertex_colors(&colors));
     block.set_has_normals(false);
 
     let saved = reload(&mut nif);
@@ -43,9 +43,9 @@ fn arrays() {
     assert!(!block.has_normals() && block.normals().is_empty());
 
     let mut nif = saved;
-    let mut block = nif.block_of_mut::<NiGeometryData>(index).unwrap();
-    assert!(block.as_mut().set_normals(&tangents));
-    assert!(block.as_mut().set_tangents(&tangents));
+    let block = nif.block_of_mut::<NiGeometryData>(index).unwrap();
+    assert!(block.set_normals(&tangents));
+    assert!(block.set_tangents(&tangents));
     block.set_has_vertex_colors(false);
     let saved = reload(&mut nif);
     let block = data(&saved, index);
@@ -91,10 +91,10 @@ fn uv_sets_and_data_flags() {
 fn scalar_fields() {
     let mut nif = load("Bones");
     let index = first::<NiGeometryData>(&nif);
-    let mut block = nif.block_of_mut::<NiGeometryData>(index).unwrap();
-    block.as_mut().set_geometry_group_id(-3);
-    block.as_mut().set_keep_raw_flags(1);
-    block.as_mut().set_compress_raw_flags(2);
+    let block = nif.block_of_mut::<NiGeometryData>(index).unwrap();
+    block.set_geometry_group_id(-3);
+    block.set_keep_raw_flags(1);
+    block.set_compress_raw_flags(2);
     block.set_material_crc(0xDEAD);
     let saved = reload(&mut nif);
     let block = data(&saved, index);
@@ -109,8 +109,8 @@ fn match_groups() {
     let mut nif = load("Bones");
     let index = first::<NiTriShapeData>(&nif);
     let n = data(&nif, index).vertex_count() as u16;
-    let mut block = nif.block_of_mut::<NiTriShapeData>(index).unwrap();
-    assert!(!block.as_mut().set_match_groups(&[vec![0, n]]));
+    let block = nif.block_of_mut::<NiTriShapeData>(index).unwrap();
+    assert!(!block.set_match_groups(&[vec![0, n]]));
     assert!(block.set_match_groups(&[vec![0, 1], vec![2]]));
     let saved = reload(&mut nif);
     assert_eq!(saved.block_of::<NiTriShapeData>(index).unwrap().match_groups(), [vec![0, 1], vec![2]]);
@@ -121,8 +121,8 @@ fn strips() {
     let mut nif = load("Strips_MW");
     let index = first::<NiTriStripsData>(&nif);
     let n = data(&nif, index).vertex_count() as u16;
-    let mut block = nif.block_of_mut::<NiTriStripsData>(index).unwrap();
-    assert!(!block.as_mut().set_strips(&[vec![0, 1, n]]));
+    let block = nif.block_of_mut::<NiTriStripsData>(index).unwrap();
+    assert!(!block.set_strips(&[vec![0, 1, n]]));
     assert!(block.set_strips(&[vec![0, 1, 2, 3], vec![1, 2]]));
     let saved = reload(&mut nif);
     let block = saved.block_of::<NiTriStripsData>(index).unwrap();
@@ -134,9 +134,9 @@ fn strips() {
 fn materials() {
     let mut nif = load("Bones");
     let shape = first::<NiGeometry>(&nif);
-    let mut block = nif.block_of_mut::<NiGeometry>(shape).unwrap();
-    block.as_mut().set_materials(&[("First", 5), ("Second", 6)]);
-    block.as_mut().set_active_material(1);
+    let block = nif.block_of_mut::<NiGeometry>(shape).unwrap();
+    block.set_materials(&[("First", 5), ("Second", 6)]);
+    block.set_active_material(1);
     block.set_default_material_update_flag(1);
     let saved = reload(&mut nif);
     let block = saved.block_of::<NiGeometry>(shape).unwrap();
@@ -148,8 +148,8 @@ fn materials() {
 fn shader_name() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let shape = first::<NiGeometry>(&nif);
-    let mut block = nif.block_of_mut::<NiGeometry>(shape).unwrap();
-    block.as_mut().set_shader_name(Some("Shader"));
+    let block = nif.block_of_mut::<NiGeometry>(shape).unwrap();
+    block.set_shader_name(Some("Shader"));
     block.set_shader_implementation(7);
     let mut saved = reload(&mut nif);
     let block = saved.block_of::<NiGeometry>(shape).unwrap();

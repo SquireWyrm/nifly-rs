@@ -157,8 +157,8 @@ impl NiPlanarCollider {
     }
 
     /// Sets [`plane`](Self::plane).
-    pub fn set_plane(mut self: Pin<&mut Self>, plane: Plane) {
-        ffi::set_old_planar_collider_plane_normal(self.as_mut().ffi_mut(), plane.normal.to_ffi());
+    pub fn set_plane(&mut self, plane: Plane) {
+        ffi::set_old_planar_collider_plane_normal(self.ffi_mut(), plane.normal.to_ffi());
         ffi::set_old_planar_collider_plane_constant(self.ffi_mut(), plane.constant);
     }
 }
@@ -171,7 +171,7 @@ impl NiParticleSystemController {
 
     /// Replaces [`particles`](Self::particles). Returns `false`, changing nothing, if there are
     /// more than 65535.
-    pub fn set_particles(self: Pin<&mut Self>, particles: &[ParticleInfo]) -> bool {
+    pub fn set_particles(&mut self, particles: &[ParticleInfo]) -> bool {
         let particles: Vec<_> = particles.iter().copied().map(ParticleInfo::to_ffi).collect();
         ffi::set_particle_system_ctlr_particles(self.ffi_mut(), &particles)
     }

@@ -124,9 +124,9 @@ fn mut_is_the_same_data() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let shape = shape_index(&nif, "Cuirass");
     let shared: *const NiGeometryData = nif.view_of(nif.block_of::<NiShape>(shape).unwrap()).unwrap().geometry_data().unwrap();
-    let mut pinned_shape = nif.edit::<nifly::geometry::NiShape>(shape).unwrap();
-    let pinned = pinned_shape.geometry_data().unwrap();
-    assert!(ptr::eq(&*pinned, shared));
+    let mut shape_edit = nif.edit::<nifly::geometry::NiShape>(shape).unwrap();
+    let geometry = shape_edit.geometry_data().unwrap();
+    assert!(ptr::eq(&*geometry, shared));
     let block: &NiObject = data(&nif, "Cuirass");
     assert_eq!(block.block_name(), "NiTriShapeData");
 }

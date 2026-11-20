@@ -56,19 +56,19 @@ fn reads_morrowind_texture_effects() {
 fn texture_effect_fields_survive_save() {
     let mut nif = upstream("TestNifFile_TextureEffect_MW");
     let mut edit = nif.edit::<NiTextureEffect>(3).unwrap();
-    let mut b = edit.block();
+    let b = &mut *edit;
     let matrix = Matrix3 { rows: [Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 2.0)] };
-    b.as_mut().set_projection_matrix(matrix);
-    b.as_mut().set_projection_translation(Vec3::new(1.0, 2.0, 3.0));
-    b.as_mut().set_filter_mode(FilterMode::Bilinear);
-    b.as_mut().set_clamp_mode(ClampMode::ClampBoth);
-    b.as_mut().set_effect_type(EffectType::ProjectedShadow);
-    b.as_mut().set_coordinate_generation(CoordinateGeneration::WorldPerspective);
-    b.as_mut().set_clipping(true);
-    b.as_mut().set_clipping_plane(Plane { normal: Vec3::new(0.0, 0.0, 1.0), constant: 5.0 });
-    b.as_mut().set_ps2_l(3);
-    b.as_mut().set_ps2_k(-4);
-    b.as_mut().upcast_mut().set_affected_node_pointers(&[1, 2]);
+    b.set_projection_matrix(matrix);
+    b.set_projection_translation(Vec3::new(1.0, 2.0, 3.0));
+    b.set_filter_mode(FilterMode::Bilinear);
+    b.set_clamp_mode(ClampMode::ClampBoth);
+    b.set_effect_type(EffectType::ProjectedShadow);
+    b.set_coordinate_generation(CoordinateGeneration::WorldPerspective);
+    b.set_clipping(true);
+    b.set_clipping_plane(Plane { normal: Vec3::new(0.0, 0.0, 1.0), constant: 5.0 });
+    b.set_ps2_l(3);
+    b.set_ps2_k(-4);
+    b.set_affected_node_pointers(&[1, 2]);
     assert!(edit.set_source_texture(Some(7)));
 
     let saved = reload(&mut nif);
@@ -95,7 +95,7 @@ fn set_source_texture_checks_type() {
         assert!(!edit.set_source_texture(Some(bad)), "{bad}");
     }
     assert_eq!(edit.source_texture().map(|t| t.index()), Some(4));
-    edit.source_texture().unwrap().block().set_file_name("textures\\new.dds");
+    edit.source_texture().unwrap().set_file_name("textures\\new.dds");
     assert_eq!(nif.view::<NiSourceTexture>(4).unwrap().file_name(), "textures\\new.dds");
 
     let mut edit = nif.edit::<NiTextureEffect>(3).unwrap();
@@ -147,12 +147,12 @@ fn affected_nodes() {
 
 fn set_light(nif: &mut NifFile, index: Index) {
     let mut edit = nif.edit::<NiLight>(index).unwrap();
-    let mut light = edit.block();
-    light.as_mut().set_dimmer(0.5);
-    light.as_mut().set_ambient_color([0.1, 0.2, 0.3]);
-    light.as_mut().set_diffuse_color([0.4, 0.5, 0.6]);
-    light.as_mut().set_specular_color([0.7, 0.8, 0.9]);
-    light.upcast_mut().set_switch_state(false);
+    let light = &mut *edit;
+    light.set_dimmer(0.5);
+    light.set_ambient_color([0.1, 0.2, 0.3]);
+    light.set_diffuse_color([0.4, 0.5, 0.6]);
+    light.set_specular_color([0.7, 0.8, 0.9]);
+    light.set_switch_state(false);
 }
 
 fn check_light(light: &NiLight) {
@@ -199,15 +199,15 @@ fn lights_survive_save() {
         assert!(nif.edit::<NiDynamicEffect>(i).unwrap().set_parent(Some(root)));
     }
     let mut edit = nif.edit::<NiPointLight>(point).unwrap();
-    let mut p = edit.block();
-    p.as_mut().set_constant_attenuation(1.0);
-    p.as_mut().set_linear_attenuation(2.0);
-    p.as_mut().set_quadratic_attenuation(3.0);
+    let p = &mut *edit;
+    p.set_constant_attenuation(1.0);
+    p.set_linear_attenuation(2.0);
+    p.set_quadratic_attenuation(3.0);
     let mut edit = nif.edit::<NiSpotLight>(spot).unwrap();
-    let mut s = edit.block();
-    s.as_mut().set_outer_angle(0.75);
-    s.as_mut().set_inner_angle(0.25);
-    s.as_mut().set_exponent(2.0);
+    let s = &mut *edit;
+    s.set_outer_angle(0.75);
+    s.set_inner_angle(0.25);
+    s.set_exponent(2.0);
 
     let saved = reload(&mut nif);
     let root = saved.root_node().unwrap();
@@ -234,10 +234,10 @@ fn spot_light_round_trip(name: &str) -> (f32, f32, f32) {
     let root = nif.root_node().unwrap().index();
     let spot = nif.edit::<NiNode>(root).unwrap().add_effect::<NiSpotLight, _>();
     let mut edit = nif.edit::<NiSpotLight>(spot).unwrap();
-    let mut s = edit.block();
-    s.as_mut().set_outer_angle(0.75);
-    s.as_mut().set_inner_angle(0.25);
-    s.as_mut().set_exponent(2.0);
+    let s = &mut *edit;
+    s.set_outer_angle(0.75);
+    s.set_inner_angle(0.25);
+    s.set_exponent(2.0);
     set_light(&mut nif, spot);
     let mut copy = nif.clone();
 

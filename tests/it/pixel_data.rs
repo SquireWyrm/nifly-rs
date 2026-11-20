@@ -59,16 +59,16 @@ fn render_data_fields() {
     let channel = PixelChannel { component: PixelComponent::Red.into(), representation: 0, bits: 8, signed: false };
 
     let (mut nif, _, data) = embedded(NifVersion::OBLIVION);
-    let mut d = nif.block_of_mut::<NiPixelData>(data).unwrap().upcast_mut();
-    d.as_mut().set_pixel_format(PixelFormat::Dxt5);
-    d.as_mut().set_bits_per_pixel(32);
-    d.as_mut().set_bytes_per_pixel(4);
-    d.as_mut().set_renderer_hint(7);
-    d.as_mut().set_format_extra_data(8);
-    d.as_mut().set_raw_flags(1);
-    d.as_mut().set_tiling(PixelTiling::Xenon);
-    d.as_mut().set_channels([channel; 4]);
-    d.as_mut().set_color_masks([1, 2, 3, 4]);
+    let d = nif.block_of_mut::<NiPixelData>(data).unwrap();
+    d.set_pixel_format(PixelFormat::Dxt5);
+    d.set_bits_per_pixel(32);
+    d.set_bytes_per_pixel(4);
+    d.set_renderer_hint(7);
+    d.set_format_extra_data(8);
+    d.set_raw_flags(1);
+    d.set_tiling(PixelTiling::Xenon);
+    d.set_channels([channel; 4]);
+    d.set_color_masks([1, 2, 3, 4]);
     d.set_mipmaps(&mipmaps);
 
     let saved = reload(&mut nif);
@@ -84,8 +84,8 @@ fn render_data_fields() {
     assert_eq!(d.color_masks(), [0; 4]);
 
     let (mut nif, _, data) = embedded(NifVersion::MORROWIND);
-    let mut d = nif.block_of_mut::<NiPixelData>(data).unwrap().upcast_mut();
-    d.as_mut().set_color_masks([1, 2, 3, 4]);
+    let d = nif.block_of_mut::<NiPixelData>(data).unwrap();
+    d.set_color_masks([1, 2, 3, 4]);
     d.set_old_fast_compare([1, 2, 3, 4, 5, 6, 7, 8]);
     let saved = reload(&mut nif);
     assert_eq!(texture_data(&saved).color_masks(), [1, 2, 3, 4]);
@@ -95,8 +95,8 @@ fn render_data_fields() {
 #[test]
 fn faces() {
     let (mut nif, _, data) = embedded(NifVersion::OBLIVION);
-    let mut d = nif.block_of_mut::<NiPixelData>(data).unwrap();
-    assert!(!d.as_mut().set_faces(&[&[1, 2], &[3]]));
+    let d = nif.block_of_mut::<NiPixelData>(data).unwrap();
+    assert!(!d.set_faces(&[&[1, 2], &[3]]));
     assert!(d.set_faces(&[&[1, 2], &[3, 4]]));
     let saved = reload(&mut nif);
     assert_eq!(texture_data(&saved).cast::<NiPixelData>().unwrap().faces(), [[1, 2], [3, 4]]);
@@ -115,9 +115,9 @@ fn persistent_data() {
     let data = nif.edit::<NiSourceTexture>(texture).unwrap().assign_pixel_data::<NiPersistentSrcTextureRendererData>();
     let faces: Vec<Vec<u8>> = (0..6).map(|f| vec![f; 3]).collect();
     let faces: Vec<&[u8]> = faces.iter().map(Vec::as_slice).collect();
-    let mut d = nif.block_of_mut::<NiPersistentSrcTextureRendererData>(data).unwrap();
-    assert!(d.as_mut().set_faces(&faces));
-    d.as_mut().set_platform(Platform::Dx9);
+    let d = nif.block_of_mut::<NiPersistentSrcTextureRendererData>(data).unwrap();
+    assert!(d.set_faces(&faces));
+    d.set_platform(Platform::Dx9);
     d.set_padded_pixel_count(4);
 
     let saved = reload(&mut nif);
@@ -142,9 +142,9 @@ fn palette() {
     assert!(p.has_alpha());
     assert_eq!(p.colors(), colors);
 
-    let mut p = nif.block_of_mut::<nifly::shaders::NiPalette>(palette).unwrap();
-    assert!(!p.as_mut().set_colors(&colors[..100]));
-    assert!(p.as_mut().set_colors(&colors[..16]));
+    let p = nif.block_of_mut::<nifly::shaders::NiPalette>(palette).unwrap();
+    assert!(!p.set_colors(&colors[..100]));
+    assert!(p.set_colors(&colors[..16]));
     p.set_has_alpha(false);
     let saved = reload(&mut nif);
     let p = texture_data(&saved).palette().unwrap();

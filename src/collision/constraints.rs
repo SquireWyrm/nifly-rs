@@ -31,7 +31,7 @@ macro_rules! wrapped {
             }
 
             /// Sets the wrapped constraint's type and settings.
-            pub fn set_wrapped(self: Pin<&mut Self>, descriptor: ConstraintDescriptor) {
+            pub fn set_wrapped(&mut self, descriptor: ConstraintDescriptor) {
                 assert!(ffi::$set(self.ffi_mut(), &descriptor.to_ffi()), "a known type");
             }
 
@@ -71,7 +71,7 @@ impl BhkBallSocketConstraintChain {
         ffi::chain_pivots(&self.0).as_chunks::<4>().0.to_vec()
     }
 
-    pub fn set_pivots(self: Pin<&mut Self>, pivots: &[[f32; 4]]) {
+    pub fn set_pivots(&mut self, pivots: &[[f32; 4]]) {
         ffi::set_chain_pivots(self.ffi_mut(), pivots.as_flattened());
     }
 

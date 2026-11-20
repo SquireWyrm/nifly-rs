@@ -45,7 +45,7 @@ fn entities_and_priority() {
     let mut edit = nif.edit::<BhkRagdollConstraint>(constraint).unwrap();
     assert!(!edit.set_entities([Some(a), Some(root)]), "not an entity");
     assert!(edit.set_entities([Some(b), Some(a)]));
-    edit.block().upcast_mut().set_priority(2);
+    edit.set_priority(2);
 
     let saved = reload(&mut nif);
     assert_eq!(entities(&saved, constraint), [Some(b), Some(a)]);
@@ -133,15 +133,15 @@ fn wrapped_constraints() {
         assert_eq!(edit.view().wrapped_entities().map(|e| e.is_none()), [true; 2]);
         assert!(!edit.set_wrapped_entities([Some(a), Some(0)]), "not an entity");
         assert!(edit.set_wrapped_entities([Some(a), Some(b)]));
-        let mut c = edit.block();
+        let c = &mut *edit;
         assert_eq!(c.wrapped(), Some(ConstraintDescriptor::BallAndSocket(Default::default())));
-        c.as_mut().set_wrapped(hinge);
-        c.as_mut().set_strength(100.0);
-        c.as_mut().set_tau(0.25);
-        c.as_mut().set_wrapped_priority(3);
+        c.set_wrapped(hinge);
+        c.set_strength(100.0);
+        c.set_tau(0.25);
+        c.set_wrapped_priority(3);
         c.set_remove_when_broken(true);
-        let mut m = nif.block_of_mut::<BhkMalleableConstraint>(malleable).unwrap();
-        m.as_mut().set_wrapped(ragdoll);
+        let m = nif.block_of_mut::<BhkMalleableConstraint>(malleable).unwrap();
+        m.set_wrapped(ragdoll);
         m.set_damping(0.75);
 
         let saved = reload(&mut nif);
@@ -167,12 +167,12 @@ fn constraint_chain() {
     assert!(edit.set_entities([Some(a), Some(b)]));
     assert!(!edit.set_chained_entities(&[a, root]), "not a rigid body");
     assert!(edit.set_chained_entities(&[a, b]));
-    let mut c = edit.block();
-    c.as_mut().set_pivots(&[v(1.0), v(2.0)]);
-    c.as_mut().set_tau(0.5);
-    c.as_mut().set_damping(0.25);
-    c.as_mut().set_cfm(0.125);
-    c.as_mut().set_max_error_distance(2.0);
+    let c = &mut *edit;
+    c.set_pivots(&[v(1.0), v(2.0)]);
+    c.set_tau(0.5);
+    c.set_damping(0.25);
+    c.set_cfm(0.125);
+    c.set_max_error_distance(2.0);
     c.set_priority(4);
 
     let saved = reload(&mut nif);

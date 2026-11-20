@@ -5,10 +5,10 @@ use super::*;
 /// Changing a shape.
 impl Edit<'_, NiShape> {
     /// Like [`View::geometry_data`], for the data's setters.
-    pub fn geometry_data(&mut self) -> Option<Pin<&mut NiGeometryData>> {
+    pub fn geometry_data(&mut self) -> Option<&mut NiGeometryData> {
         let index = self.index();
         // SAFETY: the data came from this file.
-        unsafe { self.file_mut().pin_block(|f| f.view::<NiShape>(index)?.geometry_data()) }
+        unsafe { self.file_mut().find_mut(|f| f.view::<NiShape>(index)?.geometry_data()) }
     }
 
     /// Points an `NiGeometry` shape at the [`NiGeometryData`] at `data`. Returns `false`,

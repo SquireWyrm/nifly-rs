@@ -43,12 +43,12 @@ impl NiGeometryData {
 
     /// Sets the bounds. Saving with [`optimize`](crate::file::SaveOptions::optimize) on, the
     /// default, recalculates them as [`update_bounds`](Self::update_bounds) does.
-    pub fn set_bounds(self: Pin<&mut Self>, bounds: BoundingSphere) {
+    pub fn set_bounds(&mut self, bounds: BoundingSphere) {
         ffi::set_geometry_data_bounds(self.ffi_mut(), bounds.to_ffi());
     }
 
     /// Recalculates the [bounds](Self::bounds) from the vertices.
-    pub fn update_bounds(self: Pin<&mut Self>) {
+    pub fn update_bounds(&mut self) {
         ffi::update_geometry_data_bounds(self.ffi_mut());
     }
 
@@ -60,7 +60,7 @@ impl NiGeometryData {
 
     /// Sets how often the game may change the data. Files before version 10.0.1.0 (such as
     /// Morrowind's) and [`BsGeometryMeshData`] don't store it, so it's lost on save.
-    pub fn set_consistency(self: Pin<&mut Self>, consistency: Consistency) {
+    pub fn set_consistency(&mut self, consistency: Consistency) {
         ffi::set_geometry_data_consistency(self.ffi_mut(), consistency.into());
     }
 
@@ -97,7 +97,7 @@ impl NiGeometryData {
             .collect()
     }
 
-    fn set_vectors(self: Pin<&mut Self>, which: u8, values: &[Vec3]) -> bool {
+    fn set_vectors(&mut self, which: u8, values: &[Vec3]) -> bool {
         let values: Vec<_> = values.iter().map(|v| v.to_ffi()).collect();
         ffi::set_geometry_data_vectors(self.ffi_mut(), which, &values)
     }
@@ -105,47 +105,47 @@ impl NiGeometryData {
     /// Replaces the vertex positions. Returns `false`, changing nothing, unless there's one per
     /// vertex; the vertex count changes through the shape's
     /// [`set_vertices`](crate::handle::Edit::set_vertices).
-    pub fn set_vertices(self: Pin<&mut Self>, vertices: &[Vec3]) -> bool {
+    pub fn set_vertices(&mut self, vertices: &[Vec3]) -> bool {
         self.set_vectors(0, vertices)
     }
 
     /// Replaces the normals, adding them if the data has none. Returns `false`, changing
     /// nothing, unless there's one per vertex.
-    pub fn set_normals(self: Pin<&mut Self>, normals: &[Vec3]) -> bool {
+    pub fn set_normals(&mut self, normals: &[Vec3]) -> bool {
         self.set_vectors(1, normals)
     }
 
     /// Replaces the tangents, adding tangents and bitangents if the data has none. Returns
     /// `false`, changing nothing, unless there's one per vertex.
-    pub fn set_tangents(self: Pin<&mut Self>, tangents: &[Vec3]) -> bool {
+    pub fn set_tangents(&mut self, tangents: &[Vec3]) -> bool {
         self.set_vectors(2, tangents)
     }
 
     /// Replaces the bitangents, adding tangents and bitangents if the data has none. Returns
     /// `false`, changing nothing, unless there's one per vertex.
-    pub fn set_bitangents(self: Pin<&mut Self>, bitangents: &[Vec3]) -> bool {
+    pub fn set_bitangents(&mut self, bitangents: &[Vec3]) -> bool {
         self.set_vectors(3, bitangents)
     }
 
     /// Replaces the vertex colors, adding them if the data has none. Returns `false`, changing
     /// nothing, unless there's one per vertex.
-    pub fn set_vertex_colors(self: Pin<&mut Self>, colors: &[[f32; 4]]) -> bool {
+    pub fn set_vertex_colors(&mut self, colors: &[[f32; 4]]) -> bool {
         ffi::set_geometry_data_colors(self.ffi_mut(), colors.as_flattened())
     }
 
     /// Adds zeroed normals, keeping any it has, or removes them.
-    pub fn set_has_normals(self: Pin<&mut Self>, enable: bool) {
+    pub fn set_has_normals(&mut self, enable: bool) {
         ffi::set_geometry_data_has(self.ffi_mut(), 0, enable);
     }
 
     /// Adds white vertex colors, keeping any it has, or removes them.
-    pub fn set_has_vertex_colors(self: Pin<&mut Self>, enable: bool) {
+    pub fn set_has_vertex_colors(&mut self, enable: bool) {
         ffi::set_geometry_data_has(self.ffi_mut(), 1, enable);
     }
 
     /// Adds tangents and bitangents, keeping any it has, or removes them. They're saved only
     /// with normals.
-    pub fn set_has_tangents(self: Pin<&mut Self>, enable: bool) {
+    pub fn set_has_tangents(&mut self, enable: bool) {
         ffi::set_geometry_data_has(self.ffi_mut(), 2, enable);
     }
 
@@ -160,7 +160,7 @@ impl NiGeometryData {
         ffi::geometry_data_group_id(&self.0)
     }
 
-    pub fn set_geometry_group_id(self: Pin<&mut Self>, id: i32) {
+    pub fn set_geometry_group_id(&mut self, id: i32) {
         ffi::set_geometry_data_group_id(self.ffi_mut(), id);
     }
 
@@ -169,7 +169,7 @@ impl NiGeometryData {
         ffi::geometry_data_byte(&self.0, 0)
     }
 
-    pub fn set_keep_raw_flags(self: Pin<&mut Self>, flags: u8) {
+    pub fn set_keep_raw_flags(&mut self, flags: u8) {
         ffi::set_geometry_data_byte(self.ffi_mut(), 0, flags);
     }
 
@@ -178,7 +178,7 @@ impl NiGeometryData {
         ffi::geometry_data_byte(&self.0, 1)
     }
 
-    pub fn set_compress_raw_flags(self: Pin<&mut Self>, flags: u8) {
+    pub fn set_compress_raw_flags(&mut self, flags: u8) {
         ffi::set_geometry_data_byte(self.ffi_mut(), 1, flags);
     }
 
@@ -187,7 +187,7 @@ impl NiGeometryData {
         ffi::geometry_data_material_crc(&self.0)
     }
 
-    pub fn set_material_crc(self: Pin<&mut Self>, crc: u32) {
+    pub fn set_material_crc(&mut self, crc: u32) {
         ffi::set_geometry_data_material_crc(self.ffi_mut(), crc);
     }
 }
@@ -202,7 +202,7 @@ impl NiTriShapeData {
 
     /// Replaces the match groups. Returns `false`, changing nothing, if there are more than
     /// 65535 groups or vertices in one, or a vertex is out of range.
-    pub fn set_match_groups<S: AsRef<[u16]>>(self: Pin<&mut Self>, groups: &[S]) -> bool {
+    pub fn set_match_groups<S: AsRef<[u16]>>(&mut self, groups: &[S]) -> bool {
         let (flat, lengths) = joined_u16(groups);
         ffi::set_tri_shape_data_match_groups(self.ffi_mut(), &flat, &lengths)
     }
@@ -217,7 +217,7 @@ impl NiTriStripsData {
     /// Replaces the strips, updating the triangle count. Returns `false`, changing nothing, if
     /// there are more than 65535 strips, vertices in one or triangles in all, or a vertex is
     /// out of range.
-    pub fn set_strips<S: AsRef<[u16]>>(self: Pin<&mut Self>, strips: &[S]) -> bool {
+    pub fn set_strips<S: AsRef<[u16]>>(&mut self, strips: &[S]) -> bool {
         let (flat, lengths) = joined_u16(strips);
         ffi::set_tri_strips_data_strips(self.ffi_mut(), &flat, &lengths)
     }
@@ -234,7 +234,7 @@ impl NiGeometry {
             .collect()
     }
 
-    pub fn set_materials<N: AsRef<[u8]>>(self: Pin<&mut Self>, materials: &[(N, u32)]) {
+    pub fn set_materials<N: AsRef<[u8]>>(&mut self, materials: &[(N, u32)]) {
         let (bytes, lengths) = crate::extra_data::joined(materials.iter().map(|(name, _)| name));
         let extra: Vec<u32> = materials.iter().map(|&(_, e)| e).collect();
         ffi::set_geometry_materials(self.ffi_mut(), &bytes, &lengths, &extra);
@@ -245,7 +245,7 @@ impl NiGeometry {
         ffi::geometry_active_material(&self.0)
     }
 
-    pub fn set_active_material(self: Pin<&mut Self>, index: i32) {
+    pub fn set_active_material(&mut self, index: i32) {
         ffi::set_geometry_active_material(self.ffi_mut(), index);
     }
 
@@ -254,7 +254,7 @@ impl NiGeometry {
         ffi::geometry_material_update_flag(&self.0)
     }
 
-    pub fn set_default_material_update_flag(self: Pin<&mut Self>, flag: u8) {
+    pub fn set_default_material_update_flag(&mut self, flag: u8) {
         ffi::set_geometry_material_update_flag(self.ffi_mut(), flag);
     }
 
@@ -264,7 +264,7 @@ impl NiGeometry {
     }
 
     /// Sets the shader's name, or removes the shader with `None`.
-    pub fn set_shader_name(self: Pin<&mut Self>, name: Option<impl AsRef<[u8]>>) {
+    pub fn set_shader_name(&mut self, name: Option<impl AsRef<[u8]>>) {
         match name {
             Some(name) => ffi::set_geometry_shader(self.ffi_mut(), true, name.as_ref()),
             None => ffi::set_geometry_shader(self.ffi_mut(), false, &[]),
@@ -276,7 +276,7 @@ impl NiGeometry {
         ffi::geometry_shader_implementation(&self.0)
     }
 
-    pub fn set_shader_implementation(self: Pin<&mut Self>, implementation: u32) {
+    pub fn set_shader_implementation(&mut self, implementation: u32) {
         ffi::set_geometry_shader_implementation(self.ffi_mut(), implementation);
     }
 }
@@ -301,7 +301,7 @@ impl NiLinesData {
 
     /// Sets the [line flags](Self::line_flags). Returns `false`, changing nothing, unless
     /// there's one per vertex.
-    pub fn set_line_flags(self: Pin<&mut Self>, flags: &[bool]) -> bool {
+    pub fn set_line_flags(&mut self, flags: &[bool]) -> bool {
         ffi::set_lines_data_flags(self.ffi_mut(), flags)
     }
 }
@@ -324,7 +324,7 @@ macro_rules! u16_fields {
         }
 
         #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: u16) {
+        pub fn $set(&mut self, value: u16) {
             ffi::$ffi_set(self.ffi_mut(), value);
         }
     )*};
@@ -355,7 +355,7 @@ impl NiScreenElementsData {
     /// Replaces the polygon slots and their indices. Returns `false`, changing nothing, unless
     /// both have the same length, at most 65535, and the [polygon count](Self::polygon_count)
     /// fits in it.
-    pub fn set_polygons(self: Pin<&mut Self>, polygons: &[ScreenPolygon], indices: &[u16]) -> bool {
+    pub fn set_polygons(&mut self, polygons: &[ScreenPolygon], indices: &[u16]) -> bool {
         if polygons.len() < usize::from(self.polygon_count()) {
             return false;
         }
@@ -378,7 +378,7 @@ impl NiScreenElementsData {
 
     /// Sets the [polygon count](Self::polygon_count). Returns `false`, changing nothing, if
     /// it's more than the number of [polygon slots](Self::polygons).
-    pub fn set_polygon_count(self: Pin<&mut Self>, count: u16) -> bool {
+    pub fn set_polygon_count(&mut self, count: u16) -> bool {
         if usize::from(count) > self.polygons().len() {
             return false;
         }

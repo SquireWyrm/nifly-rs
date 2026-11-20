@@ -91,10 +91,10 @@ fn modifiers() {
     let mut m = nif.edit::<NiPSysAgeDeathModifier>(age).unwrap();
     assert!(!m.set_particle_system(Some(0)) && !m.set_spawn_modifier(Some(position)));
     assert!(m.set_spawn_modifier(Some(spawn)));
-    let mut b = nif.block_of_mut::<NiPSysModifier>(age).unwrap();
-    b.as_mut().set_name("Renamed");
-    b.as_mut().set_order(3000);
-    b.as_mut().set_active(false);
+    let b = nif.block_of_mut::<NiPSysModifier>(age).unwrap();
+    b.set_name("Renamed");
+    b.set_order(3000);
+    b.set_active(false);
 
     let nif = reload_in_place(&mut nif);
     let v = nif.view::<NiParticleSystem>(system).unwrap();
@@ -184,13 +184,13 @@ fn colliders() {
     assert!(!m.set_colliders(&[plane, plane]) && !m.set_colliders(&[node]));
     assert!(m.set_colliders(&[plane, sphere]));
 
-    let mut b = nif.block_of_mut::<NiPSysCollider>(plane).unwrap();
-    b.as_mut().set_bounce(0.5);
-    b.as_mut().set_spawn_on_collide(true);
-    b.as_mut().set_die_on_collide(true);
-    let mut b = nif.block_of_mut::<NiPSysPlanarCollider>(plane).unwrap();
-    b.as_mut().set_width(2.0);
-    b.as_mut().set_x_axis(Vec3::new(1.0, 0.0, 0.0));
+    let b = nif.block_of_mut::<NiPSysCollider>(plane).unwrap();
+    b.set_bounce(0.5);
+    b.set_spawn_on_collide(true);
+    b.set_die_on_collide(true);
+    let b = nif.block_of_mut::<NiPSysPlanarCollider>(plane).unwrap();
+    b.set_width(2.0);
+    b.set_x_axis(Vec3::new(1.0, 0.0, 0.0));
     nif.block_of_mut::<NiPSysSphericalCollider>(sphere).unwrap().set_radius(3.0);
 
     let nif = reload_in_place(&mut nif);
@@ -208,27 +208,27 @@ fn colliders() {
 fn particle_data() {
     let (mut nif, system) = with_system(NifVersion::OBLIVION);
     let data = nif.view::<NiParticleSystem>(system).unwrap().data().unwrap().index();
-    let mut d = nif.block_of_mut::<NiParticlesData>(data).unwrap();
-    d.as_mut().set_vertex_count(3);
-    assert!(!d.as_mut().set_radii(&[1.0, 2.0]), "one per vertex");
-    assert!(d.as_mut().set_radii(&[1.0, 2.0, 3.0]));
-    d.as_mut().set_has_radii(true);
-    assert!(d.as_mut().set_sizes(&[0.5; 3]));
-    d.as_mut().set_has_sizes(true);
+    let d = nif.block_of_mut::<NiParticlesData>(data).unwrap();
+    d.set_vertex_count(3);
+    assert!(!d.set_radii(&[1.0, 2.0]), "one per vertex");
+    assert!(d.set_radii(&[1.0, 2.0, 3.0]));
+    d.set_has_radii(true);
+    assert!(d.set_sizes(&[0.5; 3]));
+    d.set_has_sizes(true);
     let q = [0.0, 0.0, 0.0, 1.0];
-    assert!(!d.as_mut().set_rotations(&[q]) && d.as_mut().set_rotations(&[q; 3]));
-    d.as_mut().set_has_rotations(true);
-    assert!(d.as_mut().set_rotation_angles(&[0.1, 0.2, 0.3]));
-    d.as_mut().set_has_rotation_angles(true);
-    assert!(d.as_mut().set_rotation_axes(&[Vec3::new(0.0, 0.0, 1.0); 3]));
-    d.as_mut().set_has_rotation_axes(true);
-    d.as_mut().set_active_count(2);
+    assert!(!d.set_rotations(&[q]) && d.set_rotations(&[q; 3]));
+    d.set_has_rotations(true);
+    assert!(d.set_rotation_angles(&[0.1, 0.2, 0.3]));
+    d.set_has_rotation_angles(true);
+    assert!(d.set_rotation_axes(&[Vec3::new(0.0, 0.0, 1.0); 3]));
+    d.set_has_rotation_axes(true);
+    d.set_active_count(2);
     let info = ParticleInfo { velocity: Vec3::new(1.0, 2.0, 3.0), age: 0.5, life_span: 2.0, code: 7, ..Default::default() };
-    let mut p = nif.block_of_mut::<NiPSysData>(data).unwrap();
-    assert!(!p.as_mut().set_particle_info(&[info]) && p.as_mut().set_particle_info(&[info; 3]));
-    assert!(p.as_mut().set_rotation_speeds(&[4.0; 3]));
-    p.as_mut().set_has_rotation_speeds(true);
-    p.as_mut().set_added_particle_count(1);
+    let p = nif.block_of_mut::<NiPSysData>(data).unwrap();
+    assert!(!p.set_particle_info(&[info]) && p.set_particle_info(&[info; 3]));
+    assert!(p.set_rotation_speeds(&[4.0; 3]));
+    p.set_has_rotation_speeds(true);
+    p.set_added_particle_count(1);
 
     let mut nif = reload_in_place(&mut nif);
     let d = nif.block_of::<NiPSysData>(data).unwrap();
@@ -247,14 +247,14 @@ fn particle_data() {
 fn bethesda_particle_data() {
     let (mut nif, system) = with_system(NifVersion::SKYRIM_SE);
     let data = nif.view::<NiParticleSystem>(system).unwrap().data().unwrap().index();
-    let mut d = nif.block_of_mut::<NiParticlesData>(data).unwrap();
-    d.as_mut().set_vertex_count(2);
-    assert!(d.as_mut().set_radii(&[1.0, 2.0]));
-    d.as_mut().set_has_radii(true);
-    d.as_mut().set_has_texture_indices(true);
-    d.as_mut().set_subtexture_offsets(&[[0.0, 0.0, 0.5, 0.5], [0.5, 0.0, 1.0, 0.5]]);
-    d.as_mut().set_aspect_ratio(2.0);
-    d.as_mut().set_aspect_flags(AspectFlags::SPEED_TO_ASPECT);
+    let d = nif.block_of_mut::<NiParticlesData>(data).unwrap();
+    d.set_vertex_count(2);
+    assert!(d.set_radii(&[1.0, 2.0]));
+    d.set_has_radii(true);
+    d.set_has_texture_indices(true);
+    d.set_subtexture_offsets(&[[0.0, 0.0, 0.5, 0.5], [0.5, 0.0, 1.0, 0.5]]);
+    d.set_aspect_ratio(2.0);
+    d.set_aspect_flags(AspectFlags::SPEED_TO_ASPECT);
 
     let nif = reload_in_place(&mut nif);
     let d = nif.block_of::<NiParticlesData>(data).unwrap();
@@ -267,12 +267,12 @@ fn bethesda_particle_data() {
 #[test]
 fn system_fields() {
     let (mut nif, system) = with_system(NifVersion::SKYRIM_SE);
-    let mut s = nif.block_of_mut::<NiParticleSystem>(system).unwrap();
-    s.as_mut().set_world_space(false);
-    s.as_mut().set_vertex_raw_flags([1, 2, 3, 4, 5, 6, 7, 8]);
-    s.as_mut().set_bounds(BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0));
-    s.as_mut().set_far_begin(10);
-    s.as_mut().set_near_end(20);
+    let s = nif.block_of_mut::<NiParticleSystem>(system).unwrap();
+    s.set_world_space(false);
+    s.set_vertex_raw_flags([1, 2, 3, 4, 5, 6, 7, 8]);
+    s.set_bounds(BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0));
+    s.set_far_begin(10);
+    s.set_near_end(20);
     let nif = reload_in_place(&mut nif);
     let s = nif.block_of::<NiParticleSystem>(system).unwrap();
     assert!(!s.world_space());
@@ -298,27 +298,27 @@ fn modifier_fields() {
     let radial = e.add_modifier::<NiPSysRadialFieldModifier>("Radial");
     let mesh = e.add_modifier::<NiPSysMeshEmitter>("Mesh");
 
-    let mut g = nif.block_of_mut::<NiPSysGravityModifier>(gravity).unwrap();
-    g.as_mut().set_force_type(ForceType::Spherical);
-    g.as_mut().set_strength(9.8);
-    g.as_mut().set_world_aligned(true);
-    let mut b = nif.block_of_mut::<NiPSysBombModifier>(bomb).unwrap();
-    b.as_mut().set_decay_type(DecayType::Exponential);
-    b.as_mut().set_symmetry_type(SymmetryType::Planar);
-    let mut c = nif.block_of_mut::<BsPSysSimpleColorModifier>(color).unwrap();
-    c.as_mut().set_color_2([0.1, 0.2, 0.3, 0.4]);
-    c.as_mut().set_fade_out_percent(0.75);
+    let g = nif.block_of_mut::<NiPSysGravityModifier>(gravity).unwrap();
+    g.set_force_type(ForceType::Spherical);
+    g.set_strength(9.8);
+    g.set_world_aligned(true);
+    let b = nif.block_of_mut::<NiPSysBombModifier>(bomb).unwrap();
+    b.set_decay_type(DecayType::Exponential);
+    b.set_symmetry_type(SymmetryType::Planar);
+    let c = nif.block_of_mut::<BsPSysSimpleColorModifier>(color).unwrap();
+    c.set_color_2([0.1, 0.2, 0.3, 0.4]);
+    c.set_fade_out_percent(0.75);
     nif.block_of_mut::<BsPSysScaleModifier>(scale).unwrap().set_scales(&[1.0, 0.5, 0.0]);
-    let mut r = nif.block_of_mut::<NiPSysRotationModifier>(rotation).unwrap();
-    r.as_mut().set_initial_speed_variation(0.25);
-    r.as_mut().set_random_initial_axis(true);
+    let r = nif.block_of_mut::<NiPSysRotationModifier>(rotation).unwrap();
+    r.set_initial_speed_variation(0.25);
+    r.set_random_initial_axis(true);
     nif.block_of_mut::<NiPSysRadialFieldModifier>(radial).unwrap().set_radial_type(1.5);
-    let mut m = nif.block_of_mut::<NiPSysMeshEmitter>(mesh).unwrap();
-    m.as_mut().set_velocity_type(VelocityType::UseDirection);
-    m.as_mut().set_emission_type(EmitFrom::FaceSurface);
-    let mut em = nif.block_of_mut::<NiPSysEmitter>(mesh).unwrap();
-    em.as_mut().set_initial_color([1.0, 0.5, 0.25, 1.0]);
-    em.as_mut().set_radius_variation(0.1);
+    let m = nif.block_of_mut::<NiPSysMeshEmitter>(mesh).unwrap();
+    m.set_velocity_type(VelocityType::UseDirection);
+    m.set_emission_type(EmitFrom::FaceSurface);
+    let em = nif.block_of_mut::<NiPSysEmitter>(mesh).unwrap();
+    em.set_initial_color([1.0, 0.5, 0.25, 1.0]);
+    em.set_radius_variation(0.1);
 
     let nif = reload_in_place(&mut nif);
     let g = nif.block_of::<NiPSysGravityModifier>(gravity).unwrap();
@@ -355,9 +355,9 @@ fn particle_controllers() {
     assert!(!c.set_visibility_interpolator(Some(data)) && c.set_visibility_interpolator(Some(visible)));
     assert!(!c.set_emitter_data(Some(birth)) && c.set_emitter_data(Some(data)));
     nif.block_of_mut::<NiPSysModifierCtlr>(ctlr).unwrap().set_modifier_name("Emitter");
-    let mut d = nif.block_of_mut::<NiPSysEmitterCtlrData>(data).unwrap();
-    assert!(d.as_mut().set_keys(&KeyGroup::new(Interpolation::Linear, vec![Key::new(0.0, 5.0), Key::new(1.0, 10.0)])));
-    d.as_mut().set_visibility_keys(&[Key::new(0.0, true), Key::new(2.0, false)]);
+    let d = nif.block_of_mut::<NiPSysEmitterCtlrData>(data).unwrap();
+    assert!(d.set_keys(&KeyGroup::new(Interpolation::Linear, vec![Key::new(0.0, 5.0), Key::new(1.0, 10.0)])));
+    d.set_visibility_keys(&[Key::new(0.0, true), Key::new(2.0, false)]);
 
     let nif = reload_in_place(&mut nif);
     let c = nif.view::<NiPSysEmitterCtlr>(ctlr).unwrap();
@@ -397,9 +397,9 @@ fn mesh_particle_data() {
     let data = nif.view::<NiParticleSystem>(system).unwrap().data().unwrap().index();
     let mut d = nif.edit::<NiMeshPSysData>(data).unwrap();
     assert!(!d.set_mesh_node(Some(system)) && d.set_mesh_node(Some(node)));
-    let mut b = nif.block_of_mut::<NiMeshPSysData>(data).unwrap();
-    b.as_mut().set_default_pool_size(8);
-    b.as_mut().set_generation_pool_sizes(&[4, 2]);
+    let b = nif.block_of_mut::<NiMeshPSysData>(data).unwrap();
+    b.set_default_pool_size(8);
+    b.set_generation_pool_sizes(&[4, 2]);
     let nif = reload_in_place(&mut nif);
     let d = nif.view::<NiMeshPSysData>(data).unwrap();
     assert_eq!(d.mesh_node().unwrap().index(), node);
@@ -427,17 +427,17 @@ fn old_versions() {
         let rotation = e.add_modifier::<NiPSysRotationModifier>("Rotation");
         let after = e.add_modifier::<NiPSysPositionModifier>("After");
         for &emitter in &emitters {
-            let mut b = nif.block_of_mut::<NiPSysEmitter>(emitter).unwrap();
-            b.as_mut().set_radius_variation(0.5);
-            b.as_mut().set_life_span(3.0);
-            b.as_mut().set_life_span_variation(1.0);
+            let b = nif.block_of_mut::<NiPSysEmitter>(emitter).unwrap();
+            b.set_radius_variation(0.5);
+            b.set_life_span(3.0);
+            b.set_life_span_variation(1.0);
         }
         nif.block_of_mut::<NiPSysSphereEmitter>(emitters[0]).unwrap().set_radius(7.0);
         nif.block_of_mut::<NiPSysMeshEmitter>(emitters[4]).unwrap().set_emission_axis(Vec3::new(0.0, 1.0, 0.0));
-        let mut r = nif.block_of_mut::<NiPSysRotationModifier>(rotation).unwrap();
-        r.as_mut().set_initial_speed(2.0);
-        r.as_mut().set_initial_angle(1.0);
-        r.as_mut().set_initial_axis(Vec3::new(0.0, 0.0, 1.0));
+        let r = nif.block_of_mut::<NiPSysRotationModifier>(rotation).unwrap();
+        r.set_initial_speed(2.0);
+        r.set_initial_angle(1.0);
+        r.set_initial_axis(Vec3::new(0.0, 0.0, 1.0));
         nif.block_of_mut::<NiMeshPSysData>(data).unwrap().set_default_pool_size(8);
         assert!(nif.edit::<NiMeshPSysData>(data).unwrap().set_mesh_node(Some(node)));
 
@@ -465,8 +465,8 @@ fn geometry_data_base() {
     let (mut nif, system) = with_system(NifVersion::OBLIVION);
     let data = nif.view::<NiParticleSystem>(system).unwrap().data().unwrap().index();
     nif.block_of_mut::<NiParticlesData>(data).unwrap().set_vertex_count(2);
-    let mut g = nif.block_of_mut::<NiGeometryData>(data).unwrap();
-    assert!(g.as_mut().set_vertices(&[Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0)]));
+    let g = nif.block_of_mut::<NiGeometryData>(data).unwrap();
+    assert!(g.set_vertices(&[Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0)]));
     let nif = reload_in_place(&mut nif);
     assert_eq!(nif.block_of::<NiGeometryData>(data).unwrap().vertices(), [Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0)]);
 }

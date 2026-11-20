@@ -54,8 +54,8 @@ fn face_gen_and_master_particle_system() {
 fn camera_screen_counts() {
     let mut nif = NifFile::create(NifVersion::OBLIVION);
     let camera = nif.add_camera("Camera", Transform::default(), None).unwrap();
-    let mut block = nif.block_of_mut::<NiCamera>(camera).unwrap();
-    block.as_mut().set_screen_polygon_count(3);
+    let block = nif.block_of_mut::<NiCamera>(camera).unwrap();
+    block.set_screen_polygon_count(3);
     block.set_screen_texture_count(4);
     let saved = reload(&mut nif);
     let camera = saved.block_of::<NiCamera>(camera).unwrap();
@@ -66,8 +66,8 @@ fn camera_screen_counts() {
 fn texture_effect_raw_fields() {
     let mut nif = upstream("TestNifFile_TextureEffect_MW");
     let effect = first::<NiTextureEffect>(&nif);
-    let mut block = nif.block_of_mut::<NiTextureEffect>(effect).unwrap();
-    block.as_mut().set_clipping_value(2);
+    let block = nif.block_of_mut::<NiTextureEffect>(effect).unwrap();
+    block.set_clipping_value(2);
     block.set_unknown(0x1234);
     let saved = reload(&mut nif);
     let effect = saved.block_of::<NiTextureEffect>(effect).unwrap();
@@ -80,13 +80,13 @@ fn skin_data_per_bone() {
     let data = first::<NiSkinData>(&nif);
     let bounds = BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0);
     let weights = [VertexWeight { vertex: 3, weight: 0.25 }, VertexWeight { vertex: 1, weight: 1.5 }];
-    let mut block = nif.block_of_mut::<NiSkinData>(data).unwrap();
-    assert!(block.as_mut().set_transform_skin_to_bone(1, transform(5.0)));
-    assert!(block.as_mut().set_bounds(1, bounds));
-    assert!(block.as_mut().set_vertex_weights(2, &weights));
-    assert!(!block.as_mut().set_transform_skin_to_bone(3, transform(5.0)));
-    assert!(!block.as_mut().set_bounds(3, bounds));
-    assert!(!block.as_mut().set_vertex_weights(3, &weights));
+    let block = nif.block_of_mut::<NiSkinData>(data).unwrap();
+    assert!(block.set_transform_skin_to_bone(1, transform(5.0)));
+    assert!(block.set_bounds(1, bounds));
+    assert!(block.set_vertex_weights(2, &weights));
+    assert!(!block.set_transform_skin_to_bone(3, transform(5.0)));
+    assert!(!block.set_bounds(3, bounds));
+    assert!(!block.set_vertex_weights(3, &weights));
     assert!(!block.set_vertex_weights(0, &vec![weights[0]; 65536]));
 
     let saved = reload(&mut nif);
@@ -103,10 +103,10 @@ fn skin_bone_data_per_bone() {
     let data = first::<BsSkinBoneData>(&nif);
     let bounds = BoundingSphere::new(Vec3::new(-1.0, 0.0, 1.0), 9.0);
     let count = nif.block_of::<BsSkinBoneData>(data).unwrap().bone_count();
-    let mut block = nif.block_of_mut::<BsSkinBoneData>(data).unwrap();
-    assert!(block.as_mut().set_transform_skin_to_bone(0, transform(7.0)));
-    assert!(block.as_mut().set_bounds(0, bounds));
-    assert!(!block.as_mut().set_transform_skin_to_bone(count, transform(7.0)));
+    let block = nif.block_of_mut::<BsSkinBoneData>(data).unwrap();
+    assert!(block.set_transform_skin_to_bone(0, transform(7.0)));
+    assert!(block.set_bounds(0, bounds));
+    assert!(!block.set_transform_skin_to_bone(count, transform(7.0)));
     assert!(!block.set_bounds(count, bounds));
     let saved = reload(&mut nif);
     let block = saved.block_of::<BsSkinBoneData>(data).unwrap();
@@ -132,8 +132,8 @@ fn skin_bones() {
 fn dismember_body_part() {
     let mut nif = upstream("TestNifFile_Skinned_SE");
     let skin = first::<BsDismemberSkinInstance>(&nif);
-    let mut block = nif.block_of_mut::<BsDismemberSkinInstance>(skin).unwrap();
-    assert!(block.as_mut().set_body_part(0, 42));
+    let block = nif.block_of_mut::<BsDismemberSkinInstance>(skin).unwrap();
+    assert!(block.set_body_part(0, 42));
     assert!(!block.set_body_part(1, 42));
     assert_eq!(reload(&mut nif).block_of::<BsDismemberSkinInstance>(skin).unwrap().body_part(0), Some(42));
 }
@@ -151,12 +151,12 @@ fn partition_details() {
     let desc = block.vertex_desc();
     let reversed: Vec<[u16; 3]> = block.true_triangles(0).unwrap().iter().map(|&[a, b, c]| [a, c, b]).collect();
 
-    let mut block = nif.block_of_mut::<NiSkinPartition>(part).unwrap();
-    assert!(block.as_mut().set_has_bone_indices(0, false));
-    assert!(!block.as_mut().set_has_faces(1, false));
-    assert!(block.as_mut().set_partition_vertex_desc(0, 0x1234));
-    assert!(!block.as_mut().set_true_triangles(0, &reversed[1..]));
-    assert!(block.as_mut().set_true_triangles(0, &reversed));
+    let block = nif.block_of_mut::<NiSkinPartition>(part).unwrap();
+    assert!(block.set_has_bone_indices(0, false));
+    assert!(!block.set_has_faces(1, false));
+    assert!(block.set_partition_vertex_desc(0, 0x1234));
+    assert!(!block.set_true_triangles(0, &reversed[1..]));
+    assert!(block.set_true_triangles(0, &reversed));
     block.set_vertex_desc(desc);
 
     let saved = reload(&mut nif);
@@ -170,8 +170,8 @@ fn partition_details() {
     // A partition no shape uses keeps its own.
     let skin = first::<BsDismemberSkinInstance>(&nif);
     assert!(nif.edit::<nifly::skin::NiSkinInstance>(skin).unwrap().set_partition(None));
-    let mut block = nif.block_of_mut::<NiSkinPartition>(part).unwrap();
-    block.as_mut().set_vertex_desc(0x5678);
+    let block = nif.block_of_mut::<NiSkinPartition>(part).unwrap();
+    block.set_vertex_desc(0x5678);
     assert!(block.set_partition_vertex_desc(0, 0x1234));
     let saved = reload(&mut nif);
     let block = saved.block_of::<NiSkinPartition>(part).unwrap();

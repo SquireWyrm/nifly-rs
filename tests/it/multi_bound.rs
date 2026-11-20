@@ -50,12 +50,12 @@ fn edits_round_trip() {
     let node = node_index(&nif);
     let rotation = Matrix3::from_rows(Vec3::Y, Vec3::Z, Vec3::X);
     let mut edit = nif.edit::<BsMultiBoundNode>(node).unwrap();
-    edit.block().set_culling_mode(CullingMode::AllFail);
+    edit.set_culling_mode(CullingMode::AllFail);
     let mut bound = edit.multi_bound().unwrap();
     let mut obb = bound.data().unwrap().into_cast::<BsMultiBoundObb>().unwrap();
-    obb.block().set_center(Vec3::new(1.0, 2.0, 3.0));
-    obb.block().set_size(Vec3::new(4.0, 5.0, 6.0));
-    obb.block().set_rotation(rotation);
+    obb.set_center(Vec3::new(1.0, 2.0, 3.0));
+    obb.set_size(Vec3::new(4.0, 5.0, 6.0));
+    obb.set_rotation(rotation);
 
     let saved = reload(&mut nif);
     let node = saved.blocks_of::<BsMultiBoundNode>().next().unwrap();

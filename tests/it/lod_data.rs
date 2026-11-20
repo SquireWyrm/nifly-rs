@@ -24,8 +24,8 @@ fn range_lod_data() {
     let (mut nif, node) = lod_file();
     let index = nif.edit::<NiLodNode>(node).unwrap().assign_lod_data::<NiRangeLodData>();
     let levels = [LodRange { near: 0.0, far: 1000.0 }, LodRange { near: 1000.0, far: 4000.0 }];
-    let mut d = nif.block_of_mut::<NiRangeLodData>(index).unwrap();
-    d.as_mut().set_center(Vec3::new(1.0, 2.0, 3.0));
+    let d = nif.block_of_mut::<NiRangeLodData>(index).unwrap();
+    d.set_center(Vec3::new(1.0, 2.0, 3.0));
     d.set_levels(&levels);
 
     let saved = reload(&mut nif);
@@ -42,9 +42,9 @@ fn screen_lod_data() {
     let bound = BoundingSphere { center: Vec3::new(1.0, 0.0, 0.0), radius: 5.0 };
     let world = BoundingSphere { center: Vec3::new(0.0, 2.0, 0.0), radius: 10.0 };
     let mut screen = edit.lod_data().unwrap().into_cast::<NiScreenLodData>().unwrap();
-    screen.block().set_bound(bound);
-    screen.block().set_world_bound(world);
-    screen.block().set_proportion_levels(&[0.5, 0.1]);
+    screen.set_bound(bound);
+    screen.set_world_bound(world);
+    screen.set_proportion_levels(&[0.5, 0.1]);
 
     let saved = reload(&mut nif);
     let d = data(&saved).cast::<NiScreenLodData>().unwrap();

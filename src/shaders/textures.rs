@@ -42,7 +42,7 @@ impl NiSourceTexture {
     }
 
     /// Sets the [pixel layout](Self::pixel_layout).
-    pub fn set_pixel_layout(self: Pin<&mut Self>, layout: PixelLayout) {
+    pub fn set_pixel_layout(&mut self, layout: PixelLayout) {
         ffi::set_source_pixel_layout(self.ffi_mut(), layout.into());
     }
 
@@ -53,7 +53,7 @@ impl NiSourceTexture {
     }
 
     /// Sets the [mipmap format](Self::mip_map_format).
-    pub fn set_mip_map_format(self: Pin<&mut Self>, format: MipMapFormat) {
+    pub fn set_mip_map_format(&mut self, format: MipMapFormat) {
         ffi::set_source_mip_map_format(self.ffi_mut(), format.into());
     }
 
@@ -64,7 +64,7 @@ impl NiSourceTexture {
     }
 
     /// Sets the [alpha format](Self::alpha_format).
-    pub fn set_alpha_format(self: Pin<&mut Self>, format: AlphaFormat) {
+    pub fn set_alpha_format(&mut self, format: AlphaFormat) {
         ffi::set_source_alpha_format(self.ffi_mut(), format.into());
     }
 }
@@ -78,7 +78,7 @@ impl TextureRenderData {
     }
 
     /// Sets the [pixel format](Self::pixel_format).
-    pub fn set_pixel_format(self: Pin<&mut Self>, format: PixelFormat) {
+    pub fn set_pixel_format(&mut self, format: PixelFormat) {
         ffi::set_render_data_pixel_format(self.ffi_mut(), format.into());
     }
 
@@ -105,7 +105,7 @@ impl TextureRenderData {
     }
 
     /// Sets the [tiling](Self::tiling).
-    pub fn set_tiling(self: Pin<&mut Self>, tiling: PixelTiling) {
+    pub fn set_tiling(&mut self, tiling: PixelTiling) {
         ffi::set_render_data_tiling(self.ffi_mut(), tiling.into());
     }
 
@@ -118,7 +118,7 @@ impl TextureRenderData {
     }
 
     /// Sets the [color masks](Self::color_masks).
-    pub fn set_color_masks(self: Pin<&mut Self>, masks: [u32; 4]) {
+    pub fn set_color_masks(&mut self, masks: [u32; 4]) {
         ffi::set_render_data_masks(self.ffi_mut(), &masks);
     }
 
@@ -132,10 +132,10 @@ impl TextureRenderData {
     }
 
     /// Sets the [channels](Self::channels).
-    pub fn set_channels(mut self: Pin<&mut Self>, channels: [PixelChannel; 4]) {
+    pub fn set_channels(&mut self, channels: [PixelChannel; 4]) {
         for (i, c) in channels.iter().enumerate() {
             let v = [c.component, c.representation, c.bits.into(), c.signed.into()];
-            ffi::set_render_data_channel(self.as_mut().ffi_mut(), i, &v);
+            ffi::set_render_data_channel(self.ffi_mut(), i, &v);
         }
     }
 
@@ -147,7 +147,7 @@ impl TextureRenderData {
     }
 
     /// Sets the [mipmaps](Self::mipmaps). Not checked against the pixel bytes.
-    pub fn set_mipmaps(self: Pin<&mut Self>, mipmaps: &[MipMap]) {
+    pub fn set_mipmaps(&mut self, mipmaps: &[MipMap]) {
         let flat: Vec<u32> = mipmaps.iter().flat_map(|m| [m.width, m.height, m.offset]).collect();
         ffi::set_render_data_mipmaps(self.ffi_mut(), &flat);
     }
@@ -195,14 +195,14 @@ macro_rules! pixel_faces {
 
         /// Replaces the [faces](Self::faces). Returns `false`, changing nothing, unless they all
         /// have the same length, below 2³².
-        pub fn set_faces(mut self: Pin<&mut Self>, faces: &[&[u8]]) -> bool {
+        pub fn set_faces(&mut self, faces: &[&[u8]]) -> bool {
             let len = faces.first().map_or(0, |f| f.len());
             if u32::try_from(len).is_err() || faces.iter().any(|f| f.len() != len) {
                 return false;
             }
-            ffi::$clear(self.as_mut().ffi_mut());
+            ffi::$clear(self.ffi_mut());
             for face in faces {
-                ffi::$push(self.as_mut().ffi_mut(), face);
+                ffi::$push(self.ffi_mut(), face);
             }
             true
         }
@@ -228,7 +228,7 @@ impl NiPersistentSrcTextureRendererData {
     }
 
     /// Sets the [platform](Self::platform).
-    pub fn set_platform(self: Pin<&mut Self>, platform: Platform) {
+    pub fn set_platform(&mut self, platform: Platform) {
         ffi::set_persistent_data_platform(self.ffi_mut(), platform.into());
     }
 
@@ -245,7 +245,7 @@ impl NiPalette {
         ffi::palette_has_alpha(&self.0)
     }
 
-    pub fn set_has_alpha(self: Pin<&mut Self>, value: bool) {
+    pub fn set_has_alpha(&mut self, value: bool) {
         ffi::set_palette_has_alpha(self.ffi_mut(), value);
     }
 
@@ -256,7 +256,7 @@ impl NiPalette {
 
     /// Sets the [colors](Self::colors). Returns `false`, changing nothing, unless there are 16 or
     /// 256.
-    pub fn set_colors(self: Pin<&mut Self>, colors: &[[u8; 4]]) -> bool {
+    pub fn set_colors(&mut self, colors: &[[u8; 4]]) -> bool {
         ffi::set_palette_colors(self.ffi_mut(), colors.as_flattened())
     }
 }

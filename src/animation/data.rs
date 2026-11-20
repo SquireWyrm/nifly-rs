@@ -51,7 +51,7 @@ impl NiKeyframeData {
 
     /// Replaces the [rotations](Self::rotations). Returns `false`, changing nothing, if a
     /// group has keys but no interpolation.
-    pub fn set_rotations(self: Pin<&mut Self>, rotations: &Rotations) -> bool {
+    pub fn set_rotations(&mut self, rotations: &Rotations) -> bool {
         match rotations {
             Rotations::Quaternion(keys) => ffi::set_keyframe_quaternion_keys(self.ffi_mut(), &group_to_ffi(keys)),
             Rotations::Xyz([x, y, z]) => {
@@ -90,19 +90,19 @@ impl NiUvData {
 
     /// Replaces the [u translations](Self::u_translations). Returns `false`, changing nothing,
     /// if the group has keys but no interpolation. The same goes for the other setters.
-    pub fn set_u_translations(self: Pin<&mut Self>, keys: &KeyGroup<f32>) -> bool {
+    pub fn set_u_translations(&mut self, keys: &KeyGroup<f32>) -> bool {
         ffi::set_uv_data_keys(self.ffi_mut(), 0, &group_to_ffi(keys))
     }
 
-    pub fn set_v_translations(self: Pin<&mut Self>, keys: &KeyGroup<f32>) -> bool {
+    pub fn set_v_translations(&mut self, keys: &KeyGroup<f32>) -> bool {
         ffi::set_uv_data_keys(self.ffi_mut(), 1, &group_to_ffi(keys))
     }
 
-    pub fn set_u_scales(self: Pin<&mut Self>, keys: &KeyGroup<f32>) -> bool {
+    pub fn set_u_scales(&mut self, keys: &KeyGroup<f32>) -> bool {
         ffi::set_uv_data_keys(self.ffi_mut(), 2, &group_to_ffi(keys))
     }
 
-    pub fn set_v_scales(self: Pin<&mut Self>, keys: &KeyGroup<f32>) -> bool {
+    pub fn set_v_scales(&mut self, keys: &KeyGroup<f32>) -> bool {
         ffi::set_uv_data_keys(self.ffi_mut(), 3, &group_to_ffi(keys))
     }
 }
@@ -113,7 +113,7 @@ impl NiVisData {
         ffi::vis_data_keys(&self.0).iter().map(key_from_ffi).collect()
     }
 
-    pub fn set_keys(self: Pin<&mut Self>, keys: &[Key<bool>]) {
+    pub fn set_keys(&mut self, keys: &[Key<bool>]) {
         let keys: Vec<_> = keys.iter().map(key_to_ffi).collect();
         ffi::set_vis_data_keys(self.ffi_mut(), &keys);
     }
@@ -150,7 +150,7 @@ impl NiMorphData {
         ffi::morph_relative_targets(&self.0) != 0
     }
 
-    pub fn set_relative_targets(self: Pin<&mut Self>, relative: bool) {
+    pub fn set_relative_targets(&mut self, relative: bool) {
         ffi::set_morph_relative_targets(self.ffi_mut(), relative.into());
     }
 
@@ -169,7 +169,7 @@ impl NiMorphData {
     /// Replaces the morphs, setting the [vertex count](Self::vertex_count) to their number of
     /// vectors. Returns `false`, changing nothing, unless every morph has the same number of
     /// vectors and its keys have an interpolation (if any).
-    pub fn set_morphs(self: Pin<&mut Self>, morphs: &[Morph]) -> bool {
+    pub fn set_morphs(&mut self, morphs: &[Morph]) -> bool {
         let morphs: Vec<_> = morphs
             .iter()
             .map(|m| ffi::MorphFfi {
@@ -189,7 +189,7 @@ impl NiBSplineData {
         ffi::bspline_float_points(&self.0)
     }
 
-    pub fn set_float_control_points(self: Pin<&mut Self>, points: &[f32]) {
+    pub fn set_float_control_points(&mut self, points: &[f32]) {
         ffi::set_bspline_float_points(self.ffi_mut(), points);
     }
 
@@ -199,7 +199,7 @@ impl NiBSplineData {
         ffi::bspline_short_points(&self.0)
     }
 
-    pub fn set_short_control_points(self: Pin<&mut Self>, points: &[i16]) {
+    pub fn set_short_control_points(&mut self, points: &[i16]) {
         ffi::set_bspline_short_points(self.ffi_mut(), points);
     }
 }
@@ -209,7 +209,7 @@ impl NiBSplineBasisData {
         ffi::bspline_basis_count(&self.0)
     }
 
-    pub fn set_control_point_count(self: Pin<&mut Self>, count: u32) {
+    pub fn set_control_point_count(&mut self, count: u32) {
         ffi::set_bspline_basis_count(self.ffi_mut(), count);
     }
 }
@@ -223,7 +223,7 @@ impl NiStringPalette {
 
     /// Replaces the [palette](Self::palette). A final zero byte is dropped from it and saved
     /// anyway. Offsets into the palette, such as a sequence's, aren't updated.
-    pub fn set_palette(self: Pin<&mut Self>, palette: impl AsRef<[u8]>) {
+    pub fn set_palette(&mut self, palette: impl AsRef<[u8]>) {
         ffi::set_string_palette(self.ffi_mut(), palette.as_ref());
     }
 

@@ -1,4 +1,4 @@
-use std::{io, pin::Pin};
+use std::io;
 
 use bstr::BString;
 use cxx::UniquePtr;
@@ -168,7 +168,7 @@ pub type Index = usize;
 ///   [`add_interpolator`](Self::add_interpolator), [`add_sequence`](Self::add_sequence).
 ///
 /// Methods returning a block have a `_mut` form taking a block [`Index`]. It returns
-/// `Pin<&mut T>`, for the block's setters, or an [`Edit`] where the shared form returns a
+/// `&mut T`, for the block's setters, or an [`Edit`] where the shared form returns a
 /// [`View`].
 ///
 /// Methods for one block, such as a shape's vertices, skin and shader, a node's children and
@@ -476,26 +476,26 @@ impl NifFile {
 
     /// Like [`block`](Self::block), but mutable. Use [`NiObject::downcast_mut`] or
     /// [`block_of_mut`](Self::block_of_mut) to reach a type's setters.
-    pub fn block_mut(&mut self, index: Index) -> Option<Pin<&mut NiObject>> {
+    pub fn block_mut(&mut self, index: Index) -> Option<&mut NiObject> {
         self.block_of_mut::<NiObject>(index)
     }
 
     /// The block at `index` as a mutable `T`, or `None` if there's no such block or it isn't a
-    /// `T`. Setters take `self: Pin<&mut Self>`; call [`Pin::as_mut`] to use it more than once.
+    /// `T`. A block's `&mut` also reaches its base types' setters.
     ///
     /// ```
     /// # use nifly::{file::NifFile, shaders::NiMaterialProperty};
     /// # let mut nif = NifFile::load(std::fs::File::open(
     /// #     "nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_MW.nif").unwrap(), None).unwrap();
     /// let (index, _) = nif.blocks_of::<NiMaterialProperty>().indexed().next().unwrap();
-    /// let mut material = nif.block_of_mut::<NiMaterialProperty>(index).unwrap();
-    /// material.as_mut().set_alpha(0.5);
-    /// material.as_mut().set_emissive([1.0, 0.5, 0.0]);
+    /// let material = nif.block_of_mut::<NiMaterialProperty>(index).unwrap();
+    /// material.set_alpha(0.5);
+    /// material.set_emissive([1.0, 0.5, 0.0]);
     /// assert_eq!(material.alpha(), 0.5);
     /// ```
-    pub fn block_of_mut<T: NiType>(&mut self, index: Index) -> Option<Pin<&mut T>> {
+    pub fn block_of_mut<T: NiType>(&mut self, index: Index) -> Option<&mut T> {
         // SAFETY: the block came from this file.
-        unsafe { self.pin_block(|f| f.block_of::<T>(index)) }
+        unsafe { self.find_mut(|f| f.block_of::<T>(index)) }
     }
 
     /// The block at `index` as a [`View`] of type `T`, or `None` if there's no such block or it
@@ -517,10 +517,10 @@ impl NifFile {
         Edit::new(self, index)
     }
 
-    /// Pins the object `find` finds in this file for mutation, borrowing the file mutably for as
+    /// Borrows the object `find` finds in this file for mutation, borrowing the file mutably for as
     /// long as the result lives. `None` if `find` finds nothing.
     ///
-    /// `find` only locates the object. The pinned reference is built from the pointer the
+    /// `find` only locates the object. The mutable reference is built from the pointer the
     /// `object_mut` shim returns for it through the file borrowed mutably, so no `&mut` is made
     /// from a shared reference.
     ///
@@ -528,7 +528,7 @@ impl NifFile {
     ///
     /// `find` must return a block owned by this file (or a base-class view of one), or an object
     /// inside one, such as a [`BsGeometry`](crate::geometry::BsGeometry)'s mesh data.
-    pub(crate) unsafe fn pin_block<T: NiType>(&mut self, find: impl FnOnce(&Self) -> Option<&T>) -> Option<Pin<&mut T>> {
+    pub(crate) unsafe fn find_mut<T: NiType>(&mut self, find: impl FnOnce(&Self) -> Option<&T>) -> Option<&mut T> {
         let found: *const T = find(self)?;
         // SAFETY: `found` is valid until the file is next borrowed mutably, below.
         let obj: *const objects_ffi::NiObject = unsafe { &*found }.as_object().as_ffi();
@@ -540,8 +540,8 @@ impl NifFile {
         let found = obj_mut.cast::<u8>().wrapping_offset(offset).cast::<T>();
         // SAFETY: `found` is the object `find` returned, reached through `&mut self`, which stays
         // borrowed for as long as the result lives, so no other reference to it exists. The
-        // object is only accessed through C++, and is pinned because Rust can't move C++ objects.
-        Some(unsafe { Pin::new_unchecked(&mut *found) })
+        // object is only accessed through C++, and never moves (see `objects::assert_zero_sized`).
+        Some(unsafe { &mut *found })
     }
 
     /// Iterates over every block in the file, in block order.
@@ -582,9 +582,9 @@ impl NifFile {
     }
 
     /// Like [`find_block_by_name`](Self::find_block_by_name), but mutable.
-    pub fn find_block_by_name_mut<T: NiType>(&mut self, name: impl AsRef<[u8]>) -> Option<Pin<&mut T>> {
+    pub fn find_block_by_name_mut<T: NiType>(&mut self, name: impl AsRef<[u8]>) -> Option<&mut T> {
         // SAFETY: the block came from this file.
-        unsafe { self.pin_block(|f| f.find_block_by_name::<T>(name)) }
+        unsafe { self.find_mut(|f| f.find_block_by_name::<T>(name)) }
     }
 
     /// Iterates over every block `obj` references directly: children, properties,

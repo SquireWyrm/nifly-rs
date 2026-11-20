@@ -51,7 +51,7 @@ fn target_and_body() {
     assert!(!edit.set_body(Some(shape)), "not a world object");
     assert!(edit.set_target(Some(shape)));
     let flags = CollisionObjectFlags::ACTIVE | CollisionObjectFlags::SYNC_ON_UPDATE | CollisionObjectFlags::from_bits_retain(1 << 15);
-    edit.block().upcast_mut().set_flags(flags);
+    edit.set_flags(flags);
     let saved = reload(&mut nif);
     let collision = saved.view::<BhkCollisionObject>(index).unwrap();
     assert_eq!(collision.target().unwrap().index(), shape);
@@ -89,7 +89,7 @@ fn systems() {
     nif.block_of_mut::<BhkRagdollSystem>(ragdoll).unwrap().set_data(&[9, 8]);
     let mut edit = nif.edit::<BhkNpCollisionObject>(collision).unwrap();
     let physics = edit.assign_body::<BhkPhysicsSystem, _>().unwrap();
-    edit.block().set_body_id(3);
+    edit.set_body_id(3);
     nif.block_of_mut::<BhkPhysicsSystem>(physics).unwrap().set_data(&[1, 2, 3, 4]);
 
     let saved = reload(&mut nif);
@@ -108,8 +108,8 @@ fn systems() {
 #[test]
 fn blend_gains() {
     let (mut nif, collision) = with_collision::<BhkBlendCollisionObject>(NifVersion::SKYRIM_SE);
-    let mut blend = nif.block_of_mut::<BhkBlendCollisionObject>(collision).unwrap();
-    blend.as_mut().set_heir_gain(0.5);
+    let blend = nif.block_of_mut::<BhkBlendCollisionObject>(collision).unwrap();
+    blend.set_heir_gain(0.5);
     blend.set_velocity_gain(0.25);
     let saved = reload(&mut nif);
     let blend = saved.block_of::<BhkBlendCollisionObject>(collision).unwrap();
@@ -122,9 +122,9 @@ fn collision_data() {
     let volume = BoundingVolume::Sphere(BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0));
     let data = nif.block_of::<NiCollisionData>(collision).unwrap();
     assert_eq!(data.bounding_volume(), None);
-    let mut data = nif.block_of_mut::<NiCollisionData>(collision).unwrap();
-    data.as_mut().set_propagation_mode(PropagationMode::Never);
-    data.as_mut().set_collision_mode(CollisionMode::UseAbv);
+    let data = nif.block_of_mut::<NiCollisionData>(collision).unwrap();
+    data.set_propagation_mode(PropagationMode::Never);
+    data.set_collision_mode(CollisionMode::UseAbv);
     data.set_bounding_volume(Some(&volume));
 
     let saved = reload(&mut nif);

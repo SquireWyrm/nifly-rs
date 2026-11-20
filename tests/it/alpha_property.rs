@@ -63,8 +63,8 @@ fn setters_round_trip() {
     let shape = nif.shapes().indices().next().unwrap();
     let mut alpha_shape = nif.edit::<nifly::geometry::NiShape>(shape).unwrap();
     let mut alpha_edit = alpha_shape.alpha_property().unwrap();
-    let mut alpha = alpha_edit.block();
-    alpha.as_mut().set_flags(AlphaFlags::from_bits(4845));
+    let alpha = &mut *alpha_edit;
+    alpha.set_flags(AlphaFlags::from_bits(4845));
     alpha.set_threshold(200);
     assert_eq!(alphas(&nif), [Some((6, 4845, 200))]);
 

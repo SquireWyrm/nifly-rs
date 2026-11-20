@@ -119,7 +119,7 @@ impl NiExtraData {
     }
 
     /// Sets the [name](Self::name).
-    pub fn set_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+    pub fn set_name(&mut self, name: impl AsRef<[u8]>) {
         ffi::set_extra_data_name(self.ffi_mut(), name.as_ref());
     }
 
@@ -130,7 +130,7 @@ impl NiExtraData {
     }
 
     /// Sets [`num_bytes`](Self::num_bytes).
-    pub fn set_num_bytes(self: Pin<&mut Self>, v: u32) {
+    pub fn set_num_bytes(&mut self, v: u32) {
         ffi::set_extra_data_num_bytes(self.ffi_mut(), v);
     }
 }
@@ -141,7 +141,7 @@ impl NiStringExtraData {
         ffi::string_extra_data_value(&self.0).as_bstr()
     }
 
-    pub fn set_value(self: Pin<&mut Self>, value: impl AsRef<[u8]>) {
+    pub fn set_value(&mut self, value: impl AsRef<[u8]>) {
         ffi::set_string_extra_data(self.ffi_mut(), value.as_ref());
     }
 }
@@ -151,7 +151,7 @@ impl NiIntegerExtraData {
         ffi::integer_extra_data_value(&self.0)
     }
 
-    pub fn set_value(self: Pin<&mut Self>, value: u32) {
+    pub fn set_value(&mut self, value: u32) {
         ffi::set_integer_extra_data(self.ffi_mut(), value);
     }
 }
@@ -162,8 +162,8 @@ impl BsxFlags {
         BsxBitflags::from_bits_retain(self.value())
     }
 
-    pub fn set_flags(self: Pin<&mut Self>, flags: BsxBitflags) {
-        self.upcast_mut().set_value(flags.bits());
+    pub fn set_flags(&mut self, flags: BsxBitflags) {
+        self.set_value(flags.bits());
     }
 }
 
@@ -196,7 +196,7 @@ impl NiFloatExtraData {
         ffi::float_extra_data_value(&self.0)
     }
 
-    pub fn set_value(self: Pin<&mut Self>, value: f32) {
+    pub fn set_value(&mut self, value: f32) {
         ffi::set_float_extra_data(self.ffi_mut(), value);
     }
 }
@@ -206,7 +206,7 @@ impl NiBooleanExtraData {
         ffi::boolean_extra_data_value(&self.0)
     }
 
-    pub fn set_value(self: Pin<&mut Self>, value: bool) {
+    pub fn set_value(&mut self, value: bool) {
         ffi::set_boolean_extra_data(self.ffi_mut(), value);
     }
 }
@@ -216,7 +216,7 @@ impl NiIntegersExtraData {
         ffi::integers_extra_data_values(&self.0)
     }
 
-    pub fn set_values(self: Pin<&mut Self>, values: &[u32]) {
+    pub fn set_values(&mut self, values: &[u32]) {
         ffi::set_integers_extra_data(self.ffi_mut(), values);
     }
 }
@@ -226,7 +226,7 @@ impl NiBinaryExtraData {
         ffi::binary_extra_data_bytes(&self.0)
     }
 
-    pub fn set_data(self: Pin<&mut Self>, data: &[u8]) {
+    pub fn set_data(&mut self, data: &[u8]) {
         ffi::set_binary_extra_data(self.ffi_mut(), data);
     }
 }
@@ -236,7 +236,7 @@ impl NiFloatsExtraData {
         ffi::floats_extra_data_values(&self.0)
     }
 
-    pub fn set_values(self: Pin<&mut Self>, values: &[f32]) {
+    pub fn set_values(&mut self, values: &[f32]) {
         ffi::set_floats_extra_data(self.ffi_mut(), values);
     }
 }
@@ -247,7 +247,7 @@ impl NiStringsExtraData {
         (0..ffi::strings_extra_data_len(&self.0)).map(|i| ffi::strings_extra_data_value(&self.0, i).as_bstr())
     }
 
-    pub fn set_values<S: AsRef<[u8]>>(self: Pin<&mut Self>, values: impl IntoIterator<Item = S>) {
+    pub fn set_values<S: AsRef<[u8]>>(&mut self, values: impl IntoIterator<Item = S>) {
         let (bytes, lengths) = joined(values);
         ffi::set_strings_extra_data(self.ffi_mut(), &bytes, &lengths);
     }

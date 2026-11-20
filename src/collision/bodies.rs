@@ -81,7 +81,7 @@ impl BhkRigidBody {
         CollisionResponse::try_from(ffi::rigid_body_collision_response(&self.0)).ok()
     }
 
-    pub fn set_collision_response(self: Pin<&mut Self>, response: CollisionResponse) {
+    pub fn set_collision_response(&mut self, response: CollisionResponse) {
         ffi::set_rigid_body_collision_response(self.ffi_mut(), response.into());
     }
 

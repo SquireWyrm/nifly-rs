@@ -26,7 +26,7 @@ impl BsValueNode {
         ValueNodeFlags::from_bits_retain(ffi::value_node_flags(&self.0))
     }
 
-    pub fn set_flags(self: Pin<&mut Self>, flags: ValueNodeFlags) {
+    pub fn set_flags(&mut self, flags: ValueNodeFlags) {
         ffi::set_value_node_flags(self.ffi_mut(), flags.bits());
     }
 }
@@ -51,7 +51,7 @@ impl BsMultiBoundNode {
     }
 
     /// Sets the [culling mode](Self::culling_mode).
-    pub fn set_culling_mode(self: Pin<&mut Self>, mode: CullingMode) {
+    pub fn set_culling_mode(&mut self, mode: CullingMode) {
         ffi::set_multi_bound_node_culling_mode(self.ffi_mut(), mode.into());
     }
 }
@@ -85,7 +85,7 @@ impl BsMultiBoundObb {
     }
 
     /// Sets the [rotation](Self::rotation).
-    pub fn set_rotation(self: Pin<&mut Self>, rotation: Matrix3) {
+    pub fn set_rotation(&mut self, rotation: Matrix3) {
         ffi::set_multi_bound_obb_rotation(self.ffi_mut(), &rotation.rows.map(Vec3::to_ffi));
     }
 }
@@ -182,16 +182,16 @@ impl BsDistantObjectInstancedNode {
     }
 
     /// Replaces instance `index`. Returns `false` if `index` is out of range.
-    pub fn set_instance(mut self: Pin<&mut Self>, index: usize, instance: &DistantObjectInstance) -> bool {
+    pub fn set_instance(&mut self, index: usize, instance: &DistantObjectInstance) -> bool {
         let (resource, transforms) = instance.ffi_parts();
-        ffi::set_distant_instance(self.as_mut().ffi_mut(), index, &resource, &transforms)
+        ffi::set_distant_instance(self.ffi_mut(), index, &resource, &transforms)
             && ffi::set_distant_instance_unknown(self.ffi_mut(), index, &instance.unknown_ffi())
     }
 
     /// Appends an instance.
-    pub fn push_instance(mut self: Pin<&mut Self>, instance: &DistantObjectInstance) {
+    pub fn push_instance(&mut self, instance: &DistantObjectInstance) {
         let (resource, transforms) = instance.ffi_parts();
-        ffi::push_distant_instance(self.as_mut().ffi_mut(), &resource, &transforms);
+        ffi::push_distant_instance(self.ffi_mut(), &resource, &transforms);
         let index = self.instance_count() - 1;
         ffi::set_distant_instance_unknown(self.ffi_mut(), index, &instance.unknown_ffi());
     }
@@ -204,13 +204,13 @@ impl BsDistantObjectInstancedNode {
 
     /// Sets [`texture_arrays_unknown`](Self::texture_arrays_unknown). Returns `false` if `slot`
     /// is out of range.
-    pub fn set_texture_arrays_unknown(self: Pin<&mut Self>, slot: usize, value: u8) -> bool {
+    pub fn set_texture_arrays_unknown(&mut self, slot: usize, value: u8) -> bool {
         ffi::set_distant_texture_arrays_unknown(self.ffi_mut(), slot, value)
     }
 
     /// Removes instance `index`, moving later ones down. Returns `false` if `index` is out of
     /// range.
-    pub fn remove_instance(self: Pin<&mut Self>, index: usize) -> bool {
+    pub fn remove_instance(&mut self, index: usize) -> bool {
         ffi::remove_distant_instance(self.ffi_mut(), index)
     }
 
@@ -230,7 +230,7 @@ impl BsDistantObjectInstancedNode {
 
     /// Replaces the [texture arrays](Self::texture_arrays) of slot `slot`. Returns `false`,
     /// changing nothing, if `slot` is out of range.
-    pub fn set_texture_arrays<A, P>(mut self: Pin<&mut Self>, slot: usize, arrays: impl IntoIterator<Item = A>) -> bool
+    pub fn set_texture_arrays<A, P>(&mut self, slot: usize, arrays: impl IntoIterator<Item = A>) -> bool
     where
         A: IntoIterator<Item = P>,
         P: AsRef<[u8]>,
@@ -238,11 +238,11 @@ impl BsDistantObjectInstancedNode {
         if slot >= 3 {
             return false;
         }
-        ffi::clear_distant_texture_arrays(self.as_mut().ffi_mut(), slot);
+        ffi::clear_distant_texture_arrays(self.ffi_mut(), slot);
         for array in arrays {
-            ffi::add_distant_texture_array(self.as_mut().ffi_mut(), slot);
+            ffi::add_distant_texture_array(self.ffi_mut(), slot);
             for path in array {
-                ffi::push_distant_texture_array_path(self.as_mut().ffi_mut(), slot, path.as_ref());
+                ffi::push_distant_texture_array_path(self.ffi_mut(), slot, path.as_ref());
             }
         }
         true
@@ -307,17 +307,17 @@ impl BsWeakReferenceNode {
 
     /// Replaces the [weak references](Self::weak_references). Returns `false`, changing nothing,
     /// if a material name contains a zero byte.
-    pub fn set_weak_references(mut self: Pin<&mut Self>, references: &[WeakReference]) -> bool {
+    pub fn set_weak_references(&mut self, references: &[WeakReference]) -> bool {
         if references.iter().flat_map(|r| &r.materials).any(|m| m.name.contains(&0)) {
             return false;
         }
-        ffi::clear_weak_refs(self.as_mut().ffi_mut());
+        ffi::clear_weak_refs(self.ffi_mut());
         for r in references {
             let transforms = matrices_to_ffi(&r.transforms);
-            ffi::push_weak_ref(self.as_mut().ffi_mut(), r.form_id, &r.resource.to_ffi(), &transforms);
+            ffi::push_weak_ref(self.ffi_mut(), r.form_id, &r.resource.to_ffi(), &transforms);
             for m in &r.materials {
                 let ids = [m.biome_form_id, m.dir_hash, m.file_hash];
-                ffi::push_weak_ref_material(self.as_mut().ffi_mut(), &ids, &m.name);
+                ffi::push_weak_ref_material(self.ffi_mut(), &ids, &m.name);
             }
         }
         true
@@ -340,12 +340,12 @@ impl BsWeakReferenceNode {
     }
 
     /// Replaces the [water references](Self::water_references).
-    pub fn set_water_references(mut self: Pin<&mut Self>, references: &[WaterReference]) {
-        ffi::resize_water_refs(self.as_mut().ffi_mut(), references.len());
+    pub fn set_water_references(&mut self, references: &[WaterReference]) {
+        ffi::resize_water_refs(self.ffi_mut(), references.len());
         for (i, r) in references.iter().enumerate() {
             let transform = matrices_to_ffi(&[r.transform]);
-            ffi::set_water_ref(self.as_mut().ffi_mut(), i, &transform, &r.resource.to_ffi(), &r.material);
-            ffi::set_water_ref_unknown(self.as_mut().ffi_mut(), i, r.unknown);
+            ffi::set_water_ref(self.ffi_mut(), i, &transform, &r.resource.to_ffi(), &r.material);
+            ffi::set_water_ref_unknown(self.ffi_mut(), i, r.unknown);
         }
     }
 
@@ -374,7 +374,7 @@ impl BsOrderedNode {
         out
     }
 
-    pub fn set_alpha_sort_bound(self: Pin<&mut Self>, bound: [f32; 4]) {
+    pub fn set_alpha_sort_bound(&mut self, bound: [f32; 4]) {
         ffi::set_ordered_node_alpha_sort_bound(self.ffi_mut(), &bound);
     }
 

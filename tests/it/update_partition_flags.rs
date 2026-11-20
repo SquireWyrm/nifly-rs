@@ -102,8 +102,8 @@ fn partition_accessors_out_of_range() {
         assert_eq!(d.flags(index), None);
         assert_eq!(d.body_part(index), None);
     }
-    let mut d = nif.block_of_mut::<BsDismemberSkinInstance>(inst).unwrap();
-    assert!(!d.as_mut().set_flags(1, PartitionFlags::default()));
+    let d = nif.block_of_mut::<BsDismemberSkinInstance>(inst).unwrap();
+    assert!(!d.set_flags(1, PartitionFlags::default()));
     assert!(!d.set_flags(usize::MAX, PartitionFlags::default()));
     assert_eq!(partitions(&nif, inst), [(257, 32)]);
 }

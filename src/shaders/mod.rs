@@ -33,7 +33,7 @@ macro_rules! fields {
         }
 
         #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: $ty) {
+        pub fn $set(&mut self, value: $ty) {
             ffi::$ffi_set(self.ffi_mut(), ($from)(value));
         }
     )*};
@@ -190,16 +190,16 @@ impl BsShaderTextureSet {
     }
 
     /// Sets the path in slot `index`. Returns `false`, changing nothing, if it's out of range.
-    pub fn set_path(self: Pin<&mut Self>, index: usize, path: impl AsRef<[u8]>) -> bool {
+    pub fn set_path(&mut self, index: usize, path: impl AsRef<[u8]>) -> bool {
         ffi::set_texture_set_path(self.ffi_mut(), index, path.as_ref())
     }
 
     /// Replaces every slot, changing the number of slots to the number of paths.
-    pub fn set_paths<P: AsRef<[u8]>>(mut self: Pin<&mut Self>, paths: impl IntoIterator<Item = P>) {
+    pub fn set_paths<P: AsRef<[u8]>>(&mut self, paths: impl IntoIterator<Item = P>) {
         let paths: Vec<P> = paths.into_iter().collect();
-        ffi::set_texture_set_len(self.as_mut().ffi_mut(), paths.len());
+        ffi::set_texture_set_len(self.ffi_mut(), paths.len());
         for (i, path) in paths.iter().enumerate() {
-            ffi::set_texture_set_path(self.as_mut().ffi_mut(), i, path.as_ref());
+            ffi::set_texture_set_path(self.ffi_mut(), i, path.as_ref());
         }
     }
 }
@@ -231,11 +231,11 @@ impl BsShaderProperty {
         ffi::shader_flags_2(&self.0)
     }
 
-    pub fn set_raw_flags_1(self: Pin<&mut Self>, flags: u32) {
+    pub fn set_raw_flags_1(&mut self, flags: u32) {
         ffi::set_shader_flags_1(self.ffi_mut(), flags);
     }
 
-    pub fn set_raw_flags_2(self: Pin<&mut Self>, flags: u32) {
+    pub fn set_raw_flags_2(&mut self, flags: u32) {
         ffi::set_shader_flags_2(self.ffi_mut(), flags);
     }
 
@@ -252,12 +252,12 @@ impl BsShaderProperty {
     }
 
     /// Sets the [first shader flags](Self::flags_1) from a game's flags.
-    pub fn set_flags_1<F: ShaderFlags1>(self: Pin<&mut Self>, flags: F) {
+    pub fn set_flags_1<F: ShaderFlags1>(&mut self, flags: F) {
         self.set_raw_flags_1(flags.bits());
     }
 
     /// Sets the [second shader flags](Self::flags_2) from a game's flags.
-    pub fn set_flags_2<F: ShaderFlags2>(self: Pin<&mut Self>, flags: F) {
+    pub fn set_flags_2<F: ShaderFlags2>(&mut self, flags: F) {
         self.set_raw_flags_2(flags.bits());
     }
 
@@ -274,11 +274,11 @@ impl BsShaderProperty {
         ffi::shader_crc_flags(&self.0, 1)
     }
 
-    pub fn set_crc_flags_1(self: Pin<&mut Self>, flags: &[u32]) {
+    pub fn set_crc_flags_1(&mut self, flags: &[u32]) {
         ffi::set_shader_crc_flags(self.ffi_mut(), 0, flags);
     }
 
-    pub fn set_crc_flags_2(self: Pin<&mut Self>, flags: &[u32]) {
+    pub fn set_crc_flags_2(&mut self, flags: &[u32]) {
         ffi::set_shader_crc_flags(self.ffi_mut(), 1, flags);
     }
 
@@ -302,7 +302,7 @@ impl BsShaderProperty {
     }
 
     /// Sets the [legacy shader type](Self::legacy_shader_type).
-    pub fn set_legacy_shader_type(self: Pin<&mut Self>, shader_type: LegacyShaderType) {
+    pub fn set_legacy_shader_type(&mut self, shader_type: LegacyShaderType) {
         ffi::set_shader_legacy_type(self.ffi_mut(), shader_type.into());
     }
 }
@@ -363,7 +363,7 @@ macro_rules! texture_paths {
         }
 
         #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, path: impl AsRef<[u8]>) {
+        pub fn $set(&mut self, path: impl AsRef<[u8]>) {
             ffi::$ffi_set(self.ffi_mut(), path.as_ref());
         }
     )*};

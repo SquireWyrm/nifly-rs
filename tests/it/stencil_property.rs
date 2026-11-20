@@ -74,15 +74,15 @@ fn setters_round_trip() {
     let shape = nif.shapes().indexed().find(|(_, s)| s.name() == "Tri EditorMarker_box_02").unwrap().0;
     let mut s_shape = nif.edit::<nifly::geometry::NiShape>(shape).unwrap();
     let mut s_edit = s_shape.stencil_property().unwrap();
-    let mut s = s_edit.block();
-    s.as_mut().set_enabled(false);
-    s.as_mut().set_function(StencilTest::Always);
-    s.as_mut().set_reference(1);
-    s.as_mut().set_mask(0xF0);
-    s.as_mut().set_fail_action(StencilAction::Invert);
-    s.as_mut().set_z_fail_action(StencilAction::Decrement);
-    s.as_mut().set_pass_action(StencilAction::Keep);
-    s.as_mut().set_draw_mode(DrawMode::Both);
+    let s = &mut *s_edit;
+    s.set_enabled(false);
+    s.set_function(StencilTest::Always);
+    s.set_reference(1);
+    s.set_mask(0xF0);
+    s.set_fail_action(StencilAction::Invert);
+    s.set_z_fail_action(StencilAction::Decrement);
+    s.set_pass_action(StencilAction::Keep);
+    s.set_draw_mode(DrawMode::Both);
     s.set_flags(StencilFlags::from_bits(1));
     let expected = (
         false,

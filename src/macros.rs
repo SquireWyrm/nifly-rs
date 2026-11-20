@@ -2,8 +2,7 @@
 ///
 /// For each `Name(FfiType): Parent => upcast_fn, downcast_fn;` this generates:
 /// - `#[repr(transparent)] pub struct Name(ffi::FfiType)` with a crate-private `from_ffi`
-/// - `Deref<Target = Parent>` through `ffi::upcast_fn`
-/// - `upcast_mut`, the `Deref` for `Pin<&mut Name>`
+/// - `Deref<Target = Parent>` through `ffi::upcast_fn`, and `DerefMut` to the same object
 /// - `NiType`, so `NiObject::downcast::<Name>()` works, through `ffi::downcast_fn`
 ///
 /// `ffi` is the bridge module the types and shims live in.
@@ -24,26 +23,26 @@ macro_rules! ni_types {
 
             /// The pinned C++ object, for calling mutating shims.
             #[allow(dead_code)]
-            pub(crate) fn ffi_mut(self: ::std::pin::Pin<&mut Self>) -> ::std::pin::Pin<&mut $ffi_mod::$ffi> {
-                // SAFETY: structural pin projection onto the only field of a
-                // `repr(transparent)` struct.
-                unsafe { self.map_unchecked_mut(|s| &mut s.0) }
-            }
-
-            #[doc = concat!(
-                "This block as its direct base type, [`", stringify!($parent), "`], for that type's ",
-                "setters. Chain to reach further bases."
-            )]
-            pub fn upcast_mut(self: ::std::pin::Pin<&mut Self>) -> ::std::pin::Pin<&mut $parent> {
-                $crate::objects::upcast_mut(self)
+            pub(crate) fn ffi_mut(&mut self) -> ::std::pin::Pin<&mut $ffi_mod::$ffi> {
+                // SAFETY: the C++ object never moves: the wrapper is zero-sized, so moving
+                // or swapping it through `&mut self` copies nothing.
+                unsafe { ::std::pin::Pin::new_unchecked(&mut self.0) }
             }
         }
+
+        const _: () = $crate::objects::assert_zero_sized::<$name>();
 
         impl ::std::ops::Deref for $name {
             type Target = $parent;
 
             fn deref(&self) -> &$parent {
                 <$parent>::from_ffi($ffi_mod::$upcast(&self.0))
+            }
+        }
+
+        impl ::std::ops::DerefMut for $name {
+            fn deref_mut(&mut self) -> &mut $parent {
+                $crate::objects::upcast_mut(self)
             }
         }
 
@@ -76,7 +75,7 @@ macro_rules! fields {
         }
 
         #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: $ty) {
+        pub fn $set(&mut self, value: $ty) {
             ffi::$ffi_set(self.ffi_mut(), ($from)(value));
         }
     )*};
@@ -91,7 +90,7 @@ macro_rules! enum_field {
         }
 
         #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: $ty) {
+        pub fn $set(&mut self, value: $ty) {
             ffi::$ffi_set(self.ffi_mut(), value.into());
         }
     };

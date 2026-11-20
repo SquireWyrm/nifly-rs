@@ -36,12 +36,12 @@ fn morrowind_map_fields() {
     let mut nif = upstream("TestNifFile_Skinned_MW");
     let index = first(&nif);
     assert!(property(&nif, index).has_map(TextureMap::Base));
-    let mut p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
-    p.as_mut().set_raw_flags(3);
-    assert!(p.as_mut().set_map_ps2(TextureMap::Base, [-3, 5]));
-    assert!(p.as_mut().set_map_unknown(TextureMap::Base, 9));
-    assert!(p.as_mut().set_map_transform(TextureMap::Base, Some(TRANSFORM)));
-    assert!(!p.as_mut().set_map_unknown(TextureMap::Glow, 9), "no glow map");
+    let p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
+    p.set_raw_flags(3);
+    assert!(p.set_map_ps2(TextureMap::Base, [-3, 5]));
+    assert!(p.set_map_unknown(TextureMap::Base, 9));
+    assert!(p.set_map_transform(TextureMap::Base, Some(TRANSFORM)));
+    assert!(!p.set_map_unknown(TextureMap::Glow, 9), "no glow map");
     assert_eq!(p.map_unknown(TextureMap::Glow), None);
 
     let saved = reload(&mut nif);
@@ -57,12 +57,12 @@ fn oblivion_map_fields() {
     let index = first(&nif);
     let bump = nif.add_source_texture(r"textures\bump.dds");
     assert!(nif.edit::<NiTexturingProperty>(index).unwrap().set_map_source(TextureMap::Bump, Some(bump)));
-    let mut p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
-    assert!(p.as_mut().set_map_transform(TextureMap::Base, Some(TRANSFORM)));
-    assert!(p.as_mut().set_map_clamp_mode(TextureMap::Bump, ClampMode::ClampBoth));
-    p.as_mut().set_bump_luma_scale(0.5);
-    p.as_mut().set_bump_luma_offset(0.25);
-    p.as_mut().set_bump_matrix([1.0, 2.0, 3.0, 4.0]);
+    let p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
+    assert!(p.set_map_transform(TextureMap::Base, Some(TRANSFORM)));
+    assert!(p.set_map_clamp_mode(TextureMap::Bump, ClampMode::ClampBoth));
+    p.set_bump_luma_scale(0.5);
+    p.set_bump_luma_offset(0.25);
+    p.set_bump_matrix([1.0, 2.0, 3.0, 4.0]);
     assert!(p.set_map_ps2(TextureMap::Base, [-3, 5]));
 
     let saved = reload(&mut nif);
@@ -82,11 +82,11 @@ fn fallout_3_fields() {
     let (mut nif, index) = fallout_3();
     let parallax = nif.add_source_texture(r"textures\parallax.dds");
     assert!(nif.edit::<NiTexturingProperty>(index).unwrap().set_map_source(TextureMap::Parallax, Some(parallax)));
-    let mut p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
-    p.as_mut().set_raw_flags(0x5);
-    p.as_mut().set_parallax_offset(0.125);
-    assert!(p.as_mut().set_map_raw_flags(TextureMap::Base, 0x3201));
-    assert!(p.as_mut().set_map_max_anisotropy(TextureMap::Base, 4));
+    let p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
+    p.set_raw_flags(0x5);
+    p.set_parallax_offset(0.125);
+    assert!(p.set_map_raw_flags(TextureMap::Base, 0x3201));
+    assert!(p.set_map_max_anisotropy(TextureMap::Base, 4));
     p.set_map_uv_set(TextureMap::Base, 3);
 
     let saved = reload(&mut nif);
@@ -115,9 +115,9 @@ fn shader_maps() {
     assert!(!edit.set_map_source(MapSlot::Shader(1), Some(0)), "not a source texture");
     assert!(edit.set_map_source(MapSlot::Shader(1), Some(source)));
 
-    let mut p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
-    assert!(!p.as_mut().set_shader_map_id(0, 5), "unused");
-    assert!(p.as_mut().set_shader_map_id(1, 5));
+    let p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
+    assert!(!p.set_shader_map_id(0, 5), "unused");
+    assert!(p.set_shader_map_id(1, 5));
     assert!(p.set_map_uv_set(MapSlot::Shader(1), 2));
 
     let saved = reload(&mut nif);

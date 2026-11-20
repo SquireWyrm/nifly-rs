@@ -49,7 +49,7 @@ macro_rules! fields {
         }
 
         #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: $ty) {
+        pub fn $set(&mut self, value: $ty) {
             ffi::$ffi_set(self.ffi_mut(), ($from)(value));
         }
     )*};
@@ -81,7 +81,7 @@ impl NiDynamicEffect {
     }
 
     /// Sets [`affected_node_pointers`](Self::affected_node_pointers).
-    pub fn set_affected_node_pointers(self: Pin<&mut Self>, pointers: &[u32]) {
+    pub fn set_affected_node_pointers(&mut self, pointers: &[u32]) {
         ffi::set_effect_affected_node_pointers(self.ffi_mut(), pointers);
     }
 }
@@ -132,7 +132,7 @@ impl NiTextureEffect {
     }
 
     /// Sets the [projection matrix](Self::projection_matrix).
-    pub fn set_projection_matrix(self: Pin<&mut Self>, matrix: Matrix3) {
+    pub fn set_projection_matrix(&mut self, matrix: Matrix3) {
         ffi::set_texture_effect_matrix(self.ffi_mut(), &matrix.rows.map(Vec3::to_ffi));
     }
 
@@ -158,7 +158,7 @@ impl NiTextureEffect {
     }
 
     /// Sets the [filter mode](Self::filter_mode).
-    pub fn set_filter_mode(self: Pin<&mut Self>, mode: FilterMode) {
+    pub fn set_filter_mode(&mut self, mode: FilterMode) {
         ffi::set_texture_effect_filtering(self.ffi_mut(), mode.into());
     }
 
@@ -168,7 +168,7 @@ impl NiTextureEffect {
     }
 
     /// Sets the [clamp mode](Self::clamp_mode).
-    pub fn set_clamp_mode(self: Pin<&mut Self>, mode: ClampMode) {
+    pub fn set_clamp_mode(&mut self, mode: ClampMode) {
         ffi::set_texture_effect_clamping(self.ffi_mut(), mode.into());
     }
 
@@ -178,7 +178,7 @@ impl NiTextureEffect {
     }
 
     /// Sets the [effect type](Self::effect_type).
-    pub fn set_effect_type(self: Pin<&mut Self>, effect_type: EffectType) {
+    pub fn set_effect_type(&mut self, effect_type: EffectType) {
         ffi::set_texture_effect_type(self.ffi_mut(), effect_type.into());
     }
 
@@ -189,7 +189,7 @@ impl NiTextureEffect {
     }
 
     /// Sets the [coordinate generation](Self::coordinate_generation).
-    pub fn set_coordinate_generation(self: Pin<&mut Self>, generation: CoordinateGeneration) {
+    pub fn set_coordinate_generation(&mut self, generation: CoordinateGeneration) {
         ffi::set_texture_effect_coordinates(self.ffi_mut(), generation.into());
     }
 
@@ -202,8 +202,8 @@ impl NiTextureEffect {
     }
 
     /// Sets the [clipping plane](Self::clipping_plane).
-    pub fn set_clipping_plane(mut self: Pin<&mut Self>, plane: Plane) {
-        ffi::set_texture_effect_plane_normal(self.as_mut().ffi_mut(), plane.normal.to_ffi());
+    pub fn set_clipping_plane(&mut self, plane: Plane) {
+        ffi::set_texture_effect_plane_normal(self.ffi_mut(), plane.normal.to_ffi());
         ffi::set_texture_effect_plane_constant(self.ffi_mut(), plane.constant);
     }
 }
@@ -300,7 +300,7 @@ impl<T: NiType> Edit<'_, T> {
     /// let light = nif.edit::<NiNode>(0).unwrap().add_effect::<NiPointLight, _>();
     /// nif.edit::<NiPointLight>(light).unwrap().set_parent(Some(0));
     /// let mut edit = nif.edit::<NiPointLight>(light).unwrap();
-    /// edit.block().upcast_mut().set_diffuse_color([1.0, 0.8, 0.6]);
+    /// edit.set_diffuse_color([1.0, 0.8, 0.6]);
     /// ```
     pub fn add_effect<E: NewEffect, I>(&mut self) -> Index
     where

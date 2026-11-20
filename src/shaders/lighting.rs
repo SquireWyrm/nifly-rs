@@ -38,7 +38,7 @@ impl BsLightingShaderProperty {
     /// Types before `Parallax` save correctly. A shader with a name (a material file path)
     /// isn't affected: it stores neither its type nor its other fields, which come from the
     /// material file.
-    pub fn set_shader_type(self: Pin<&mut Self>, shader_type: LightingShaderType) {
+    pub fn set_shader_type(&mut self, shader_type: LightingShaderType) {
         ffi::set_lighting_shader_type(self.ffi_mut(), shader_type.into());
     }
 
@@ -48,7 +48,7 @@ impl BsLightingShaderProperty {
     }
 
     /// Sets the [texture clamp mode](Self::texture_clamp_mode).
-    pub fn set_texture_clamp_mode(self: Pin<&mut Self>, mode: ClampMode) {
+    pub fn set_texture_clamp_mode(&mut self, mode: ClampMode) {
         ffi::set_lighting_texture_clamp_mode(self.ffi_mut(), mode.into());
     }
 
@@ -213,7 +213,7 @@ impl BsLightingShaderProperty {
     }
 
     /// Sets the [wet material](Self::wet_material).
-    pub fn set_wet_material(self: Pin<&mut Self>, path: impl AsRef<[u8]>) {
+    pub fn set_wet_material(&mut self, path: impl AsRef<[u8]>) {
         ffi::set_lighting_root_material(self.ffi_mut(), path.as_ref());
     }
 
@@ -229,13 +229,13 @@ impl BsLightingShaderProperty {
     }
 
     /// Turns translucency on with these settings, or off with `None`.
-    pub fn set_translucency(mut self: Pin<&mut Self>, translucency: Option<Translucency>) {
-        ffi::set_lighting_translucency(self.as_mut().ffi_mut(), translucency.is_some());
+    pub fn set_translucency(&mut self, translucency: Option<Translucency>) {
+        ffi::set_lighting_translucency(self.ffi_mut(), translucency.is_some());
         if let Some(t) = translucency {
-            ffi::set_lighting_subsurface_color(self.as_mut().ffi_mut(), rgb_to_ffi(t.subsurface_color));
-            ffi::set_lighting_transmissive_scale(self.as_mut().ffi_mut(), t.transmissive_scale);
-            ffi::set_lighting_turbulence(self.as_mut().ffi_mut(), t.turbulence);
-            ffi::set_lighting_thick_object(self.as_mut().ffi_mut(), t.thick_object);
+            ffi::set_lighting_subsurface_color(self.ffi_mut(), rgb_to_ffi(t.subsurface_color));
+            ffi::set_lighting_transmissive_scale(self.ffi_mut(), t.transmissive_scale);
+            ffi::set_lighting_turbulence(self.ffi_mut(), t.turbulence);
+            ffi::set_lighting_thick_object(self.ffi_mut(), t.thick_object);
             ffi::set_lighting_mix_albedo(self.ffi_mut(), t.mix_albedo);
         }
     }
@@ -252,16 +252,16 @@ impl BsLightingShaderProperty {
     }
 
     /// Replaces the [texture arrays](Self::texture_arrays).
-    pub fn set_texture_arrays<A, P>(mut self: Pin<&mut Self>, arrays: impl IntoIterator<Item = A>)
+    pub fn set_texture_arrays<A, P>(&mut self, arrays: impl IntoIterator<Item = A>)
     where
         A: IntoIterator<Item = P>,
         P: AsRef<[u8]>,
     {
-        ffi::clear_lighting_texture_arrays(self.as_mut().ffi_mut());
+        ffi::clear_lighting_texture_arrays(self.ffi_mut());
         for array in arrays {
-            ffi::add_lighting_texture_array(self.as_mut().ffi_mut());
+            ffi::add_lighting_texture_array(self.ffi_mut());
             for path in array {
-                ffi::push_lighting_texture_array_path(self.as_mut().ffi_mut(), path.as_ref());
+                ffi::push_lighting_texture_array_path(self.ffi_mut(), path.as_ref());
             }
         }
     }

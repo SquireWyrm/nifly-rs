@@ -57,16 +57,16 @@ fn edit_sets_and_casts() {
     let mut nif = load();
     let index = nif.blocks_of::<NiMaterialProperty>().indices().next().unwrap();
     let mut edit = nif.edit::<NiMaterialProperty>(index).unwrap();
-    edit.block().set_alpha(0.25);
-    edit.block().set_glossiness(3.0);
+    edit.set_alpha(0.25);
+    edit.set_glossiness(3.0);
     assert_eq!(edit.alpha(), 0.25);
     assert_eq!(edit.index(), index);
     // Derefs to the block, the same one the view has, and sees each change.
     assert_eq!((edit.alpha(), edit.glossiness()), (0.25, 3.0));
     assert!(std::ptr::eq(&*edit, edit.view().get()));
-    edit.block().set_alpha(0.5);
+    edit.set_alpha(0.5);
     assert_eq!(edit.alpha(), 0.5);
-    edit.block().set_alpha(0.25);
+    edit.set_alpha(0.25);
 
     // A failed cast gives the edit back.
     let edit = edit.into_cast::<NiNode>().unwrap_err();

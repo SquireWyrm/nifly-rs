@@ -28,7 +28,7 @@ fn rename_shape_and_reach_setter_by_upcast() {
     let mut nif = load("Bones");
     // Block 4 is the NiTriShape "Limb".
     let shape = nif.block_of_mut::<NiShape>(4).unwrap();
-    shape.upcast_mut().upcast_mut().set_name("Arm");
+    shape.set_name("Arm");
     assert_eq!(nif.block_of::<NiShape>(4).unwrap().name(), "Arm");
     // Blocks without a name can't be reached as NiObjectNet.
     assert!(nif.block_of_mut::<NiObjectNet>(nif.blocks().count()).is_none());

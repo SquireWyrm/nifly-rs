@@ -28,8 +28,8 @@ fn bounds() {
     let mut nif = upstream("TestNifFile_FO76");
     let index = first(&nif);
     let sphere = BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0);
-    let mut block = nif.block_of_mut::<BsTriShape>(index).unwrap();
-    block.as_mut().set_bounds(sphere);
+    let block = nif.block_of_mut::<BsTriShape>(index).unwrap();
+    block.set_bounds(sphere);
     block.set_bound_min_max([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
     let saved = reload(&mut nif);
     assert_eq!(shape(&saved, index).bounds(), sphere);
@@ -90,11 +90,11 @@ fn particle_data() {
         normals: vec![Vec3::new(0.0, 0.0, 1.0); n],
         triangles: triangles.clone(),
     };
-    let mut block = nif.block_of_mut::<BsTriShape>(index).unwrap();
+    let block = nif.block_of_mut::<BsTriShape>(index).unwrap();
     let mut bad = data.clone();
     bad.triangles[0][0] = n as u16;
-    assert!(!block.as_mut().set_particle_data(Some(&bad)));
-    assert!(!block.as_mut().set_particle_data(Some(&ParticleData { triangles: vec![], ..data.clone() })));
+    assert!(!block.set_particle_data(Some(&bad)));
+    assert!(!block.set_particle_data(Some(&ParticleData { triangles: vec![], ..data.clone() })));
     assert!(block.set_particle_data(Some(&data)));
 
     let mut saved = reload(&mut nif);
@@ -116,8 +116,8 @@ fn sse_segments() {
         GeometrySegment { raw_flags: 0, index: 0, triangle_count: 1 },
         GeometrySegment { raw_flags: 2, index: 3, triangle_count: count - 1 },
     ];
-    let mut block = nif.block_of_mut::<BsSubIndexTriShape>(index).unwrap();
-    assert!(!block.as_mut().set_sse_segments(&[GeometrySegment { raw_flags: 0, index: 3, triangle_count: count }]));
+    let block = nif.block_of_mut::<BsSubIndexTriShape>(index).unwrap();
+    assert!(!block.set_sse_segments(&[GeometrySegment { raw_flags: 0, index: 3, triangle_count: count }]));
     assert!(block.set_sse_segments(&segments));
     let saved = reload(&mut nif);
     assert_eq!(saved.block_of::<BsSubIndexTriShape>(index).unwrap().sse_segments(), segments);

@@ -50,31 +50,31 @@ impl NiMaterialProperty {
         ffi::material_has_specular(&self.0)
     }
 
-    pub fn set_ambient(self: Pin<&mut Self>, color: [f32; 3]) {
+    pub fn set_ambient(&mut self, color: [f32; 3]) {
         ffi::set_material_ambient(self.ffi_mut(), rgb_to_ffi(color));
     }
 
-    pub fn set_diffuse(self: Pin<&mut Self>, color: [f32; 3]) {
+    pub fn set_diffuse(&mut self, color: [f32; 3]) {
         ffi::set_material_diffuse(self.ffi_mut(), rgb_to_ffi(color));
     }
 
-    pub fn set_specular(self: Pin<&mut Self>, color: [f32; 3]) {
+    pub fn set_specular(&mut self, color: [f32; 3]) {
         ffi::set_material_specular(self.ffi_mut(), rgb_to_ffi(color));
     }
 
-    pub fn set_emissive(self: Pin<&mut Self>, color: [f32; 3]) {
+    pub fn set_emissive(&mut self, color: [f32; 3]) {
         ffi::set_material_emissive(self.ffi_mut(), rgb_to_ffi(color));
     }
 
-    pub fn set_glossiness(self: Pin<&mut Self>, glossiness: f32) {
+    pub fn set_glossiness(&mut self, glossiness: f32) {
         ffi::set_material_glossiness(self.ffi_mut(), glossiness);
     }
 
-    pub fn set_alpha(self: Pin<&mut Self>, alpha: f32) {
+    pub fn set_alpha(&mut self, alpha: f32) {
         ffi::set_material_alpha(self.ffi_mut(), alpha);
     }
 
-    pub fn set_emissive_multiple(self: Pin<&mut Self>, multiple: f32) {
+    pub fn set_emissive_multiple(&mut self, multiple: f32) {
         ffi::set_material_emissive_multiple(self.ffi_mut(), multiple);
     }
 }
@@ -94,11 +94,11 @@ impl NiAlphaProperty {
         ffi::alpha_threshold(&self.0)
     }
 
-    pub fn set_flags(self: Pin<&mut Self>, flags: AlphaFlags) {
+    pub fn set_flags(&mut self, flags: AlphaFlags) {
         ffi::set_alpha_flags(self.ffi_mut(), flags.bits());
     }
 
-    pub fn set_threshold(self: Pin<&mut Self>, threshold: u8) {
+    pub fn set_threshold(&mut self, threshold: u8) {
         ffi::set_alpha_threshold(self.ffi_mut(), threshold);
     }
 }
@@ -158,39 +158,39 @@ impl NiStencilProperty {
         DrawMode::try_from(ffi::stencil_draw_mode(&self.0)).ok()
     }
 
-    pub fn set_flags(self: Pin<&mut Self>, flags: StencilFlags) {
+    pub fn set_flags(&mut self, flags: StencilFlags) {
         ffi::set_stencil_flags(self.ffi_mut(), flags.bits());
     }
 
-    pub fn set_enabled(self: Pin<&mut Self>, enabled: bool) {
+    pub fn set_enabled(&mut self, enabled: bool) {
         ffi::set_stencil_enabled(self.ffi_mut(), enabled);
     }
 
-    pub fn set_function(self: Pin<&mut Self>, function: StencilTest) {
+    pub fn set_function(&mut self, function: StencilTest) {
         ffi::set_stencil_function(self.ffi_mut(), function.into());
     }
 
-    pub fn set_reference(self: Pin<&mut Self>, reference: u32) {
+    pub fn set_reference(&mut self, reference: u32) {
         ffi::set_stencil_reference(self.ffi_mut(), reference);
     }
 
-    pub fn set_mask(self: Pin<&mut Self>, mask: u32) {
+    pub fn set_mask(&mut self, mask: u32) {
         ffi::set_stencil_mask(self.ffi_mut(), mask);
     }
 
-    pub fn set_fail_action(self: Pin<&mut Self>, action: StencilAction) {
+    pub fn set_fail_action(&mut self, action: StencilAction) {
         ffi::set_stencil_fail_action(self.ffi_mut(), action.into());
     }
 
-    pub fn set_z_fail_action(self: Pin<&mut Self>, action: StencilAction) {
+    pub fn set_z_fail_action(&mut self, action: StencilAction) {
         ffi::set_stencil_z_fail_action(self.ffi_mut(), action.into());
     }
 
-    pub fn set_pass_action(self: Pin<&mut Self>, action: StencilAction) {
+    pub fn set_pass_action(&mut self, action: StencilAction) {
         ffi::set_stencil_pass_action(self.ffi_mut(), action.into());
     }
 
-    pub fn set_draw_mode(self: Pin<&mut Self>, mode: DrawMode) {
+    pub fn set_draw_mode(&mut self, mode: DrawMode) {
         ffi::set_stencil_draw_mode(self.ffi_mut(), mode.into());
     }
 }

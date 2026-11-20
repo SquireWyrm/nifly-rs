@@ -38,15 +38,15 @@ fn skyrim_round_trip() {
     let range = add::<BsBlastNode>(&mut nif, "Range");
     let billboard = add::<NiBillboardNode>(&mut nif, "Billboard");
 
-    let mut v = nif.block_of_mut::<BsValueNode>(value).unwrap();
-    v.as_mut().set_value(-7);
+    let v = nif.block_of_mut::<BsValueNode>(value).unwrap();
+    v.set_value(-7);
     v.set_flags(ValueNodeFlags::USE_PLAYER_ADJUST);
-    let mut o = nif.block_of_mut::<BsOrderedNode>(ordered).unwrap();
-    o.as_mut().set_alpha_sort_bound([1.0, 2.0, 3.0, 4.0]);
+    let o = nif.block_of_mut::<BsOrderedNode>(ordered).unwrap();
+    o.set_alpha_sort_bound([1.0, 2.0, 3.0, 4.0]);
     o.set_static_bound(true);
-    let mut r = nif.block_of_mut::<BsBlastNode>(range).unwrap().upcast_mut();
-    r.as_mut().set_min(1);
-    r.as_mut().set_max(5);
+    let r = nif.block_of_mut::<BsBlastNode>(range).unwrap();
+    r.set_min(1);
+    r.set_max(5);
     r.set_current(3);
     nif.block_of_mut::<NiBillboardNode>(billboard).unwrap().set_mode(BillboardMode::RotateAboutUp2);
 
@@ -68,8 +68,8 @@ fn oblivion_round_trip() {
     let switch = add::<NiSwitchNode>(&mut nif, "Switch");
     let sort = add::<NiSortAdjustNode>(&mut nif, "Sort");
 
-    let mut s = nif.block_of_mut::<NiSwitchNode>(switch).unwrap();
-    s.as_mut().set_flags(SwitchNodeFlags::all());
+    let s = nif.block_of_mut::<NiSwitchNode>(switch).unwrap();
+    s.set_flags(SwitchNodeFlags::all());
     s.set_active_index(2);
     nif.block_of_mut::<NiSortAdjustNode>(sort).unwrap().set_sorting_mode(SortingMode::Off);
 

@@ -1,6 +1,6 @@
 //! Skinning blocks: skin instances, skin data and partitions.
 
-use std::{collections::BTreeMap, pin::Pin};
+use std::collections::BTreeMap;
 
 use bitflags::bitflags;
 use bstr::BString;
@@ -60,7 +60,7 @@ impl NiSkinData {
     }
 
     /// Sets the [global-to-skin transform](View::transform_global_to_skin).
-    pub fn set_transform_global_to_skin(self: Pin<&mut Self>, transform: Transform) {
+    pub fn set_transform_global_to_skin(&mut self, transform: Transform) {
         ffi::set_skin_data_transform_global_to_skin(self.ffi_mut(), transform.to_ffi());
     }
 
@@ -82,7 +82,7 @@ impl NiSkinData {
 
     /// Sets [`has_vertex_weights`](Self::has_vertex_weights). When off, the weights aren't
     /// saved, except in files before version 4.2.1.0, which always save them.
-    pub fn set_has_vertex_weights(self: Pin<&mut Self>, value: bool) {
+    pub fn set_has_vertex_weights(&mut self, value: bool) {
         ffi::set_skin_data_has_vertex_weights(self.ffi_mut(), value);
     }
 
@@ -95,13 +95,13 @@ impl NiSkinData {
 
     /// Sets the [skin-to-bone transform](Self::transform_skin_to_bone) of bone `index`.
     /// Returns `false` if `index` is out of range.
-    pub fn set_transform_skin_to_bone(self: Pin<&mut Self>, index: usize, transform: Transform) -> bool {
+    pub fn set_transform_skin_to_bone(&mut self, index: usize, transform: Transform) -> bool {
         ffi::set_skin_data_transform_skin_to_bone(self.ffi_mut(), index, transform.to_ffi())
     }
 
     /// Sets the [bounds](Self::bounds) of bone `index`. Returns `false` if `index` is out of
     /// range.
-    pub fn set_bounds(self: Pin<&mut Self>, index: usize, bounds: BoundingSphere) -> bool {
+    pub fn set_bounds(&mut self, index: usize, bounds: BoundingSphere) -> bool {
         ffi::set_skin_data_bone_bounds(self.ffi_mut(), index, bounds.to_ffi())
     }
 
@@ -115,7 +115,7 @@ impl NiSkinData {
     /// Replaces the [vertex weights](Self::vertex_weights) of bone `index` as given, without
     /// sorting or normalizing them. Returns `false`, changing nothing, if `index` is out of range
     /// or there are more than 65535. See also [`Edit::set_bone_weights`] on the shape.
-    pub fn set_vertex_weights(self: Pin<&mut Self>, index: usize, weights: &[VertexWeight]) -> bool {
+    pub fn set_vertex_weights(&mut self, index: usize, weights: &[VertexWeight]) -> bool {
         let vertices: Vec<u16> = weights.iter().map(|w| w.vertex).collect();
         let values: Vec<f32> = weights.iter().map(|w| w.weight).collect();
         ffi::set_skin_data_vertex_weights(self.ffi_mut(), index, &vertices, &values)
@@ -145,13 +145,13 @@ impl BsSkinBoneData {
 
     /// Sets the [skin-to-bone transform](Self::transform_skin_to_bone) of bone `index`.
     /// Returns `false` if `index` is out of range.
-    pub fn set_transform_skin_to_bone(self: Pin<&mut Self>, index: usize, transform: Transform) -> bool {
+    pub fn set_transform_skin_to_bone(&mut self, index: usize, transform: Transform) -> bool {
         ffi::set_skin_bone_data_transform_skin_to_bone(self.ffi_mut(), index, transform.to_ffi())
     }
 
     /// Sets the [bounds](Self::bounds) of bone `index`. Returns `false` if `index` is out of
     /// range.
-    pub fn set_bounds(self: Pin<&mut Self>, index: usize, bounds: BoundingSphere) -> bool {
+    pub fn set_bounds(&mut self, index: usize, bounds: BoundingSphere) -> bool {
         ffi::set_skin_bone_data_bounds(self.ffi_mut(), index, bounds.to_ffi())
     }
 }
@@ -163,7 +163,7 @@ impl BsSkinInstance {
     }
 
     /// Sets the [scales](Self::scales). Not checked against the bone count.
-    pub fn set_scales(self: Pin<&mut Self>, scales: &[Vec3]) {
+    pub fn set_scales(&mut self, scales: &[Vec3]) {
         let scales: Vec<_> = scales.iter().map(|v| v.to_ffi()).collect();
         ffi::set_skin_instance_scales(self.ffi_mut(), &scales);
     }
@@ -190,12 +190,12 @@ impl BsDismemberSkinInstance {
     }
 
     /// Sets the flags of partition `index`. Returns `false` if `index` is out of range.
-    pub fn set_flags(self: Pin<&mut Self>, index: usize, flags: PartitionFlags) -> bool {
+    pub fn set_flags(&mut self, index: usize, flags: PartitionFlags) -> bool {
         ffi::set_dismember_partition_flags(self.ffi_mut(), index, flags.bits())
     }
 
     /// Sets the body part of partition `index`. Returns `false` if `index` is out of range.
-    pub fn set_body_part(self: Pin<&mut Self>, index: usize, part: u16) -> bool {
+    pub fn set_body_part(&mut self, index: usize, part: u16) -> bool {
         ffi::set_dismember_partition_body_part(self.ffi_mut(), index, part)
     }
 }
@@ -303,7 +303,7 @@ impl NiSkinPartition {
 
     /// Sets the [LOD level](Self::lod_level) of partition `index`. Returns `false` if `index` is
     /// out of range.
-    pub fn set_lod_level(self: Pin<&mut Self>, index: usize, level: u8) -> bool {
+    pub fn set_lod_level(&mut self, index: usize, level: u8) -> bool {
         ffi::set_skin_partition_lod_level(self.ffi_mut(), index, level)
     }
 
@@ -315,7 +315,7 @@ impl NiSkinPartition {
 
     /// Sets [`global_vb`](Self::global_vb) for partition `index`. Returns `false` if `index` is
     /// out of range.
-    pub fn set_global_vb(self: Pin<&mut Self>, index: usize, value: bool) -> bool {
+    pub fn set_global_vb(&mut self, index: usize, value: bool) -> bool {
         ffi::set_skin_partition_global_vb(self.ffi_mut(), index, value)
     }
 
@@ -349,25 +349,25 @@ impl NiSkinPartition {
 
     /// Sets [`has_vertex_map`](Self::has_vertex_map). A saved list shorter than the partition's
     /// vertex count is padded with zeros. Returns `false` if `index` is out of range.
-    pub fn set_has_vertex_map(self: Pin<&mut Self>, index: usize, value: bool) -> bool {
+    pub fn set_has_vertex_map(&mut self, index: usize, value: bool) -> bool {
         ffi::set_skin_partition_flag(self.ffi_mut(), index, 0, value)
     }
 
     /// Sets [`has_vertex_weights`](Self::has_vertex_weights), as
     /// [`set_has_vertex_map`](Self::set_has_vertex_map) does.
-    pub fn set_has_vertex_weights(self: Pin<&mut Self>, index: usize, value: bool) -> bool {
+    pub fn set_has_vertex_weights(&mut self, index: usize, value: bool) -> bool {
         ffi::set_skin_partition_flag(self.ffi_mut(), index, 1, value)
     }
 
     /// Sets [`has_faces`](Self::has_faces), as [`set_has_vertex_map`](Self::set_has_vertex_map)
     /// does.
-    pub fn set_has_faces(self: Pin<&mut Self>, index: usize, value: bool) -> bool {
+    pub fn set_has_faces(&mut self, index: usize, value: bool) -> bool {
         ffi::set_skin_partition_flag(self.ffi_mut(), index, 2, value)
     }
 
     /// Sets [`has_bone_indices`](Self::has_bone_indices), as
     /// [`set_has_vertex_map`](Self::set_has_vertex_map) does.
-    pub fn set_has_bone_indices(self: Pin<&mut Self>, index: usize, value: bool) -> bool {
+    pub fn set_has_bone_indices(&mut self, index: usize, value: bool) -> bool {
         ffi::set_skin_partition_flag(self.ffi_mut(), index, 3, value)
     }
 
@@ -379,7 +379,7 @@ impl NiSkinPartition {
     }
 
     /// Sets the [vertex format](Self::vertex_desc). The vertex data isn't converted.
-    pub fn set_vertex_desc(self: Pin<&mut Self>, bits: u64) {
+    pub fn set_vertex_desc(&mut self, bits: u64) {
         ffi::set_skin_partition_vertex_desc(self.ffi_mut(), bits);
     }
 
@@ -392,7 +392,7 @@ impl NiSkinPartition {
 
     /// Sets the [vertex format](Self::partition_vertex_desc) of partition `index`. Returns
     /// `false` if `index` is out of range.
-    pub fn set_partition_vertex_desc(self: Pin<&mut Self>, index: usize, bits: u64) -> bool {
+    pub fn set_partition_vertex_desc(&mut self, index: usize, bits: u64) -> bool {
         ffi::set_skin_partition_block_vertex_desc(self.ffi_mut(), index, bits)
     }
 
@@ -406,7 +406,7 @@ impl NiSkinPartition {
     /// Sets the [true triangles](Self::true_triangles) of partition `index`. Returns `false`,
     /// changing nothing, if `index` is out of range or the count differs from
     /// [`triangle_count`](Self::triangle_count).
-    pub fn set_true_triangles(self: Pin<&mut Self>, index: usize, triangles: &[[u16; 3]]) -> bool {
+    pub fn set_true_triangles(&mut self, index: usize, triangles: &[[u16; 3]]) -> bool {
         ffi::set_skin_partition_true_triangles(self.ffi_mut(), index, triangles.as_flattened())
     }
 }

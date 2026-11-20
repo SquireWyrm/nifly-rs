@@ -11,7 +11,7 @@ impl BsLodTriShape {
     }
 
     /// Sets the [LOD sizes](Self::lod_sizes). Not checked against the shape's triangles.
-    pub fn set_lod_sizes(self: Pin<&mut Self>, sizes: [u32; 3]) {
+    pub fn set_lod_sizes(&mut self, sizes: [u32; 3]) {
         ffi::set_lod_tri_shape_sizes(self.ffi_mut(), &sizes);
     }
 }
@@ -26,7 +26,7 @@ impl BsMeshLodTriShape {
     }
 
     /// Sets the [LOD sizes](Self::lod_sizes). Not checked against the shape's triangles.
-    pub fn set_lod_sizes(self: Pin<&mut Self>, sizes: [u32; 3]) {
+    pub fn set_lod_sizes(&mut self, sizes: [u32; 3]) {
         ffi::set_mesh_lod_tri_shape_sizes(self.ffi_mut(), &sizes);
     }
 }
@@ -59,7 +59,7 @@ impl BsSubIndexTriShape {
 
     /// Replaces the [Skyrim SE segments](Self::sse_segments). Returns `false`, changing
     /// nothing, if a segment goes past the shape's triangles.
-    pub fn set_sse_segments(self: Pin<&mut Self>, segments: &[GeometrySegment]) -> bool {
+    pub fn set_sse_segments(&mut self, segments: &[GeometrySegment]) -> bool {
         let segments: Vec<_> = segments.iter().map(|s| s.to_ffi()).collect();
         ffi::set_sub_index_tri_shape_sse_segments(self.ffi_mut(), &segments)
     }
@@ -107,12 +107,12 @@ impl BsTriShape {
 
     /// Sets the bounds. Saving with [`optimize`](crate::file::SaveOptions::optimize) on, the
     /// default, recalculates them as [`update_bounds`](Self::update_bounds) does.
-    pub fn set_bounds(self: Pin<&mut Self>, bounds: BoundingSphere) {
+    pub fn set_bounds(&mut self, bounds: BoundingSphere) {
         ffi::set_bs_tri_shape_bounds(self.ffi_mut(), bounds.to_ffi());
     }
 
     /// Recalculates the [bounds](Self::bounds) from the vertices.
-    pub fn update_bounds(self: Pin<&mut Self>) {
+    pub fn update_bounds(&mut self) {
         ffi::update_bs_tri_shape_bounds(self.ffi_mut());
     }
 
@@ -123,7 +123,7 @@ impl BsTriShape {
         out
     }
 
-    pub fn set_bound_min_max(self: Pin<&mut Self>, values: [f32; 6]) {
+    pub fn set_bound_min_max(&mut self, values: [f32; 6]) {
         ffi::set_bs_tri_shape_bound_min_max(self.ffi_mut(), &values);
     }
 
@@ -163,7 +163,7 @@ impl BsTriShape {
     /// Replaces the [particle data](Self::particle_data), or removes it with `None`. Returns
     /// `false`, changing nothing, unless it has a position and normal per vertex and a
     /// triangle per triangle, using only the shape's vertices.
-    pub fn set_particle_data(self: Pin<&mut Self>, data: Option<&ParticleData>) -> bool {
+    pub fn set_particle_data(&mut self, data: Option<&ParticleData>) -> bool {
         let Some(data) = data else {
             return ffi::set_bs_tri_shape_particle_data(self.ffi_mut(), false, &[], &[], &[]);
         };
@@ -175,7 +175,7 @@ impl BsTriShape {
 
 /// Changing a [`BsTriShape`]'s vertex format.
 impl<T: NiType> Edit<'_, T> {
-    fn bs_tri_shape<I>(&mut self) -> (Pin<&mut BsTriShape>, bool)
+    fn bs_tri_shape<I>(&mut self) -> (&mut BsTriShape, bool)
     where
         T: IsA<BsTriShape, I>,
     {
@@ -224,7 +224,7 @@ impl BsSegmentedTriShape {
 
     /// Replaces the segments. Returns `false`, changing nothing, if a segment goes past the
     /// shape's triangles. Segments may overlap or leave triangles out.
-    pub fn set_segments(self: Pin<&mut Self>, segments: &[GeometrySegment]) -> bool {
+    pub fn set_segments(&mut self, segments: &[GeometrySegment]) -> bool {
         let segments: Vec<_> = segments.iter().map(|s| s.to_ffi()).collect();
         ffi::set_segmented_tri_shape_segments(self.ffi_mut(), &segments)
     }

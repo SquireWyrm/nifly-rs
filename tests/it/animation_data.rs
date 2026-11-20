@@ -77,12 +77,12 @@ fn keys_need_an_interpolation() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let f = nif.add_animation_data::<NiFloatData>();
     let before = KeyGroup::new(Interpolation::Linear, vec![Key::new(0.0, 1.0)]);
-    let mut data = nif.block_of_mut::<NiFloatData>(f).unwrap();
-    assert!(data.as_mut().set_keys(&before));
+    let data = nif.block_of_mut::<NiFloatData>(f).unwrap();
+    assert!(data.set_keys(&before));
     let none = KeyGroup { interpolation: None, keys: vec![Key::new(0.0, 2.0)] };
-    assert!(!data.as_mut().set_keys(&none));
+    assert!(!data.set_keys(&none));
     assert_eq!(data.keys(), before);
-    assert!(data.as_mut().set_keys(&KeyGroup::default()), "an empty group needs none");
+    assert!(data.set_keys(&KeyGroup::default()), "an empty group needs none");
     assert_eq!(data.keys(), KeyGroup::default());
 }
 
@@ -101,9 +101,9 @@ fn keyframe_rotations() {
         let mut nif = NifFile::create(version);
         let q = nif.add_animation_data::<NiKeyframeData>();
         let x = nif.add_animation_data::<NiTransformData>();
-        let mut data = nif.block_of_mut::<NiKeyframeData>(q).unwrap();
-        assert!(data.as_mut().set_rotations(&Rotations::Quaternion(quaternions.clone())));
-        assert!(data.as_mut().set_translations(&translations));
+        let data = nif.block_of_mut::<NiKeyframeData>(q).unwrap();
+        assert!(data.set_rotations(&Rotations::Quaternion(quaternions.clone())));
+        assert!(data.set_translations(&translations));
         assert!(data.set_scales(&scales));
         let rotations = Rotations::Xyz(xyz.clone());
         assert!(nif.block_of_mut::<NiKeyframeData>(x).unwrap().set_rotations(&rotations));
@@ -123,10 +123,10 @@ fn keyframe_rotations() {
 fn rotations_need_interpolations() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let index = nif.add_animation_data::<NiKeyframeData>();
-    let mut data = nif.block_of_mut::<NiKeyframeData>(index).unwrap();
+    let data = nif.block_of_mut::<NiKeyframeData>(index).unwrap();
     let bad = KeyGroup { interpolation: None, keys: vec![Key::new(0.0, 1.0)] };
-    assert!(!data.as_mut().set_rotations(&Rotations::Xyz([KeyGroup::default(), bad, KeyGroup::default()])));
-    assert!(!data.as_mut().set_rotations(&Rotations::Quaternion(KeyGroup { interpolation: None, keys: vec![Key::new(0.0, [0.0; 4])] })));
+    assert!(!data.set_rotations(&Rotations::Xyz([KeyGroup::default(), bad, KeyGroup::default()])));
+    assert!(!data.set_rotations(&Rotations::Quaternion(KeyGroup { interpolation: None, keys: vec![Key::new(0.0, [0.0; 4])] })));
     assert_eq!(data.rotations(), Rotations::Quaternion(KeyGroup::default()));
 }
 
@@ -136,10 +136,10 @@ fn uv_and_visibility() {
     let uv = nif.add_animation_data::<NiUvData>();
     let vis = nif.add_animation_data::<NiVisData>();
     let groups: [KeyGroup<f32>; 4] = ALL.map(|i| KeyGroup::new(i, keys([0.0, 0.5, 1.0], 0.25)));
-    let mut data = nif.block_of_mut::<NiUvData>(uv).unwrap();
-    assert!(data.as_mut().set_u_translations(&groups[0]));
-    assert!(data.as_mut().set_v_translations(&groups[1]));
-    assert!(data.as_mut().set_u_scales(&groups[2]));
+    let data = nif.block_of_mut::<NiUvData>(uv).unwrap();
+    assert!(data.set_u_translations(&groups[0]));
+    assert!(data.set_v_translations(&groups[1]));
+    assert!(data.set_u_scales(&groups[2]));
     assert!(data.set_v_scales(&groups[3]));
     let visible = vec![Key::new(0.0, true), Key::new(1.5, false)];
     nif.block_of_mut::<NiVisData>(vis).unwrap().set_keys(&visible);
@@ -164,10 +164,10 @@ fn morphs_by_version() {
     for version in [NifVersion::MORROWIND, legacy, NifVersion::OBLIVION, NifVersion::SKYRIM] {
         let mut nif = NifFile::create(version);
         let index = nif.add_animation_data::<NiMorphData>();
-        let mut data = nif.block_of_mut::<NiMorphData>(index).unwrap();
-        assert!(!data.as_mut().set_morphs(&[morph("A", 3), morph("B", 2)]), "vectors per vertex");
+        let data = nif.block_of_mut::<NiMorphData>(index).unwrap();
+        assert!(!data.set_morphs(&[morph("A", 3), morph("B", 2)]), "vectors per vertex");
         assert_eq!(data.vertex_count(), 0);
-        assert!(data.as_mut().set_morphs(&morphs));
+        assert!(data.set_morphs(&morphs));
         data.set_relative_targets(false);
 
         let nif = reload(&mut nif);
@@ -193,8 +193,8 @@ fn bsplines_and_palettes() {
     let spline = nif.add_animation_data::<NiBSplineData>();
     let basis = nif.add_animation_data::<NiBSplineBasisData>();
     let palette = nif.add_animation_data::<NiStringPalette>();
-    let mut data = nif.block_of_mut::<NiBSplineData>(spline).unwrap();
-    data.as_mut().set_float_control_points(&[0.5, 1.5]);
+    let data = nif.block_of_mut::<NiBSplineData>(spline).unwrap();
+    data.set_float_control_points(&[0.5, 1.5]);
     data.set_short_control_points(&[-3, 7, 32767]);
     nif.block_of_mut::<NiBSplineBasisData>(basis).unwrap().set_control_point_count(4);
     nif.block_of_mut::<NiStringPalette>(palette).unwrap().set_palette(b"Bip01\0NiTransformController\0");
@@ -231,9 +231,9 @@ fn upstream_files_round_trip() {
         let before = save(&mut nif);
         let indices: Vec<_> = nif.blocks().indices().collect();
         for i in indices {
-            if let Some(mut d) = nif.block_of_mut::<NiKeyframeData>(i) {
+            if let Some(d) = nif.block_of_mut::<NiKeyframeData>(i) {
                 let (r, t, s) = (d.rotations(), d.translations(), d.scales());
-                assert!(d.as_mut().set_rotations(&r) && d.as_mut().set_translations(&t) && d.set_scales(&s));
+                assert!(d.set_rotations(&r) && d.set_translations(&t) && d.set_scales(&s));
             } else if let Some(d) = nif.block_of_mut::<NiFloatData>(i) {
                 let k = d.keys();
                 assert!(d.set_keys(&k));
@@ -243,10 +243,10 @@ fn upstream_files_round_trip() {
             } else if let Some(d) = nif.block_of_mut::<NiBoolData>(i) {
                 let k = d.keys();
                 assert!(d.set_keys(&k));
-            } else if let Some(mut d) = nif.block_of_mut::<NiUvData>(i) {
+            } else if let Some(d) = nif.block_of_mut::<NiUvData>(i) {
                 let g = [d.u_translations(), d.v_translations(), d.u_scales(), d.v_scales()];
-                assert!(d.as_mut().set_u_translations(&g[0]) && d.as_mut().set_v_translations(&g[1]));
-                assert!(d.as_mut().set_u_scales(&g[2]) && d.set_v_scales(&g[3]));
+                assert!(d.set_u_translations(&g[0]) && d.set_v_translations(&g[1]));
+                assert!(d.set_u_scales(&g[2]) && d.set_v_scales(&g[3]));
             } else if let Some(d) = nif.block_of_mut::<NiMorphData>(i) {
                 let m = d.morphs();
                 assert!(d.set_morphs(&m));

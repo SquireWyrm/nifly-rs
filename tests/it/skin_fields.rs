@@ -127,10 +127,10 @@ fn partitions() {
 fn partition_lod_and_global_vb() {
     let mut nif = load("TestNifFile_Skinned_SE");
     let index = nif.blocks_of::<NiSkinPartition>().indices().next().unwrap();
-    let mut part = nif.block_of_mut::<NiSkinPartition>(index).unwrap();
-    assert!(part.as_mut().set_lod_level(0, 2));
-    assert!(part.as_mut().set_global_vb(0, true));
-    assert!(!part.as_mut().set_lod_level(1, 2));
+    let part = nif.block_of_mut::<NiSkinPartition>(index).unwrap();
+    assert!(part.set_lod_level(0, 2));
+    assert!(part.set_global_vb(0, true));
+    assert!(!part.set_lod_level(1, 2));
     assert!(!part.set_global_vb(1, true));
     let saved = reload(&mut nif);
     let part = saved.block_of::<NiSkinPartition>(index).unwrap();

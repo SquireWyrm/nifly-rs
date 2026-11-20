@@ -8,7 +8,7 @@ impl SkinAttach {
         (0..ffi::skin_attach_bone_count(&self.0)).map(|i| ffi::skin_attach_bone(&self.0, i).as_bstr())
     }
 
-    pub fn set_bones<S: AsRef<[u8]>>(self: Pin<&mut Self>, bones: impl IntoIterator<Item = S>) {
+    pub fn set_bones<S: AsRef<[u8]>>(&mut self, bones: impl IntoIterator<Item = S>) {
         let (bytes, lengths) = joined(bones);
         ffi::set_skin_attach_bones(self.ffi_mut(), &bytes, &lengths);
     }
@@ -21,7 +21,7 @@ impl BsFurnitureMarker {
 
     /// Replaces the [positions](Self::positions). Which fields are saved depends on the file
     /// version, as described on [`FurniturePosition`].
-    pub fn set_positions(self: Pin<&mut Self>, positions: &[FurniturePosition]) {
+    pub fn set_positions(&mut self, positions: &[FurniturePosition]) {
         ffi::set_furniture_positions(self.ffi_mut(), &furniture_ffi(positions));
     }
 }
@@ -42,7 +42,7 @@ impl BsConnectPointParents {
             .collect()
     }
 
-    pub fn set_connect_points(self: Pin<&mut Self>, points: &[ConnectPoint]) {
+    pub fn set_connect_points(&mut self, points: &[ConnectPoint]) {
         let (bytes, lengths, transforms) = connect_points_ffi(points);
         ffi::set_connect_points(self.ffi_mut(), &bytes, &lengths, &transforms);
     }
@@ -59,11 +59,11 @@ impl BsConnectPointChildren {
         (0..ffi::connect_point_children_len(&self.0)).map(|i| ffi::connect_point_child(&self.0, i).as_bstr())
     }
 
-    pub fn set_skinned(self: Pin<&mut Self>, skinned: bool) {
+    pub fn set_skinned(&mut self, skinned: bool) {
         ffi::set_connect_point_skinned(self.ffi_mut(), skinned);
     }
 
-    pub fn set_targets<S: AsRef<[u8]>>(self: Pin<&mut Self>, targets: impl IntoIterator<Item = S>) {
+    pub fn set_targets<S: AsRef<[u8]>>(&mut self, targets: impl IntoIterator<Item = S>) {
         let (bytes, lengths) = joined(targets);
         ffi::set_connect_point_targets(self.ffi_mut(), &bytes, &lengths);
     }
@@ -80,12 +80,12 @@ impl BsInvMarker {
         ffi::inv_marker(&self.0).zoom
     }
 
-    pub fn set_rotation(self: Pin<&mut Self>, [rotation_x, rotation_y, rotation_z]: [u16; 3]) {
+    pub fn set_rotation(&mut self, [rotation_x, rotation_y, rotation_z]: [u16; 3]) {
         let marker = types_ffi::InvMarkerFfi { rotation_x, rotation_y, rotation_z, ..ffi::inv_marker(&self.0) };
         ffi::set_inv_marker(self.ffi_mut(), marker);
     }
 
-    pub fn set_zoom(self: Pin<&mut Self>, zoom: f32) {
+    pub fn set_zoom(&mut self, zoom: f32) {
         let marker = types_ffi::InvMarkerFfi { zoom, ..ffi::inv_marker(&self.0) };
         ffi::set_inv_marker(self.ffi_mut(), marker);
     }
@@ -101,11 +101,11 @@ impl BsBound {
         Vec3::from_ffi(ffi::bound_half_extents(&self.0))
     }
 
-    pub fn set_center(self: Pin<&mut Self>, center: Vec3) {
+    pub fn set_center(&mut self, center: Vec3) {
         ffi::set_bound_center(self.ffi_mut(), center.to_ffi());
     }
 
-    pub fn set_half_extents(self: Pin<&mut Self>, half_extents: Vec3) {
+    pub fn set_half_extents(&mut self, half_extents: Vec3) {
         ffi::set_bound_half_extents(self.ffi_mut(), half_extents.to_ffi());
     }
 }
@@ -121,11 +121,11 @@ impl BsBehaviorGraphExtraData {
         ffi::behavior_graph_controls_base_skeleton(&self.0)
     }
 
-    pub fn set_graph_file(self: Pin<&mut Self>, graph_file: impl AsRef<[u8]>) {
+    pub fn set_graph_file(&mut self, graph_file: impl AsRef<[u8]>) {
         ffi::set_behavior_graph_file(self.ffi_mut(), graph_file.as_ref());
     }
 
-    pub fn set_controls_base_skeleton(self: Pin<&mut Self>, controls: bool) {
+    pub fn set_controls_base_skeleton(&mut self, controls: bool) {
         ffi::set_behavior_graph_controls_base_skeleton(self.ffi_mut(), controls);
     }
 }
@@ -137,7 +137,7 @@ impl NiColorExtraData {
         [c.x, c.y, c.z, c.w]
     }
 
-    pub fn set_value(self: Pin<&mut Self>, value: [f32; 4]) {
+    pub fn set_value(&mut self, value: [f32; 4]) {
         ffi::set_color_extra_data(self.ffi_mut(), float4(value));
     }
 }
@@ -148,7 +148,7 @@ impl NiVectorExtraData {
         [v.x, v.y, v.z, v.w]
     }
 
-    pub fn set_value(self: Pin<&mut Self>, value: [f32; 4]) {
+    pub fn set_value(&mut self, value: [f32; 4]) {
         ffi::set_vector_extra_data(self.ffi_mut(), float4(value));
     }
 }
@@ -160,7 +160,7 @@ impl NiVertWeightsExtraData {
 
     /// Replaces the [weights](Self::weights). Returns `false`, changing nothing, for more than
     /// 65535, as the count is stored in 16 bits.
-    pub fn set_weights(self: Pin<&mut Self>, weights: &[f32]) -> bool {
+    pub fn set_weights(&mut self, weights: &[f32]) -> bool {
         ffi::set_vert_weights_extra_data(self.ffi_mut(), weights)
     }
 }
@@ -170,7 +170,7 @@ impl BsEyeCenterExtraData {
         ffi::eye_center_extra_data_values(&self.0)
     }
 
-    pub fn set_values(self: Pin<&mut Self>, values: &[f32]) {
+    pub fn set_values(&mut self, values: &[f32]) {
         ffi::set_eye_center_extra_data(self.ffi_mut(), values);
     }
 }
@@ -182,7 +182,7 @@ impl BsPositionData {
     }
 
     /// Replaces the [values](Self::values), rounded to 16-bit floats.
-    pub fn set_values(self: Pin<&mut Self>, values: &[f32]) {
+    pub fn set_values(&mut self, values: &[f32]) {
         ffi::set_position_data(self.ffi_mut(), values);
     }
 }
@@ -192,7 +192,7 @@ impl BsWArray {
         ffi::w_array_values(&self.0)
     }
 
-    pub fn set_values(self: Pin<&mut Self>, values: &[u32]) {
+    pub fn set_values(&mut self, values: &[u32]) {
         ffi::set_w_array(self.ffi_mut(), values);
     }
 }
@@ -216,7 +216,7 @@ impl BsDecalPlacementVectorExtraData {
     /// Replaces the [blocks](Self::blocks). Its float value is set with
     /// [`NiFloatExtraData::set_value`]. Returns `false`, changing nothing, for more than 65535
     /// blocks or points in a block, as the counts are stored in 16 bits.
-    pub fn set_blocks<B: AsRef<[DecalPoint]>>(self: Pin<&mut Self>, blocks: impl IntoIterator<Item = B>) -> bool {
+    pub fn set_blocks<B: AsRef<[DecalPoint]>>(&mut self, blocks: impl IntoIterator<Item = B>) -> bool {
         let (lengths, points, normals) = decal_ffi(blocks);
         ffi::set_decal_blocks(self.ffi_mut(), &lengths, &points, &normals)
     }
@@ -229,7 +229,7 @@ impl NiTextKeyExtraData {
             .collect()
     }
 
-    pub fn set_text_keys(self: Pin<&mut Self>, keys: &[TextKey]) {
+    pub fn set_text_keys(&mut self, keys: &[TextKey]) {
         let (bytes, lengths) = joined(keys.iter().map(|k| &k.text));
         let times: Vec<f32> = keys.iter().map(|k| k.time).collect();
         ffi::set_text_keys(self.ffi_mut(), &bytes, &lengths, &times);
@@ -250,7 +250,7 @@ impl BsBoneLodExtraData {
             .collect()
     }
 
-    pub fn set_bone_lods(self: Pin<&mut Self>, lods: &[BoneLod]) {
+    pub fn set_bone_lods(&mut self, lods: &[BoneLod]) {
         let (bytes, lengths) = joined(lods.iter().map(|l| &l.bone));
         let distances: Vec<u32> = lods.iter().map(|l| l.distance).collect();
         ffi::set_bone_lods(self.ffi_mut(), &bytes, &lengths, &distances);
@@ -262,7 +262,7 @@ impl BsDistantObjectExtraData {
         ffi::distant_object_flags(&self.0)
     }
 
-    pub fn set_raw_flags(self: Pin<&mut Self>, flags: u32) {
+    pub fn set_raw_flags(&mut self, flags: u32) {
         ffi::set_distant_object_flags(self.ffi_mut(), flags);
     }
 }
@@ -272,7 +272,7 @@ impl BsDistantObjectLargeRefExtraData {
         ffi::distant_object_large_ref(&self.0)
     }
 
-    pub fn set_large_ref(self: Pin<&mut Self>, large_ref: bool) {
+    pub fn set_large_ref(&mut self, large_ref: bool) {
         ffi::set_distant_object_large_ref(self.ffi_mut(), large_ref);
     }
 }
@@ -287,7 +287,7 @@ impl BoneTranslations {
             .collect()
     }
 
-    pub fn set_translations(self: Pin<&mut Self>, translations: &[BoneTranslation]) {
+    pub fn set_translations(&mut self, translations: &[BoneTranslation]) {
         let (bytes, lengths, values) = bone_translations_ffi(translations);
         ffi::set_bone_translations(self.ffi_mut(), &bytes, &lengths, &values);
     }
@@ -391,7 +391,7 @@ impl BsClothExtraData {
         ffi::cloth_extra_data_bytes(&self.0)
     }
 
-    pub fn set_data(self: Pin<&mut Self>, data: &[u8]) {
+    pub fn set_data(&mut self, data: &[u8]) {
         ffi::set_cloth_extra_data(self.ffi_mut(), data);
     }
 }
@@ -402,7 +402,7 @@ impl BsCollisionQueryProxyExtraData {
         ffi::collision_query_proxy_extra_data_bytes(&self.0)
     }
 
-    pub fn set_data(self: Pin<&mut Self>, data: &[u8]) {
+    pub fn set_data(&mut self, data: &[u8]) {
         ffi::set_collision_query_proxy_extra_data(self.ffi_mut(), data);
     }
 }

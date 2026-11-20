@@ -25,7 +25,7 @@ impl BsShaderLightingProperty {
     }
 
     /// Sets the [texture clamp mode](Self::texture_clamp_mode).
-    pub fn set_texture_clamp_mode(self: Pin<&mut Self>, mode: ClampMode) {
+    pub fn set_texture_clamp_mode(&mut self, mode: ClampMode) {
         ffi::set_shader_lighting_clamp_mode(self.ffi_mut(), mode.into());
     }
 }
@@ -86,7 +86,7 @@ impl SkyShaderProperty {
     }
 
     /// Sets the [sky object type](Self::sky_object_type).
-    pub fn set_sky_object_type(self: Pin<&mut Self>, object_type: SkyObjectType) {
+    pub fn set_sky_object_type(&mut self, object_type: SkyObjectType) {
         ffi::set_sky_object_type(self.ffi_mut(), object_type.into());
     }
 }
@@ -160,7 +160,7 @@ impl BsSkyShaderProperty {
     }
 
     /// Sets the [sky object type](Self::sky_object_type).
-    pub fn set_sky_object_type(self: Pin<&mut Self>, object_type: SkyObjectType) {
+    pub fn set_sky_object_type(&mut self, object_type: SkyObjectType) {
         ffi::set_bs_sky_object_type(self.ffi_mut(), object_type.into());
     }
 }

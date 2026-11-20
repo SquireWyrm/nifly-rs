@@ -32,9 +32,9 @@ fn instance(seed: f32, copies: usize) -> DistantObjectInstance {
 #[test]
 fn instances_round_trip() {
     let (mut nif, index) = setup();
-    let mut n = nif.block_of_mut::<BsDistantObjectInstancedNode>(index).unwrap();
-    n.as_mut().push_instance(&instance(1.0, 2));
-    n.as_mut().push_instance(&instance(2.0, 0));
+    let n = nif.block_of_mut::<BsDistantObjectInstancedNode>(index).unwrap();
+    n.push_instance(&instance(1.0, 2));
+    n.push_instance(&instance(2.0, 0));
     n.push_instance(&instance(3.0, 1));
 
     let mut saved = reload(&mut nif);
@@ -45,10 +45,10 @@ fn instances_round_trip() {
     assert_eq!(n.instance(3), None);
 
     let index = saved.blocks_of::<BsDistantObjectInstancedNode>().indices().next().unwrap();
-    let mut n = saved.block_of_mut::<BsDistantObjectInstancedNode>(index).unwrap();
-    assert!(n.as_mut().set_instance(1, &instance(5.0, 1)));
-    assert!(n.as_mut().remove_instance(0));
-    assert!(!n.as_mut().remove_instance(2));
+    let n = saved.block_of_mut::<BsDistantObjectInstancedNode>(index).unwrap();
+    assert!(n.set_instance(1, &instance(5.0, 1)));
+    assert!(n.remove_instance(0));
+    assert!(!n.remove_instance(2));
     assert!(!n.set_instance(2, &instance(6.0, 1)));
     let n = node(&saved);
     assert_eq!((n.instance(0), n.instance(1)), (Some(instance(5.0, 1)), Some(instance(3.0, 1))));
@@ -57,11 +57,11 @@ fn instances_round_trip() {
 #[test]
 fn texture_arrays_round_trip() {
     let (mut nif, index) = setup();
-    let mut n = nif.block_of_mut::<BsDistantObjectInstancedNode>(index).unwrap();
-    assert!(n.as_mut().set_texture_arrays(1, [vec!["a.dds", "b.dds"], vec!["c.dds"]]));
-    assert!(!n.as_mut().set_texture_arrays(3, [["x.dds"]]));
+    let n = nif.block_of_mut::<BsDistantObjectInstancedNode>(index).unwrap();
+    assert!(n.set_texture_arrays(1, [vec!["a.dds", "b.dds"], vec!["c.dds"]]));
+    assert!(!n.set_texture_arrays(3, [["x.dds"]]));
     assert_eq!(n.texture_arrays_unknown(1), Some(1));
-    assert!(n.as_mut().set_texture_arrays_unknown(1, 7));
+    assert!(n.set_texture_arrays_unknown(1, 7));
     assert!(!n.set_texture_arrays_unknown(3, 7));
 
     let saved = reload(&mut nif);

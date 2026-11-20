@@ -10,7 +10,7 @@ impl NiSequence {
     }
 
     /// Sets [`name`](Self::name).
-    pub fn set_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+    pub fn set_name(&mut self, name: impl AsRef<[u8]>) {
         ffi::set_sequence_name(self.ffi_mut(), name.as_ref());
     }
 
@@ -22,7 +22,7 @@ impl NiSequence {
     }
 
     /// Sets [`accum_root_name`](Self::accum_root_name).
-    pub fn set_accum_root_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+    pub fn set_accum_root_name(&mut self, name: impl AsRef<[u8]>) {
         ffi::set_sequence_accum_root_name(self.ffi_mut(), name.as_ref());
     }
 

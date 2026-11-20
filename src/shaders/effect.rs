@@ -17,7 +17,7 @@ impl BsEffectShaderProperty {
     }
 
     /// Sets the [texture clamp mode](Self::texture_clamp_mode).
-    pub fn set_texture_clamp_mode(self: Pin<&mut Self>, mode: ClampMode) {
+    pub fn set_texture_clamp_mode(&mut self, mode: ClampMode) {
         self.set_clamp_byte(0, u32::from(mode) as u8);
     }
 
@@ -27,7 +27,7 @@ impl BsEffectShaderProperty {
     }
 
     /// Sets the [lighting influence](Self::lighting_influence).
-    pub fn set_lighting_influence(self: Pin<&mut Self>, influence: u8) {
+    pub fn set_lighting_influence(&mut self, influence: u8) {
         self.set_clamp_byte(1, influence);
     }
 
@@ -37,7 +37,7 @@ impl BsEffectShaderProperty {
     }
 
     /// Sets the [environment map's minimum LOD](Self::env_map_min_lod).
-    pub fn set_env_map_min_lod(self: Pin<&mut Self>, lod: u8) {
+    pub fn set_env_map_min_lod(&mut self, lod: u8) {
         self.set_clamp_byte(2, lod);
     }
 
@@ -48,7 +48,7 @@ impl BsEffectShaderProperty {
     }
 
     /// Sets [`clamp_unknown`](Self::clamp_unknown).
-    pub fn set_clamp_unknown(self: Pin<&mut Self>, value: u8) {
+    pub fn set_clamp_unknown(&mut self, value: u8) {
         self.set_clamp_byte(3, value);
     }
 
@@ -58,10 +58,10 @@ impl BsEffectShaderProperty {
         ffi::effect_texture_clamp_bytes(&self.0).to_le_bytes()[i]
     }
 
-    fn set_clamp_byte(mut self: Pin<&mut Self>, i: usize, value: u8) {
+    fn set_clamp_byte(&mut self, i: usize, value: u8) {
         let mut bytes = ffi::effect_texture_clamp_bytes(&self.0).to_le_bytes();
         bytes[i] = value;
-        ffi::set_effect_texture_clamp_bytes(self.as_mut().ffi_mut(), u32::from_le_bytes(bytes));
+        ffi::set_effect_texture_clamp_bytes(self.ffi_mut(), u32::from_le_bytes(bytes));
     }
 
     texture_paths! {

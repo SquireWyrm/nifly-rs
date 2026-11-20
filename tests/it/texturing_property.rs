@@ -70,14 +70,14 @@ fn setters_round_trip() {
     let shape = shape_index(&nif, "Cuirass");
     let mut t_shape = nif.edit::<nifly::geometry::NiShape>(shape).unwrap();
     let mut t_edit = t_shape.texturing_property().unwrap();
-    let mut t = t_edit.block();
-    t.as_mut().set_apply_mode(ApplyMode::Decal);
-    assert!(t.as_mut().set_map_clamp_mode(TextureMap::Base, ClampMode::ClampUWrapV));
-    assert!(t.as_mut().set_map_filter_mode(TextureMap::Base, FilterMode::Bilinear));
-    assert!(t.as_mut().set_map_uv_set(TextureMap::Base, 1));
+    let t = &mut *t_edit;
+    t.set_apply_mode(ApplyMode::Decal);
+    assert!(t.set_map_clamp_mode(TextureMap::Base, ClampMode::ClampUWrapV));
+    assert!(t.set_map_filter_mode(TextureMap::Base, FilterMode::Bilinear));
+    assert!(t.set_map_uv_set(TextureMap::Base, 1));
     // Maps the property doesn't have aren't set.
-    assert!(!t.as_mut().set_map_clamp_mode(TextureMap::Dark, ClampMode::ClampBoth));
-    assert!(!t.as_mut().set_map_filter_mode(TextureMap::Glow, FilterMode::Nearest));
+    assert!(!t.set_map_clamp_mode(TextureMap::Dark, ClampMode::ClampBoth));
+    assert!(!t.set_map_filter_mode(TextureMap::Glow, FilterMode::Nearest));
     assert!(!t.set_map_uv_set(TextureMap::Decal3, 2));
 
     let expected = (Some(ClampMode::ClampUWrapV), Some(FilterMode::Bilinear), Some(1));

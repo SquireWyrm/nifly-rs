@@ -95,9 +95,9 @@ fn skips_model_space_unless_forced() {
         let s = nif.block_of::<NiShape>(shape).unwrap();
         nif.view_of(s).unwrap().shader().unwrap().index()
     };
-    let mut flags = nif.block_of_mut::<BsShaderProperty>(shader).unwrap();
+    let flags = nif.block_of_mut::<BsShaderProperty>(shader).unwrap();
     let model_space = flags.flags_1::<SkyrimShaderFlags1>() | MODEL_SPACE;
-    flags.as_mut().set_flags_1(model_space);
+    flags.set_flags_1(model_space);
     assert_eq!(nif.block_of::<BsShaderProperty>(shader).unwrap().raw_flags_1(), model_space.bits());
 
     assert!(nif.edit::<nifly::geometry::NiShape>(shape).is_some_and(|mut e| e.set_normals(&[Vec3::Z; 14])));

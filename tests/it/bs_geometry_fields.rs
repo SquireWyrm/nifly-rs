@@ -33,13 +33,13 @@ fn shape_fields() {
     let count = geometry(&nif, index).mesh_count();
     assert!(!geometry(&nif, index).has_internal_geometry());
 
-    let mut block = nif.block_of_mut::<BsGeometry>(index).unwrap();
-    block.as_mut().set_bounds(sphere);
-    block.as_mut().set_bound_min_max([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-    assert!(block.as_mut().set_mesh_info(0, info));
-    assert!(!block.as_mut().set_mesh_info(count, info));
+    let block = nif.block_of_mut::<BsGeometry>(index).unwrap();
+    block.set_bounds(sphere);
+    block.set_bound_min_max([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+    assert!(block.set_mesh_info(0, info));
+    assert!(!block.set_mesh_info(count, info));
     while block.mesh_count() < 4 {
-        assert!(block.as_mut().add_mesh());
+        assert!(block.add_mesh());
     }
     assert!(!block.add_mesh());
 
@@ -72,20 +72,20 @@ fn internal_mesh_data_round_trips() {
     let cull = [CullData { center: Vec3::new(1.0, 2.0, 3.0), expand: Vec3::new(0.5, 0.5, 0.5) }];
     let lods = [vec![[0, 1, 2]], vec![[2, 1, 0], [0, 1, 3]]];
 
-    let mut block = nif.block_of_mut::<BsGeometry>(index).unwrap();
-    let mut mesh = block.as_mut().mesh_mut(0).unwrap();
-    assert!(!mesh.as_mut().set_second_uvs(&vec![[0.5, 0.25]; n - 1]));
-    assert!(mesh.as_mut().set_second_uvs(&vec![[0.5, 0.25]; n]));
-    assert!(mesh.as_mut().set_colors(&vec![[1, 2, 3, 4]; n]));
-    assert!(!mesh.as_mut().set_tangent_ws(&vec![4; tangents]));
-    assert!(mesh.as_mut().set_tangent_ws(&vec![2; tangents]));
-    assert!(!mesh.as_mut().set_skin_weights(&weights[1..]));
-    assert!(mesh.as_mut().set_skin_weights(&weights));
-    assert!(!mesh.as_mut().set_lods(&[vec![[0, 1, n as u16]]]));
-    assert!(mesh.as_mut().set_lods(&lods));
-    mesh.as_mut().set_meshlets(&meshlets);
-    mesh.as_mut().set_cull_data(&cull);
-    mesh.as_mut().set_version(1);
+    let block = nif.block_of_mut::<BsGeometry>(index).unwrap();
+    let mesh = block.mesh_mut(0).unwrap();
+    assert!(!mesh.set_second_uvs(&vec![[0.5, 0.25]; n - 1]));
+    assert!(mesh.set_second_uvs(&vec![[0.5, 0.25]; n]));
+    assert!(mesh.set_colors(&vec![[1, 2, 3, 4]; n]));
+    assert!(!mesh.set_tangent_ws(&vec![4; tangents]));
+    assert!(mesh.set_tangent_ws(&vec![2; tangents]));
+    assert!(!mesh.set_skin_weights(&weights[1..]));
+    assert!(mesh.set_skin_weights(&weights));
+    assert!(!mesh.set_lods(&[vec![[0, 1, n as u16]]]));
+    assert!(mesh.set_lods(&lods));
+    mesh.set_meshlets(&meshlets);
+    mesh.set_cull_data(&cull);
+    mesh.set_version(1);
 
     let saved = reload(&mut nif);
     assert!(geometry(&saved, index).has_internal_geometry());
@@ -104,19 +104,19 @@ fn internal_mesh_data_round_trips() {
 #[test]
 fn replace_vertices_and_triangles() {
     let (mut nif, index) = internal();
-    let mut block = nif.block_of_mut::<BsGeometry>(index).unwrap();
-    let mut mesh = block.as_mut().mesh_mut(0).unwrap();
+    let block = nif.block_of_mut::<BsGeometry>(index).unwrap();
+    let mesh = block.mesh_mut(0).unwrap();
     let few = [Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0)];
-    assert!(!mesh.as_mut().replace_vertices(&few), "the triangles use more vertices");
-    assert!(!mesh.as_mut().set_triangles(&[[0, 1, 6616]]));
-    assert!(mesh.as_mut().set_lods::<Vec<[u16; 3]>>(&[]));
-    assert!(mesh.as_mut().set_triangles(&[[0, 1, 2]]));
-    assert!(mesh.as_mut().replace_vertices(&few));
+    assert!(!mesh.replace_vertices(&few), "the triangles use more vertices");
+    assert!(!mesh.set_triangles(&[[0, 1, 6616]]));
+    assert!(mesh.set_lods::<Vec<[u16; 3]>>(&[]));
+    assert!(mesh.set_triangles(&[[0, 1, 2]]));
+    assert!(mesh.replace_vertices(&few));
     assert_eq!((mesh.vertex_count(), mesh.normals().len(), mesh.uvs().len()), (3, 3, 3));
 
     // More than 65535 vertices, far outside the stored scale.
     let many: Vec<Vec3> = (0..70000).map(|i| Vec3::new(i as f32, 0.0, -1000.0)).collect();
-    assert!(mesh.as_mut().replace_vertices(&many));
+    assert!(mesh.replace_vertices(&many));
     let scale = mesh.scale();
     assert_eq!(mesh.vertex_count(), 70000);
 
@@ -132,9 +132,9 @@ fn replace_vertices_and_triangles() {
 #[test]
 fn generate_meshlets() {
     let (mut nif, index) = internal();
-    let mut block = nif.block_of_mut::<BsGeometry>(index).unwrap();
-    let mut mesh = block.as_mut().mesh_mut(0).unwrap();
-    assert!(mesh.as_mut().generate_meshlets(64, 64));
+    let block = nif.block_of_mut::<BsGeometry>(index).unwrap();
+    let mesh = block.mesh_mut(0).unwrap();
+    assert!(mesh.generate_meshlets(64, 64));
     let meshlets = mesh.meshlets();
     assert!(!meshlets.is_empty());
     assert_eq!(meshlets.iter().map(|m| m.primitive_count).sum::<u32>(), 12132);

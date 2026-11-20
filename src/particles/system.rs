@@ -31,7 +31,7 @@ impl NiParticleSystem {
     }
 
     /// Sets [`vertex_raw_flags`](Self::vertex_raw_flags).
-    pub fn set_vertex_raw_flags(self: Pin<&mut Self>, flags: [u8; 8]) {
+    pub fn set_vertex_raw_flags(&mut self, flags: [u8; 8]) {
         ffi::set_particle_system_vertex_raw_flags(self.ffi_mut(), flags);
     }
 
@@ -41,7 +41,7 @@ impl NiParticleSystem {
     }
 
     /// Sets [`bounds`](Self::bounds).
-    pub fn set_bounds(self: Pin<&mut Self>, bounds: BoundingSphere) {
+    pub fn set_bounds(&mut self, bounds: BoundingSphere) {
         ffi::set_particle_system_bounds(self.ffi_mut(), bounds.to_ffi());
     }
 
@@ -51,7 +51,7 @@ impl NiParticleSystem {
     }
 
     /// Sets [`bound_min_max`](Self::bound_min_max).
-    pub fn set_bound_min_max(self: Pin<&mut Self>, values: [f32; 6]) {
+    pub fn set_bound_min_max(&mut self, values: [f32; 6]) {
         ffi::set_particle_system_bound_min_max(self.ffi_mut(), values);
     }
 }
@@ -68,7 +68,7 @@ impl NiParticleSystem {
     }
 
     /// Replaces [`materials`](Self::materials).
-    pub fn set_materials<N: AsRef<[u8]>>(self: Pin<&mut Self>, materials: &[(N, u32)]) {
+    pub fn set_materials<N: AsRef<[u8]>>(&mut self, materials: &[(N, u32)]) {
         let (bytes, lengths) = crate::extra_data::joined(materials.iter().map(|(name, _)| name));
         let extra: Vec<u32> = materials.iter().map(|&(_, e)| e).collect();
         ffi::set_particle_system_materials(self.ffi_mut(), &bytes, &lengths, &extra);
@@ -80,7 +80,7 @@ impl NiParticleSystem {
     }
 
     /// Sets the shader's name, or removes the shader with `None`.
-    pub fn set_shader_name(self: Pin<&mut Self>, name: Option<impl AsRef<[u8]>>) {
+    pub fn set_shader_name(&mut self, name: Option<impl AsRef<[u8]>>) {
         match name {
             Some(name) => ffi::set_particle_system_shader(self.ffi_mut(), true, name.as_ref()),
             None => ffi::set_particle_system_shader(self.ffi_mut(), false, &[]),

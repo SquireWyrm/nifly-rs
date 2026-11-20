@@ -23,12 +23,12 @@ const VIEWPORT: Viewport = Viewport { left: 0.25, right: 0.75, top: 0.5, bottom:
 
 fn set_fields(nif: &mut NifFile, camera: usize) {
     let mut edit = nif.edit::<NiCamera>(camera).unwrap();
-    let mut c = edit.block();
-    c.as_mut().set_raw_flags(7);
-    c.as_mut().set_frustum(FRUSTUM);
-    c.as_mut().set_orthographic(true);
-    c.as_mut().set_viewport(VIEWPORT);
-    c.as_mut().set_lod_adjust(2.5);
+    let c = &mut *edit;
+    c.set_raw_flags(7);
+    c.set_frustum(FRUSTUM);
+    c.set_orthographic(true);
+    c.set_viewport(VIEWPORT);
+    c.set_lod_adjust(2.5);
 }
 
 #[test]
@@ -102,7 +102,7 @@ fn scene() {
     assert!(edit.set_scene(Some(5)));
     assert_eq!(edit.view().scene().map(|s| s.index()), Some(5));
     assert!(edit.set_scene(Some(10)));
-    edit.scene().unwrap().block().upcast_mut().set_name("Scene");
+    edit.scene().unwrap().set_name("Scene");
     assert_eq!(nif.view::<NiCamera>(camera).unwrap().scene().unwrap().name(), "Scene");
     let saved = reload(&mut nif, KEEP);
     assert_eq!(saved.view::<NiCamera>(camera).unwrap().scene().map(|s| s.index()), Some(10));

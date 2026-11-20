@@ -86,8 +86,8 @@ impl NiMaterialColorController {
     }
 
     /// Sets [`target_color`](Self::target_color).
-    pub fn set_target_color(self: Pin<&mut Self>, color: MaterialColor) {
-        ffi::set_point3_controller_target_color(self.upcast_mut().ffi_mut(), color.into());
+    pub fn set_target_color(&mut self, color: MaterialColor) {
+        ffi::set_point3_controller_target_color((**self).ffi_mut(), color.into());
     }
 }
 
@@ -99,8 +99,8 @@ impl NiLightColorController {
     }
 
     /// Sets [`target_color`](Self::target_color).
-    pub fn set_target_color(self: Pin<&mut Self>, color: LightColor) {
-        ffi::set_point3_controller_target_color(self.upcast_mut().ffi_mut(), color.into());
+    pub fn set_target_color(&mut self, color: LightColor) {
+        ffi::set_point3_controller_target_color((**self).ffi_mut(), color.into());
     }
 }
 
@@ -111,7 +111,7 @@ impl NiFlipController {
     }
 
     /// Sets [`texture_map`](Self::texture_map).
-    pub fn set_texture_map(self: Pin<&mut Self>, map: TextureMap) {
+    pub fn set_texture_map(&mut self, map: TextureMap) {
         ffi::set_flip_texture_slot(self.ffi_mut(), map.into());
     }
 
@@ -148,7 +148,7 @@ impl NiTextureTransformController {
 
     /// Sets [`map`](Self::map). Returns `false`, changing nothing, for a shader map past
     /// `u32::MAX`.
-    pub fn set_map(mut self: Pin<&mut Self>, map: impl Into<MapSlot>) -> bool {
+    pub fn set_map(&mut self, map: impl Into<MapSlot>) -> bool {
         let (shader, slot) = match map.into() {
             MapSlot::Map(map) => (false, map.into()),
             MapSlot::Shader(i) => match u32::try_from(i) {
@@ -156,7 +156,7 @@ impl NiTextureTransformController {
                 Err(_) => return false,
             },
         };
-        ffi::set_texture_transform_shader_map(self.as_mut().ffi_mut(), shader);
+        ffi::set_texture_transform_shader_map(self.ffi_mut(), shader);
         ffi::set_texture_transform_slot(self.ffi_mut(), slot);
         true
     }
@@ -167,7 +167,7 @@ impl NiTextureTransformController {
     }
 
     /// Sets [`operation`](Self::operation).
-    pub fn set_operation(self: Pin<&mut Self>, operation: TransformMember) {
+    pub fn set_operation(&mut self, operation: TransformMember) {
         ffi::set_texture_transform_operation(self.ffi_mut(), operation.into());
     }
 }
@@ -180,7 +180,7 @@ impl NiFloatExtraDataController {
     }
 
     /// Sets [`extra_data_name`](Self::extra_data_name).
-    pub fn set_extra_data_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+    pub fn set_extra_data_name(&mut self, name: impl AsRef<[u8]>) {
         ffi::set_float_extra_data_controller_name(self.ffi_mut(), name.as_ref());
     }
 }
@@ -192,7 +192,7 @@ impl NiPSysModifierCtlr {
     }
 
     /// Sets [`modifier_name`](Self::modifier_name).
-    pub fn set_modifier_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+    pub fn set_modifier_name(&mut self, name: impl AsRef<[u8]>) {
         nifly_sys::particles::ffi::set_psys_modifier_ctlr_modifier_name(self.ffi_mut(), name.as_ref());
     }
 }
@@ -325,7 +325,7 @@ impl NiGeomMorpherController {
     }
 
     /// Sets [`unknown_ints`](Self::unknown_ints).
-    pub fn set_unknown_ints(self: Pin<&mut Self>, ints: &[u32]) {
+    pub fn set_unknown_ints(&mut self, ints: &[u32]) {
         ffi::set_geom_morpher_unknown_ints(self.ffi_mut(), ints);
     }
 }

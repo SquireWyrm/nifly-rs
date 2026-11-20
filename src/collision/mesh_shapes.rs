@@ -21,7 +21,7 @@ impl BhkNiTriStripsShape {
 
     /// Replaces the [filters](Self::filters). Returns `false`, changing nothing, unless there's
     /// one per [strips data](View::strips_data) ref.
-    pub fn set_filters(self: Pin<&mut Self>, filters: &[u32]) -> bool {
+    pub fn set_filters(&mut self, filters: &[u32]) -> bool {
         ffi::set_strips_shape_filters(self.ffi_mut(), filters)
     }
 }
@@ -63,7 +63,7 @@ impl BhkPackedNiTriStripsShape {
 
     /// Replaces the [sub-parts](Self::sub_parts). Returns `false`, changing nothing, for more
     /// than 65535.
-    pub fn set_sub_parts(self: Pin<&mut Self>, parts: &[SubPart]) -> bool {
+    pub fn set_sub_parts(&mut self, parts: &[SubPart]) -> bool {
         ffi::set_packed_shape_sub_parts(self.ffi_mut(), &sub_parts_to_ffi(parts))
     }
 
@@ -106,7 +106,7 @@ impl HkPackedNiTriStripsData {
 
     /// Replaces the [triangles](Self::triangles). Returns `false`, changing nothing, if an index
     /// isn't below the vertex count.
-    pub fn set_triangles(self: Pin<&mut Self>, triangles: &[PackedTriangle]) -> bool {
+    pub fn set_triangles(&mut self, triangles: &[PackedTriangle]) -> bool {
         let triangles: Vec<_> = triangles
             .iter()
             .map(|t| ffi::PackedTriangleFfi {
@@ -126,7 +126,7 @@ impl HkPackedNiTriStripsData {
 
     /// Replaces the vertices, changing the vertex count. Returns `false`, changing nothing, if a
     /// triangle uses a vertex past the new count.
-    pub fn set_vertices(self: Pin<&mut Self>, vertices: &[Vec3]) -> bool {
+    pub fn set_vertices(&mut self, vertices: &[Vec3]) -> bool {
         let vertices: Vec<_> = vertices.iter().map(|v| v.to_ffi()).collect();
         ffi::set_packed_data_vertices(self.ffi_mut(), &vertices)
     }
@@ -139,7 +139,7 @@ impl HkPackedNiTriStripsData {
 
     /// Replaces the [sub-parts](Self::sub_parts). Returns `false`, changing nothing, for more
     /// than 65535.
-    pub fn set_sub_parts(self: Pin<&mut Self>, parts: &[SubPart]) -> bool {
+    pub fn set_sub_parts(&mut self, parts: &[SubPart]) -> bool {
         ffi::set_packed_data_sub_parts(self.ffi_mut(), &sub_parts_to_ffi(parts))
     }
 }
@@ -238,7 +238,7 @@ impl BhkCompressedMeshShapeData {
         ffi::cms_materials_n(&self.0, 0)
     }
 
-    pub fn set_materials_32(self: Pin<&mut Self>, materials: &[u32]) {
+    pub fn set_materials_32(&mut self, materials: &[u32]) {
         ffi::set_cms_materials_n(self.ffi_mut(), 0, materials);
     }
 
@@ -247,7 +247,7 @@ impl BhkCompressedMeshShapeData {
         ffi::cms_materials_n(&self.0, 1)
     }
 
-    pub fn set_materials_16(self: Pin<&mut Self>, materials: &[u32]) {
+    pub fn set_materials_16(&mut self, materials: &[u32]) {
         ffi::set_cms_materials_n(self.ffi_mut(), 1, materials);
     }
 
@@ -256,7 +256,7 @@ impl BhkCompressedMeshShapeData {
         ffi::cms_materials_n(&self.0, 2)
     }
 
-    pub fn set_materials_8(self: Pin<&mut Self>, materials: &[u32]) {
+    pub fn set_materials_8(&mut self, materials: &[u32]) {
         ffi::set_cms_materials_n(self.ffi_mut(), 2, materials);
     }
 
@@ -268,7 +268,7 @@ impl BhkCompressedMeshShapeData {
             .collect()
     }
 
-    pub fn set_chunk_materials(self: Pin<&mut Self>, materials: &[ChunkMaterial]) {
+    pub fn set_chunk_materials(&mut self, materials: &[ChunkMaterial]) {
         let materials: Vec<_> = materials
             .iter()
             .map(|m| ffi::CmsMaterialFfi { material: m.material, filter: m.filter.to_ffi() })
@@ -284,7 +284,7 @@ impl BhkCompressedMeshShapeData {
             .collect()
     }
 
-    pub fn set_chunk_transforms(self: Pin<&mut Self>, transforms: &[ChunkTransform]) {
+    pub fn set_chunk_transforms(&mut self, transforms: &[ChunkTransform]) {
         let transforms: Vec<_> = transforms
             .iter()
             .map(|t| ffi::CmsTransformFfi { translation: t.translation, rotation: t.rotation })
@@ -300,7 +300,7 @@ impl BhkCompressedMeshShapeData {
 
     /// Replaces the [big vertices](Self::big_vertices). Returns `false`, changing nothing, if a
     /// big triangle uses a vertex past the new count.
-    pub fn set_big_vertices(self: Pin<&mut Self>, vertices: &[[f32; 4]]) -> bool {
+    pub fn set_big_vertices(&mut self, vertices: &[[f32; 4]]) -> bool {
         ffi::set_cms_big_vertices(self.ffi_mut(), vertices.as_flattened())
     }
 
@@ -314,7 +314,7 @@ impl BhkCompressedMeshShapeData {
 
     /// Replaces the [big triangles](Self::big_triangles). Returns `false`, changing nothing, if
     /// an index isn't below the big vertex count.
-    pub fn set_big_triangles(self: Pin<&mut Self>, triangles: &[BigTriangle]) -> bool {
+    pub fn set_big_triangles(&mut self, triangles: &[BigTriangle]) -> bool {
         let triangles: Vec<_> = triangles
             .iter()
             .map(|t| ffi::CmsBigTriangleFfi {
@@ -347,7 +347,7 @@ impl BhkCompressedMeshShapeData {
             .collect()
     }
 
-    pub fn set_chunks(self: Pin<&mut Self>, chunks: &[MeshChunk]) {
+    pub fn set_chunks(&mut self, chunks: &[MeshChunk]) {
         let mut headers = Vec::with_capacity(chunks.len());
         let mut lists = Vec::new();
         let mut lengths = Vec::with_capacity(chunks.len() * 4);

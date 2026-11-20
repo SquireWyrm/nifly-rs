@@ -48,7 +48,7 @@ impl NiCamera {
     }
 
     /// Sets the [frustum](Self::frustum).
-    pub fn set_frustum(self: Pin<&mut Self>, f: Frustum) {
+    pub fn set_frustum(&mut self, f: Frustum) {
         ffi::set_camera_frustum(self.ffi_mut(), &[f.left, f.right, f.top, f.bottom, f.near, f.far]);
     }
 
@@ -60,7 +60,7 @@ impl NiCamera {
     }
 
     /// Sets the [viewport](Self::viewport).
-    pub fn set_viewport(self: Pin<&mut Self>, v: Viewport) {
+    pub fn set_viewport(&mut self, v: Viewport) {
         ffi::set_camera_viewport(self.ffi_mut(), &[v.left, v.right, v.top, v.bottom]);
     }
 }
@@ -85,7 +85,7 @@ impl NiRangeLodData {
     }
 
     /// Sets the [levels](Self::levels). Not checked against the child count.
-    pub fn set_levels(self: Pin<&mut Self>, levels: &[LodRange]) {
+    pub fn set_levels(&mut self, levels: &[LodRange]) {
         let flat: Vec<f32> = levels.iter().flat_map(|r| [r.near, r.far]).collect();
         ffi::set_range_lod_levels(self.ffi_mut(), &flat);
     }
@@ -98,7 +98,7 @@ impl NiScreenLodData {
     }
 
     /// Sets the [bound](Self::bound).
-    pub fn set_bound(self: Pin<&mut Self>, bound: BoundingSphere) {
+    pub fn set_bound(&mut self, bound: BoundingSphere) {
         ffi::set_screen_lod_bound(self.ffi_mut(), bound.to_ffi());
     }
 
@@ -108,7 +108,7 @@ impl NiScreenLodData {
     }
 
     /// Sets the [world bound](Self::world_bound).
-    pub fn set_world_bound(self: Pin<&mut Self>, bound: BoundingSphere) {
+    pub fn set_world_bound(&mut self, bound: BoundingSphere) {
         ffi::set_screen_lod_world_bound(self.ffi_mut(), bound.to_ffi());
     }
 
@@ -119,7 +119,7 @@ impl NiScreenLodData {
 
     /// Sets the [proportion levels](Self::proportion_levels). Not checked against the child
     /// count.
-    pub fn set_proportion_levels(self: Pin<&mut Self>, levels: &[f32]) {
+    pub fn set_proportion_levels(&mut self, levels: &[f32]) {
         ffi::set_screen_lod_proportion_levels(self.ffi_mut(), levels);
     }
 }
@@ -153,7 +153,7 @@ impl NiBillboardNode {
         BillboardMode::try_from(ffi::billboard_mode(&self.0)).ok()
     }
 
-    pub fn set_mode(self: Pin<&mut Self>, mode: BillboardMode) {
+    pub fn set_mode(&mut self, mode: BillboardMode) {
         ffi::set_billboard_mode(self.ffi_mut(), mode.into());
     }
 }
@@ -183,7 +183,7 @@ impl NiSwitchNode {
         SwitchNodeFlags::from_bits_retain(ffi::switch_node_flags(&self.0))
     }
 
-    pub fn set_flags(self: Pin<&mut Self>, flags: SwitchNodeFlags) {
+    pub fn set_flags(&mut self, flags: SwitchNodeFlags) {
         ffi::set_switch_node_flags(self.ffi_mut(), flags.bits());
     }
 
@@ -211,7 +211,7 @@ impl NiSortAdjustNode {
         SortingMode::try_from(ffi::sorting_mode(&self.0)).ok()
     }
 
-    pub fn set_sorting_mode(self: Pin<&mut Self>, mode: SortingMode) {
+    pub fn set_sorting_mode(&mut self, mode: SortingMode) {
         ffi::set_sorting_mode(self.ffi_mut(), mode.into());
     }
 }

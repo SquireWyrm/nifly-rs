@@ -23,7 +23,7 @@ impl BhkPoseArray {
         (0..ffi::pose_array_bone_count(&self.0)).map(|i| ffi::pose_array_bone(&self.0, i).as_bstr())
     }
 
-    pub fn set_bones<S: AsRef<[u8]>>(self: Pin<&mut Self>, bones: impl IntoIterator<Item = S>) {
+    pub fn set_bones<S: AsRef<[u8]>>(&mut self, bones: impl IntoIterator<Item = S>) {
         let (bytes, lengths) = joined(bones);
         ffi::set_pose_array_bones(self.ffi_mut(), &bytes, &lengths);
     }
@@ -44,7 +44,7 @@ impl BhkPoseArray {
             .collect()
     }
 
-    pub fn set_poses<P: AsRef<[BoneTransform]>>(self: Pin<&mut Self>, poses: &[P]) {
+    pub fn set_poses<P: AsRef<[BoneTransform]>>(&mut self, poses: &[P]) {
         let lengths: Vec<_> = poses.iter().map(|p| p.as_ref().len()).collect();
         let transforms: Vec<_> = poses
             .iter()
@@ -80,7 +80,7 @@ impl BhkRagdollTemplateData {
         ffi::template_data_name(&self.0).as_bstr()
     }
 
-    pub fn set_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+    pub fn set_name(&mut self, name: impl AsRef<[u8]>) {
         ffi::set_template_data_name(self.ffi_mut(), name.as_ref());
     }
 
@@ -112,7 +112,7 @@ impl BhkRagdollTemplateData {
 
     /// Replaces the [joint constraints](Self::joint_constraints). Each keeps the entities of the
     /// one it replaces; new ones have none.
-    pub fn set_joint_constraints(self: Pin<&mut Self>, constraints: &[JointConstraint]) {
+    pub fn set_joint_constraints(&mut self, constraints: &[JointConstraint]) {
         let constraints: Vec<_> = constraints
             .iter()
             .map(|c| ffi::JointConstraintFfi {

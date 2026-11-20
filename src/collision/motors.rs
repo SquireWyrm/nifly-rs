@@ -470,7 +470,7 @@ macro_rules! descriptors {
             }
 
             /// Sets the [descriptor](Self::descriptor).
-            pub fn set_descriptor(self: Pin<&mut Self>, descriptor: $desc) {
+            pub fn set_descriptor(&mut self, descriptor: $desc) {
                 ffi::$set(self.ffi_mut(), &descriptor.to_ffi());
             }
         }

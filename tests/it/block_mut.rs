@@ -1,8 +1,8 @@
-//! Tests for block, block_of, block_mut, block_of_mut, NiObject::downcast_mut, upcast_mut and
+//! Tests for block, block_of, block_mut, block_of_mut, NiObject::downcast_mut, DerefMut and
 //! the other `_mut` lookups on NifFile.
 
 use crate::common::{load, upstream};
-use std::{io::Cursor, pin::Pin, ptr};
+use std::{io::Cursor, ptr};
 
 use nifly::{
     file::{Index, NifFile},
@@ -12,8 +12,8 @@ use nifly::{
     shaders::{NiMaterialProperty, NiShader},
 };
 
-/// The address of a pinned block, to compare with a shared reference.
-fn addr<T>(p: Option<Pin<&mut T>>) -> Option<*const T> {
+/// The address of a mutable block, to compare with a shared reference.
+fn addr<T>(p: Option<&mut T>) -> Option<*const T> {
     p.map(|p| ptr::from_ref(&*p))
 }
 
@@ -33,20 +33,20 @@ fn same_block_as_shared_form() {
     let set = ptr::from_ref(nif.block(9).unwrap());
     assert_eq!(shader_index, 8);
 
-    assert_eq!(nif.root_node_mut().map(|mut r| ptr::from_ref(&*r.block())), Some(root));
+    assert_eq!(nif.root_node_mut().map(|r| ptr::from_ref(&*r)), Some(root));
     assert_eq!(addr(nif.find_block_by_name_mut::<NiShape>("Suzanne:6")), Some(named));
     let mut shape_edit = nif.edit::<NiShape>(shape).unwrap();
-    assert_eq!(ptr::from_ref(&*shape_edit.shader().unwrap().block()), shader);
+    assert_eq!(ptr::from_ref(&*shape_edit.shader().unwrap()), shader);
     let mut edit = nif.edit::<NiShader>(shader_index).unwrap();
-    let mut texture_set = edit.texture_set().unwrap();
-    assert_eq!(ptr::from_ref(&*texture_set.block()).cast(), set);
+    let texture_set = edit.texture_set().unwrap();
+    assert_eq!(ptr::from_ref(&*texture_set).cast(), set);
 
     // Icosphere: shape 3's parent is Indirect2 (block 2).
     let mut ico = load("Icosphere");
     let indirect2: *const NiNode = ico.block(2).unwrap().downcast().unwrap();
     let mut shape = ico.edit::<NiShape>(3).unwrap();
-    let mut parent = shape.parent().unwrap();
-    assert_eq!(ptr::from_ref(&*parent.block()), indirect2);
+    let parent = shape.parent().unwrap();
+    assert_eq!(ptr::from_ref(&*parent), indirect2);
 }
 
 #[test]
@@ -55,9 +55,9 @@ fn material_and_shader_in_older_files() {
     let shape = shape_index(&nif);
     let material = ptr::from_ref(nif.view::<NiShape>(shape).unwrap().material_property().unwrap().get());
     let mut edit = nif.edit::<NiShape>(shape).unwrap();
-    assert_eq!(ptr::from_ref(&*edit.material_property().unwrap().block()), material);
+    assert_eq!(ptr::from_ref(&*edit.material_property().unwrap()), material);
     // With no other shader, the shader is the material.
-    assert_eq!(ptr::from_ref(&*edit.shader().unwrap().block()).cast::<u8>(), material.cast());
+    assert_eq!(ptr::from_ref(&*edit.shader().unwrap()).cast::<u8>(), material.cast());
 }
 
 #[test]
@@ -90,7 +90,7 @@ fn none_cases() {
 fn set_through_material_property_mut() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let shape = shape_index(&nif);
-    nif.edit::<nifly::geometry::NiShape>(shape).unwrap().material_property().unwrap().block().set_alpha(0.5);
+    nif.edit::<nifly::geometry::NiShape>(shape).unwrap().material_property().unwrap().set_alpha(0.5);
     assert_eq!(nif.shapes().views().next().unwrap().material_property().unwrap().alpha(), 0.5);
 
     let mut cur = Cursor::new(Vec::new());
@@ -143,7 +143,7 @@ fn block_mut_and_downcast_mut() {
 }
 
 #[test]
-fn upcast_mut() {
+fn deref_mut() {
     use nifly::{
         objects::{NiAvObject, NiObjectNet},
         shaders::{BsLightingShaderProperty, BsShaderProperty},
@@ -152,9 +152,9 @@ fn upcast_mut() {
     // A subclass reaches its base type's setters, on the same object.
     let mut nif = load("Cube");
     let index = nif.blocks_of::<BsLightingShaderProperty>().indices().next().unwrap();
-    let mut shader = nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap();
-    shader.as_mut().set_alpha(0.5);
-    let base: Pin<&mut BsShaderProperty> = shader.upcast_mut();
+    let shader = nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap();
+    shader.set_alpha(0.5);
+    let base: &mut BsShaderProperty = shader;
     let base_addr = ptr::from_ref(&*base);
     base.set_uv_scale([2.0, 3.0]);
     let s = nif.block_of::<BsLightingShaderProperty>(index).unwrap();
@@ -165,9 +165,9 @@ fn upcast_mut() {
     // Chained, up to NiObject, each the same object as Deref gives.
     let node = nif.root_node().map(|r| r.index()).unwrap();
     let n = nif.block_of_mut::<NiNode>(node).unwrap();
-    let av: Pin<&mut NiAvObject> = n.upcast_mut();
-    let net: Pin<&mut NiObjectNet> = av.upcast_mut();
-    let obj: Pin<&mut NiObject> = net.upcast_mut();
+    let av: &mut NiAvObject = n;
+    let net: &mut NiObjectNet = av;
+    let obj: &mut NiObject = net;
     let obj_addr = ptr::from_ref(&*obj);
     assert!(ptr::eq(obj_addr, nif.block(node).unwrap()));
 }

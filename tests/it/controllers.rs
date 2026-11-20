@@ -65,12 +65,12 @@ fn add_controllers() {
     assert_eq!((c.frequency(), c.phase(), c.start_time(), c.stop_time()), (1.0, 0.0, f32::MAX, f32::MIN));
 
     let flags = TimeControllerFlags::DEFAULT.with_cycle_type(CycleType::Loop).with_compute_scaled_time(true);
-    let mut base = nif.block_of_mut::<NiTimeController>(alpha).unwrap();
-    base.as_mut().set_flags(flags);
-    base.as_mut().set_frequency(2.0);
-    base.as_mut().set_phase(0.5);
-    base.as_mut().set_start_time(0.25);
-    base.as_mut().set_stop_time(3.0);
+    let base = nif.block_of_mut::<NiTimeController>(alpha).unwrap();
+    base.set_flags(flags);
+    base.set_frequency(2.0);
+    base.set_phase(0.5);
+    base.set_start_time(0.25);
+    base.set_stop_time(3.0);
 
     let nif = reload_in_place(&mut nif);
     assert_eq!(chain(&nif, 0), [alpha, vis]);

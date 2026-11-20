@@ -84,11 +84,11 @@ fn objects_store_no_geometry() {
 #[test]
 fn set_objects() {
     let (mut nif, block) = with_objects(&[]);
-    let mut b = nif.block_of_mut::<BsPackedCombinedSharedGeomDataExtra>(block).unwrap();
+    let b = nif.block_of_mut::<BsPackedCombinedSharedGeomDataExtra>(block).unwrap();
     assert!(b.objects().is_empty());
-    b.as_mut().set_objects(&[object(), object()]);
+    b.set_objects(&[object(), object()]);
     assert_eq!(b.objects().len(), 2);
-    b.as_mut().set_objects(&[PackedGeomObject { instances: vec![], ..object() }]);
+    b.set_objects(&[PackedGeomObject { instances: vec![], ..object() }]);
     assert_eq!(reload(&mut nif).block_of::<BsPackedCombinedSharedGeomDataExtra>(block).unwrap().objects(), [
         PackedGeomObject { instances: vec![], ..object() }
     ]);

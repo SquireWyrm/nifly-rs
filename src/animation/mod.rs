@@ -308,7 +308,7 @@ macro_rules! key_groups {
             "Replaces [`", stringify!($get), "`](Self::", stringify!($get), "). Returns `false`, ",
             "changing nothing, if the group has keys but no interpolation."
         )]
-        pub fn $set(self: Pin<&mut Self>, keys: &KeyGroup<$ty>) -> bool {
+        pub fn $set(&mut self, keys: &KeyGroup<$ty>) -> bool {
             ffi::$ffi_set(self.ffi_mut(), &group_to_ffi(keys))
         }
     )*};

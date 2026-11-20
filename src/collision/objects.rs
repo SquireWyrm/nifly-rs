@@ -9,7 +9,7 @@ impl NiCollisionData {
         PropagationMode::try_from(ffi::collision_data_propagation_mode(&self.0)).ok()
     }
 
-    pub fn set_propagation_mode(self: Pin<&mut Self>, mode: PropagationMode) {
+    pub fn set_propagation_mode(&mut self, mode: PropagationMode) {
         ffi::set_collision_data_propagation_mode(self.ffi_mut(), mode.into());
     }
 
@@ -18,7 +18,7 @@ impl NiCollisionData {
         CollisionMode::try_from(ffi::collision_data_collision_mode(&self.0)).ok()
     }
 
-    pub fn set_collision_mode(self: Pin<&mut Self>, mode: CollisionMode) {
+    pub fn set_collision_mode(&mut self, mode: CollisionMode) {
         ffi::set_collision_data_collision_mode(self.ffi_mut(), mode.into());
     }
 
@@ -28,7 +28,7 @@ impl NiCollisionData {
     }
 
     /// Sets the [bounding volume](Self::bounding_volume), or removes it with `None`.
-    pub fn set_bounding_volume(self: Pin<&mut Self>, volume: Option<&BoundingVolume>) {
+    pub fn set_bounding_volume(&mut self, volume: Option<&BoundingVolume>) {
         let mut records = Vec::new();
         if let Some(volume) = volume {
             volume.to_ffi(&mut records);
@@ -112,7 +112,7 @@ impl BhkPhysicsSystem {
         ffi::physics_system_data(&self.0)
     }
 
-    pub fn set_data(self: Pin<&mut Self>, data: &[u8]) {
+    pub fn set_data(&mut self, data: &[u8]) {
         ffi::set_physics_system_data(self.ffi_mut(), data);
     }
 }
@@ -123,7 +123,7 @@ impl BhkRagdollSystem {
         ffi::ragdoll_system_data(&self.0)
     }
 
-    pub fn set_data(self: Pin<&mut Self>, data: &[u8]) {
+    pub fn set_data(&mut self, data: &[u8]) {
         ffi::set_ragdoll_system_data(self.ffi_mut(), data);
     }
 }

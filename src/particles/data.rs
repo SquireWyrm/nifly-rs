@@ -80,7 +80,7 @@ impl NiRotatingParticlesData {
 
     /// Replaces [`rotations_2`](Self::rotations_2). Returns `false`, changing nothing, unless
     /// there are none or one per vertex.
-    pub fn set_rotations_2(self: Pin<&mut Self>, rotations: &[[f32; 4]]) -> bool {
+    pub fn set_rotations_2(&mut self, rotations: &[[f32; 4]]) -> bool {
         ffi::set_rotating_particles_data_rotations_2(self.ffi_mut(), rotations.as_flattened())
     }
 }
@@ -90,7 +90,7 @@ impl NiRotatingParticlesData {
 impl NiParticlesData {
     /// Sets the [vertex count](NiGeometryData::vertex_count), the most particles the system
     /// holds, and resizes every per-vertex list that has values to match, padding with zeros.
-    pub fn set_vertex_count(self: Pin<&mut Self>, count: u16) {
+    pub fn set_vertex_count(&mut self, count: u16) {
         ffi::set_particles_data_vertex_count(self.ffi_mut(), count);
     }
 
@@ -101,7 +101,7 @@ impl NiParticlesData {
 
     /// Replaces [`radii`](Self::radii). Returns `false`, changing nothing, unless there are none
     /// or one per vertex.
-    pub fn set_radii(self: Pin<&mut Self>, radii: &[f32]) -> bool {
+    pub fn set_radii(&mut self, radii: &[f32]) -> bool {
         ffi::set_particles_data_radii(self.ffi_mut(), radii)
     }
 
@@ -112,7 +112,7 @@ impl NiParticlesData {
 
     /// Replaces [`sizes`](Self::sizes). Returns `false`, changing nothing, unless there are none
     /// or one per vertex.
-    pub fn set_sizes(self: Pin<&mut Self>, sizes: &[f32]) -> bool {
+    pub fn set_sizes(&mut self, sizes: &[f32]) -> bool {
         ffi::set_particles_data_sizes(self.ffi_mut(), sizes)
     }
 
@@ -123,7 +123,7 @@ impl NiParticlesData {
 
     /// Replaces [`rotations`](Self::rotations). Returns `false`, changing nothing, unless there
     /// are none or one per vertex.
-    pub fn set_rotations(self: Pin<&mut Self>, rotations: &[[f32; 4]]) -> bool {
+    pub fn set_rotations(&mut self, rotations: &[[f32; 4]]) -> bool {
         ffi::set_particles_data_rotations(self.ffi_mut(), rotations.as_flattened())
     }
 
@@ -134,7 +134,7 @@ impl NiParticlesData {
 
     /// Replaces [`rotation_angles`](Self::rotation_angles). Returns `false`, changing nothing,
     /// unless there are none or one per vertex.
-    pub fn set_rotation_angles(self: Pin<&mut Self>, angles: &[f32]) -> bool {
+    pub fn set_rotation_angles(&mut self, angles: &[f32]) -> bool {
         ffi::set_particles_data_rotation_angles(self.ffi_mut(), angles)
     }
 
@@ -145,7 +145,7 @@ impl NiParticlesData {
 
     /// Replaces [`rotation_axes`](Self::rotation_axes). Returns `false`, changing nothing, unless
     /// there are none or one per vertex.
-    pub fn set_rotation_axes(self: Pin<&mut Self>, axes: &[Vec3]) -> bool {
+    pub fn set_rotation_axes(&mut self, axes: &[Vec3]) -> bool {
         let axes: Vec<_> = axes.iter().map(|a| a.to_ffi()).collect();
         ffi::set_particles_data_rotation_axes(self.ffi_mut(), &axes)
     }
@@ -157,7 +157,7 @@ impl NiParticlesData {
     }
 
     /// Replaces [`subtexture_offsets`](Self::subtexture_offsets).
-    pub fn set_subtexture_offsets(self: Pin<&mut Self>, offsets: &[[f32; 4]]) {
+    pub fn set_subtexture_offsets(&mut self, offsets: &[[f32; 4]]) {
         ffi::set_particles_data_subtexture_offsets(self.ffi_mut(), offsets.as_flattened());
     }
 }
@@ -171,7 +171,7 @@ impl NiPSysData {
 
     /// Replaces [`rotation_speeds`](Self::rotation_speeds). Returns `false`, changing nothing,
     /// unless there are none or one per vertex.
-    pub fn set_rotation_speeds(self: Pin<&mut Self>, speeds: &[f32]) -> bool {
+    pub fn set_rotation_speeds(&mut self, speeds: &[f32]) -> bool {
         ffi::set_psys_data_rotation_speeds(self.ffi_mut(), speeds)
     }
 
@@ -182,7 +182,7 @@ impl NiPSysData {
 
     /// Replaces [`particle_info`](Self::particle_info). Returns `false`, changing nothing, unless
     /// there is none or one per vertex.
-    pub fn set_particle_info(self: Pin<&mut Self>, info: &[ParticleInfo]) -> bool {
+    pub fn set_particle_info(&mut self, info: &[ParticleInfo]) -> bool {
         let info: Vec<_> = info.iter().copied().map(ParticleInfo::to_ffi).collect();
         ffi::set_psys_data_particle_info(self.ffi_mut(), &info)
     }
@@ -196,7 +196,7 @@ impl NiMeshPSysData {
     }
 
     /// Replaces [`generation_pool_sizes`](Self::generation_pool_sizes).
-    pub fn set_generation_pool_sizes(self: Pin<&mut Self>, sizes: &[u32]) {
+    pub fn set_generation_pool_sizes(&mut self, sizes: &[u32]) {
         ffi::set_mesh_psys_data_generation_pool_sizes(self.ffi_mut(), sizes);
     }
 }

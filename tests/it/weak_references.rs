@@ -62,8 +62,8 @@ fn form_id_not_saved_before_stream_173() {
 #[test]
 fn rejects_zero_in_material_name() {
     let (mut nif, index) = with_node(NifVersion::STARFIELD);
-    let mut n = nif.block_of_mut::<BsWeakReferenceNode>(index).unwrap();
-    assert!(n.as_mut().set_weak_references(&weak_references()));
+    let n = nif.block_of_mut::<BsWeakReferenceNode>(index).unwrap();
+    assert!(n.set_weak_references(&weak_references()));
     let mut bad = weak_references();
     bad[0].materials[0].name = "a\0b".into();
     assert!(!n.set_weak_references(&bad));
@@ -77,8 +77,8 @@ fn water_references_round_trip() {
         WaterReference { transform: matrix(3.0), resource: resource(5), unknown: 9, material: "water.mat".into() },
         WaterReference { transform: matrix(4.0), resource: resource(6), unknown: 0, material: "".into() },
     ];
-    let mut n = nif.block_of_mut::<BsWeakReferenceNode>(index).unwrap();
-    n.as_mut().set_water_references(&water);
+    let n = nif.block_of_mut::<BsWeakReferenceNode>(index).unwrap();
+    n.set_water_references(&water);
     n.set_unknown(42);
     let mut saved = reload(&mut nif);
     assert_eq!(node(&saved).water_references(), water);

@@ -36,7 +36,7 @@ fn add(nif: &mut NifFile, value: impl IntoExtraData) -> Index {
     nif.edit::<NiAvObject>(root).unwrap().assign_extra_data(value).unwrap()
 }
 
-fn set<T: NiType>(nif: &mut NifFile, index: Index, f: impl FnOnce(std::pin::Pin<&mut T>)) {
+fn set<T: NiType>(nif: &mut NifFile, index: Index, f: impl FnOnce(&mut T)) {
     f(nif.block_of_mut::<T>(index).unwrap());
 }
 
@@ -134,21 +134,21 @@ fn lists_and_records() {
     set::<BoneTranslations>(&mut nif, translations, |b| b.set_translations(&bone_translations));
     set::<BsFurnitureMarker>(&mut nif, furniture, |b| b.set_positions(&positions));
     set::<BsConnectPointParents>(&mut nif, parents, |b| b.set_connect_points(&points));
-    set::<BsConnectPointChildren>(&mut nif, children, |mut b| {
-        b.as_mut().set_skinned(true);
-        b.as_mut().set_targets(["P-Point", "P-Other"]);
+    set::<BsConnectPointChildren>(&mut nif, children, |b| {
+        b.set_skinned(true);
+        b.set_targets(["P-Point", "P-Other"]);
     });
-    set::<BsInvMarker>(&mut nif, inv, |mut b| {
-        b.as_mut().set_rotation([100, 200, 300]);
-        b.as_mut().set_zoom(0.75);
+    set::<BsInvMarker>(&mut nif, inv, |b| {
+        b.set_rotation([100, 200, 300]);
+        b.set_zoom(0.75);
     });
-    set::<BsBound>(&mut nif, bound, |mut b| {
-        b.as_mut().set_center(Vec3::new(1.0, 2.0, 3.0));
-        b.as_mut().set_half_extents(Vec3::new(4.0, 5.0, 6.0));
+    set::<BsBound>(&mut nif, bound, |b| {
+        b.set_center(Vec3::new(1.0, 2.0, 3.0));
+        b.set_half_extents(Vec3::new(4.0, 5.0, 6.0));
     });
-    set::<BsBehaviorGraphExtraData>(&mut nif, graph, |mut b| {
-        b.as_mut().set_graph_file("Actors\\Graph.hkx");
-        b.as_mut().set_controls_base_skeleton(true);
+    set::<BsBehaviorGraphExtraData>(&mut nif, graph, |b| {
+        b.set_graph_file("Actors\\Graph.hkx");
+        b.set_controls_base_skeleton(true);
     });
     set::<SkinAttach>(&mut nif, attach, |b| b.set_bones(["Bone1", "Bone2"]));
 
@@ -197,9 +197,9 @@ fn rejected_values_change_nothing() {
 
     set::<NiVertWeightsExtraData>(&mut nif, weights, |b| assert!(!b.set_weights(&vec![0.0; 0x10000])));
     assert_eq!(get::<NiVertWeightsExtraData>(&nif, weights).weights(), [1.0]);
-    set::<BsDecalPlacementVectorExtraData>(&mut nif, decal, |mut b| {
-        assert!(!b.as_mut().set_blocks([vec![DecalPoint::default(); 0x10000]]));
-        assert!(!b.as_mut().set_blocks(vec![Vec::<DecalPoint>::new(); 0x10000]));
+    set::<BsDecalPlacementVectorExtraData>(&mut nif, decal, |b| {
+        assert!(!b.set_blocks([vec![DecalPoint::default(); 0x10000]]));
+        assert!(!b.set_blocks(vec![Vec::<DecalPoint>::new(); 0x10000]));
     });
     assert_eq!(get::<BsDecalPlacementVectorExtraData>(&nif, decal).blocks(), [vec![DecalPoint::default()]]);
 }
@@ -242,7 +242,7 @@ fn extra_data_chain() {
     assert!(edit.set_next_extra_data(None));
     assert!(edit.view().next_extra_data().is_none());
     assert!(edit.set_next_extra_data(Some(a)));
-    edit.next_extra_data().unwrap().block().set_num_bytes(5);
+    edit.next_extra_data().unwrap().set_num_bytes(5);
     assert_eq!(nif.block_of::<NiExtraData>(a).unwrap().num_bytes(), 5);
     let saved = reload(&mut nif);
     assert_eq!(saved.view::<NiExtraData>(b).unwrap().next_extra_data().map(|n| n.index()), Some(a));

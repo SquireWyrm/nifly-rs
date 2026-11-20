@@ -2,7 +2,6 @@
 //! BSSkyShaderProperty.
 
 use crate::common::{reload};
-use std::pin::Pin;
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
@@ -23,7 +22,7 @@ fn first<T: NiType>(nif: &NifFile) -> &T {
     nif.blocks_of::<T>().next().unwrap()
 }
 
-fn add<T: NewProperty>(nif: &mut NifFile) -> Pin<&mut T> {
+fn add<T: NewProperty>(nif: &mut NifFile) -> &mut T {
     let i = nif.edit::<nifly::objects::NiAvObject>(root_index(nif)).map(|mut e| e.add_property::<T, _>()).unwrap();
     nif.block_of_mut::<T>(i).unwrap()
 }
@@ -32,27 +31,27 @@ fn add<T: NewProperty>(nif: &mut NifFile) -> Pin<&mut T> {
 fn fallout_3_round_trip() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_3);
 
-    let mut pp = add::<BsShaderPpLightingProperty>(&mut nif);
-    pp.as_mut().set_refraction_strength(0.5);
-    pp.as_mut().set_refraction_fire_period(-3);
-    pp.as_mut().set_parallax_max_passes(8.0);
-    pp.as_mut().set_parallax_scale(0.25);
-    pp.as_mut().set_emissive_color([1.0, 0.5, 0.25, 1.0]);
-    let mut lighting = pp.upcast_mut();
-    lighting.as_mut().set_texture_clamp_mode(ClampMode::ClampBoth);
-    let mut base = lighting.upcast_mut();
-    base.as_mut().set_legacy_shader_type(LegacyShaderType::Skin);
+    let pp = add::<BsShaderPpLightingProperty>(&mut nif);
+    pp.set_refraction_strength(0.5);
+    pp.set_refraction_fire_period(-3);
+    pp.set_parallax_max_passes(8.0);
+    pp.set_parallax_scale(0.25);
+    pp.set_emissive_color([1.0, 0.5, 0.25, 1.0]);
+    let lighting = pp;
+    lighting.set_texture_clamp_mode(ClampMode::ClampBoth);
+    let base = lighting;
+    base.set_legacy_shader_type(LegacyShaderType::Skin);
     base.set_environment_map_scale(2.0);
 
-    let mut no_lighting = add::<BsShaderNoLightingProperty>(&mut nif);
-    no_lighting.as_mut().set_base_texture(b"textures\\effects\\glow.dds");
-    no_lighting.as_mut().set_falloff_start_angle(0.9);
-    no_lighting.as_mut().set_falloff_stop_angle(0.1);
-    no_lighting.as_mut().set_falloff_start_opacity(0.8);
+    let no_lighting = add::<BsShaderNoLightingProperty>(&mut nif);
+    no_lighting.set_base_texture(b"textures\\effects\\glow.dds");
+    no_lighting.set_falloff_start_angle(0.9);
+    no_lighting.set_falloff_stop_angle(0.1);
+    no_lighting.set_falloff_start_opacity(0.8);
     no_lighting.set_falloff_stop_opacity(0.2);
 
-    let mut sky = add::<SkyShaderProperty>(&mut nif);
-    sky.as_mut().set_file_name("textures\\sky\\clouds.dds");
+    let sky = add::<SkyShaderProperty>(&mut nif);
+    sky.set_file_name("textures\\sky\\clouds.dds");
     sky.set_sky_object_type(SkyObjectType::Clouds);
     add::<TileShaderProperty>(&mut nif).set_file_name("tile.dds");
     add::<TallGrassShaderProperty>(&mut nif).set_file_name("grass.dds");
@@ -97,13 +96,13 @@ fn fallout_3_round_trip() {
 fn skyrim_fields() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     add::<BsWaterShaderProperty>(&mut nif).set_flags(WaterShaderFlags::DISPLACEMENT | WaterShaderFlags::DEPTH);
-    let mut sky = add::<BsSkyShaderProperty>(&mut nif);
-    sky.as_mut().set_base_texture("textures\\sky\\moon.dds");
+    let sky = add::<BsSkyShaderProperty>(&mut nif);
+    sky.set_base_texture("textures\\sky\\moon.dds");
     sky.set_sky_object_type(SkyObjectType::Stars);
-    let mut pp = add::<BsShaderPpLightingProperty>(&mut nif);
-    pp.as_mut().set_emissive_color([1.0, 0.5, 0.25, 1.0]);
-    pp.as_mut().set_refraction_strength(0.5);
-    pp.upcast_mut().set_texture_clamp_mode(ClampMode::ClampBoth);
+    let pp = add::<BsShaderPpLightingProperty>(&mut nif);
+    pp.set_emissive_color([1.0, 0.5, 0.25, 1.0]);
+    pp.set_refraction_strength(0.5);
+    pp.set_texture_clamp_mode(ClampMode::ClampBoth);
 
     // Skyrim doesn't save property lists, so the blocks are saved unattached.
     let saved = reload(&mut nif);

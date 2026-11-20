@@ -32,9 +32,9 @@ fn crc_flag_lists() {
     assert_eq!((shader.crc_flags_1().len(), shader.crc_flags_2().len()), (4, 1));
     let flags_1 = shader.raw_flags_1();
 
-    let mut shader = nif.block_of_mut::<BsShaderProperty>(231).unwrap();
-    shader.as_mut().set_crc_flags_1(&[1, 2, 3, 4, 5, 6]);
-    shader.as_mut().set_crc_flags_2(&[]);
+    let shader = nif.block_of_mut::<BsShaderProperty>(231).unwrap();
+    shader.set_crc_flags_1(&[1, 2, 3, 4, 5, 6]);
+    shader.set_crc_flags_2(&[]);
     shader.set_raw_flags_1(flags_1 ^ 1);
     let saved = reload(&mut nif);
     let shader = saved.block_of::<BsShaderProperty>(231).unwrap();
@@ -75,12 +75,12 @@ fn lighting_unknowns() {
     let mut nif = upstream("TestNifFile_SF");
     let index = first::<BsLightingShaderProperty>(&nif);
     nif.block_of_mut::<NiObjectNet>(index).unwrap().set_name("");
-    let mut s = nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap();
-    s.as_mut().set_wetness_unknown_1(1.5);
-    s.as_mut().set_wetness_unknown_2(2.5);
-    s.as_mut().set_unknown_float(3.5);
-    s.as_mut().set_unknown_float_1(4.5);
-    s.as_mut().set_unknown_float_2(5.5);
+    let s = nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap();
+    s.set_wetness_unknown_1(1.5);
+    s.set_wetness_unknown_2(2.5);
+    s.set_unknown_float(3.5);
+    s.set_unknown_float_1(4.5);
+    s.set_unknown_float_2(5.5);
     s.set_unknown_short(6);
     let saved = reload(&mut nif);
     let s = saved.block_of::<BsLightingShaderProperty>(index).unwrap();
@@ -93,12 +93,12 @@ fn lighting_unknowns() {
 fn effect_unknowns() {
     // No Starfield test file has an effect shader without a name; Fallout 76 doesn't save these.
     let mut nif = upstream("TestNifFile_FO76");
-    let mut s = nif.block_of_mut::<BsEffectShaderProperty>(231).unwrap();
-    s.as_mut().set_unknown_float(1.5);
-    s.as_mut().set_unknown_bytes([1, 2, 3, 4, 5, 6, 7]);
-    s.as_mut().set_unknown_floats([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-    s.as_mut().set_unknown_byte(9);
-    s.as_mut().set_lighting_influence(11);
+    let s = nif.block_of_mut::<BsEffectShaderProperty>(231).unwrap();
+    s.set_unknown_float(1.5);
+    s.set_unknown_bytes([1, 2, 3, 4, 5, 6, 7]);
+    s.set_unknown_floats([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+    s.set_unknown_byte(9);
+    s.set_lighting_influence(11);
     s.set_clamp_unknown(12);
     let s = nif.block_of::<BsEffectShaderProperty>(231).unwrap();
     assert_eq!((s.unknown_float(), s.unknown_bytes(), s.unknown_byte()), (1.5, [1, 2, 3, 4, 5, 6, 7], 9));
@@ -114,9 +114,9 @@ fn effect_unknowns() {
 fn texture_set_slots() {
     let mut nif = upstream("TestNifFile_Static_SE");
     let index = first::<BsShaderTextureSet>(&nif);
-    let mut set = nif.block_of_mut::<BsShaderTextureSet>(index).unwrap();
-    assert!(!set.as_mut().set_path(9, "x.dds"), "Skyrim sets have 9 slots");
-    assert!(set.as_mut().set_path(1, "textures\\n.dds"));
+    let set = nif.block_of_mut::<BsShaderTextureSet>(index).unwrap();
+    assert!(!set.set_path(9, "x.dds"), "Skyrim sets have 9 slots");
+    assert!(set.set_path(1, "textures\\n.dds"));
     let saved = reload(&mut nif);
     assert_eq!(saved.block_of::<BsShaderTextureSet>(index).unwrap().path(1).unwrap(), "textures\\n.dds");
 

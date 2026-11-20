@@ -2,7 +2,7 @@
 //! fields.
 
 use crate::common::{UPSTREAM, reload};
-use std::{fs, io::Cursor, pin::Pin};
+use std::{fs, io::Cursor};
 
 use nifly::{
     file::{NifFile, NifVersion},
@@ -19,7 +19,7 @@ fn shader(nif: &NifFile) -> &BsLightingShaderProperty {
     nif.blocks_of::<BsLightingShaderProperty>().next().unwrap()
 }
 
-fn shader_mut(nif: &mut NifFile) -> Pin<&mut BsLightingShaderProperty> {
+fn shader_mut(nif: &mut NifFile) -> &mut BsLightingShaderProperty {
     let index = nif.blocks_of::<BsLightingShaderProperty>().indices().next().unwrap();
     nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap()
 }
@@ -53,23 +53,23 @@ fn reads_fields() {
 #[test]
 fn shared_fields_round_trip() {
     let mut nif = load("assets/Cube.nif");
-    let mut s = shader_mut(&mut nif);
-    s.as_mut().set_emissive_color([0.25, 0.5, 0.75]);
-    s.as_mut().set_emissive_multiple(2.0);
-    s.as_mut().set_alpha(0.5);
-    s.as_mut().set_refraction_strength(0.125);
-    s.as_mut().set_glossiness(40.0);
-    s.as_mut().set_specular_color([1.0, 0.5, 0.0]);
-    s.as_mut().set_specular_strength(3.0);
-    s.as_mut().set_soft_lighting(0.5);
-    s.as_mut().set_rimlight_power(4.0);
-    s.as_mut().set_texture_clamp_mode(ClampMode::ClampUWrapV);
+    let s = shader_mut(&mut nif);
+    s.set_emissive_color([0.25, 0.5, 0.75]);
+    s.set_emissive_multiple(2.0);
+    s.set_alpha(0.5);
+    s.set_refraction_strength(0.125);
+    s.set_glossiness(40.0);
+    s.set_specular_color([1.0, 0.5, 0.0]);
+    s.set_specular_strength(3.0);
+    s.set_soft_lighting(0.5);
+    s.set_rimlight_power(4.0);
+    s.set_texture_clamp_mode(ClampMode::ClampUWrapV);
     // Not saved in Skyrim.
-    s.as_mut().set_subsurface_rolloff(0.9);
-    s.as_mut().set_wet_material("wet.bgsm");
+    s.set_subsurface_rolloff(0.9);
+    s.set_wet_material("wet.bgsm");
     s.set_lum_emittance(5.0);
-    let mut base = shader_mut(&mut nif).upcast_mut();
-    base.as_mut().set_uv_offset([0.5, -0.5]);
+    let base = shader_mut(&mut nif);
+    base.set_uv_offset([0.5, -0.5]);
     base.set_uv_scale([2.0, 3.0]);
 
     let saved = reload(&mut nif);
@@ -92,10 +92,10 @@ fn shared_fields_round_trip() {
 
 #[test]
 fn type_fields_round_trip() {
-    let set = |shader_type, f: &dyn Fn(Pin<&mut BsLightingShaderProperty>)| {
+    let set = |shader_type, f: &dyn Fn(&mut BsLightingShaderProperty)| {
         let mut nif = load("assets/Cube.nif");
-        let mut s = shader_mut(&mut nif);
-        s.as_mut().set_shader_type(shader_type);
+        let s = shader_mut(&mut nif);
+        s.set_shader_type(shader_type);
         f(s);
         let saved = reload(&mut nif);
         assert_eq!(shader(&saved).shader_type(), Some(shader_type));
@@ -104,21 +104,21 @@ fn type_fields_round_trip() {
 
     let mut nif = load("assets/Cube.nif");
     shader_mut(&mut nif).set_shader_type(LightingShaderType::EnvironmentMap);
-    shader_mut(&mut nif).upcast_mut().set_environment_map_scale(2.5);
+    shader_mut(&mut nif).set_environment_map_scale(2.5);
     assert_eq!(shader(&reload(&mut nif)).environment_map_scale(), 2.5);
     let nif = set(LightingShaderType::SkinTint, &|s| s.set_skin_tint_color([0.5, 0.25, 0.125]));
     assert_eq!(shader(&nif).skin_tint_color(), [0.5, 0.25, 0.125]);
     let nif = set(LightingShaderType::HairTint, &|s| s.set_hair_tint_color([0.1, 0.2, 0.3]));
     assert_eq!(shader(&nif).hair_tint_color(), [0.1, 0.2, 0.3]);
-    let nif = set(LightingShaderType::ParallaxOcclusion, &|mut s| {
-        s.as_mut().set_parallax_max_passes(8.0);
+    let nif = set(LightingShaderType::ParallaxOcclusion, &|s| {
+        s.set_parallax_max_passes(8.0);
         s.set_parallax_scale(0.25);
     });
     assert_eq!((shader(&nif).parallax_max_passes(), shader(&nif).parallax_scale()), (8.0, 0.25));
-    let nif = set(LightingShaderType::MultiLayerParallax, &|mut s| {
-        s.as_mut().set_parallax_inner_layer_thickness(0.5);
-        s.as_mut().set_parallax_refraction_scale(0.75);
-        s.as_mut().set_parallax_inner_layer_texture_scale([2.0, 4.0]);
+    let nif = set(LightingShaderType::MultiLayerParallax, &|s| {
+        s.set_parallax_inner_layer_thickness(0.5);
+        s.set_parallax_refraction_scale(0.75);
+        s.set_parallax_inner_layer_texture_scale([2.0, 4.0]);
         s.set_parallax_envmap_strength(0.125);
     });
     let s = shader(&nif);
@@ -128,9 +128,9 @@ fn type_fields_round_trip() {
     assert_eq!(s.parallax_envmap_strength(), 0.125);
     let nif = set(LightingShaderType::MultiIndexSnow, &|s| s.set_sparkle_parameters([1.0, 2.0, 3.0, 4.0]));
     assert_eq!(shader(&nif).sparkle_parameters(), [1.0, 2.0, 3.0, 4.0]);
-    let nif = set(LightingShaderType::Eye, &|mut s| {
-        s.as_mut().set_eye_cubemap_scale(1.5);
-        s.as_mut().set_eye_left_reflection_center(Vec3::new(-1.0, 2.0, 3.0));
+    let nif = set(LightingShaderType::Eye, &|s| {
+        s.set_eye_cubemap_scale(1.5);
+        s.set_eye_left_reflection_center(Vec3::new(-1.0, 2.0, 3.0));
         s.set_eye_right_reflection_center(Vec3::new(1.0, 2.0, 3.0));
     });
     let s = shader(&nif);
@@ -146,21 +146,21 @@ fn type_fields_round_trip() {
 #[test]
 fn fallout_4_fields_round_trip() {
     let mut nif = load(&format!("{UPSTREAM}/TestNifFile_Static_FO4.nif"));
-    let mut s = shader_mut(&mut nif);
-    s.as_mut().set_shader_type(LightingShaderType::EnvironmentMap);
-    s.as_mut().set_wet_material("wet.bgsm");
-    s.as_mut().set_subsurface_rolloff(0.5);
-    s.as_mut().set_backlight_power(2.5);
-    s.as_mut().set_grayscale_to_palette_scale(0.5);
-    s.as_mut().set_fresnel_power(4.0);
-    s.as_mut().set_wetness_specular_scale(0.25);
-    s.as_mut().set_wetness_specular_power(2.0);
-    s.as_mut().set_wetness_min_var(0.125);
-    s.as_mut().set_wetness_envmap_scale(0.75);
-    s.as_mut().set_wetness_fresnel_power(1.5);
-    s.as_mut().set_wetness_metalness(0.5);
-    s.as_mut().set_use_ssr(true);
-    s.as_mut().set_wetness_use_ssr(true);
+    let s = shader_mut(&mut nif);
+    s.set_shader_type(LightingShaderType::EnvironmentMap);
+    s.set_wet_material("wet.bgsm");
+    s.set_subsurface_rolloff(0.5);
+    s.set_backlight_power(2.5);
+    s.set_grayscale_to_palette_scale(0.5);
+    s.set_fresnel_power(4.0);
+    s.set_wetness_specular_scale(0.25);
+    s.set_wetness_specular_power(2.0);
+    s.set_wetness_min_var(0.125);
+    s.set_wetness_envmap_scale(0.75);
+    s.set_wetness_fresnel_power(1.5);
+    s.set_wetness_metalness(0.5);
+    s.set_use_ssr(true);
+    s.set_wetness_use_ssr(true);
     // Skyrim's.
     s.set_soft_lighting(0.9);
 
@@ -187,8 +187,8 @@ fn fallout_4_fields_round_trip() {
 
     // Skin tint alpha, from Fallout 4 on.
     let mut nif = load(&format!("{UPSTREAM}/TestNifFile_Static_FO4.nif"));
-    let mut s = shader_mut(&mut nif);
-    s.as_mut().set_shader_type(LightingShaderType::SkinTint);
+    let s = shader_mut(&mut nif);
+    s.set_shader_type(LightingShaderType::SkinTint);
     s.set_skin_tint_alpha(0.5);
     assert_eq!(shader(&reload(&mut nif)).skin_tint_alpha(), 0.5);
 }
@@ -205,12 +205,12 @@ fn fallout_76_fields_round_trip() {
     let arrays = [vec!["a.dds", "b.dds"], vec![], vec!["c.dds"]];
 
     let mut nif = fallout_76();
-    let mut s = shader_mut(&mut nif);
-    s.as_mut().set_lum_emittance(50.0);
-    s.as_mut().set_exposure_offset(12.0);
-    s.as_mut().set_final_exposure_min(1.5);
-    s.as_mut().set_final_exposure_max(2.5);
-    s.as_mut().set_translucency(Some(translucency));
+    let s = shader_mut(&mut nif);
+    s.set_lum_emittance(50.0);
+    s.set_exposure_offset(12.0);
+    s.set_final_exposure_min(1.5);
+    s.set_final_exposure_max(2.5);
+    s.set_translucency(Some(translucency));
     s.set_texture_arrays(arrays.clone());
     let mut saved = reload(&mut nif);
     let s = shader(&saved);
@@ -221,8 +221,8 @@ fn fallout_76_fields_round_trip() {
     assert_eq!(s.texture_arrays(), arrays);
 
     // Both can be turned off again.
-    let mut s = shader_mut(&mut saved);
-    s.as_mut().set_translucency(None);
+    let s = shader_mut(&mut saved);
+    s.set_translucency(None);
     s.set_texture_arrays(Vec::<Vec<&str>>::new());
     let saved = reload(&mut saved);
     assert_eq!(shader(&saved).translucency(), None);
@@ -239,7 +239,7 @@ fn shader_types_by_version() {
     // Fallout 76 saves the types before Parallax.
     let mut nif = fallout_76();
     shader_mut(&mut nif).set_shader_type(LightingShaderType::EnvironmentMap);
-    shader_mut(&mut nif).upcast_mut().set_environment_map_scale(2.0);
+    shader_mut(&mut nif).set_environment_map_scale(2.0);
     let saved = reload(&mut nif);
     assert_eq!(shader(&saved).shader_type(), Some(LightingShaderType::EnvironmentMap));
     assert_eq!(shader(&saved).environment_map_scale(), 2.0);
