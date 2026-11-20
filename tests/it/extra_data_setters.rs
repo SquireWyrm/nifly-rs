@@ -5,12 +5,13 @@ use std::{fs, io::Cursor};
 
 use nifly::{
     extra_data::{
+        EntryPoints,
         BoneLod, BoneTranslation, BoneTranslations, BsBehaviorGraphExtraData, BsBoneLodExtraData, BsBound,
         BsClothExtraData, BsCollisionQueryProxyExtraData, BsConnectPointChildren, BsConnectPointParents,
         BsDecalPlacementVectorExtraData, BsDistantObjectExtraData, BsDistantObjectLargeRefExtraData,
         BsEyeCenterExtraData, BsFurnitureMarker, BsInvMarker, BsPositionData, BsWArray, BsxFlags, ConnectPoint,
         DecalPoint, ExtraBehaviorGraph, ExtraBinary, ExtraBoneLods, ExtraBoneTranslations, ExtraBoolean, ExtraBsBound,
-        ExtraBsCloth, ExtraBsCollisionQueryProxy, ExtraBsxFlags, ExtraColor, ExtraConnectPointChildren,
+        ExtraBsCloth, ExtraBsCollisionQueryProxy, BsxBitflags, ExtraBsxFlags, ExtraColor, ExtraConnectPointChildren,
         ExtraConnectPointParents, ExtraDecalPlacement, ExtraDistantObject, ExtraDistantObjectLargeRef, ExtraEyeCenter,
         ExtraFloat, ExtraFloats, ExtraFurnitureMarkerNode, ExtraInteger, ExtraIntegers, ExtraInvMarker,
         ExtraPositionData, ExtraSkinAttach, ExtraString, ExtraStrings, ExtraVector, ExtraVertWeights, ExtraWArray,
@@ -56,7 +57,7 @@ fn values_and_names() {
     let strings = add(&mut nif, ExtraStrings("Ss", ["a"]));
     let color = add(&mut nif, ExtraColor("C", [0.0; 4]));
     let vector = add(&mut nif, ExtraVector("V", [0.0; 4]));
-    let bsx = add(&mut nif, ExtraBsxFlags(1));
+    let bsx = add(&mut nif, ExtraBsxFlags(BsxBitflags::ANIMATED));
 
     set::<NiStringExtraData>(&mut nif, string, |b| b.set_value("changed"));
     set::<NiIntegerExtraData>(&mut nif, integer, |b| b.set_value(42));
@@ -112,7 +113,7 @@ fn lists_and_records() {
     let point = |x: f32| DecalPoint { position: Vec3::new(x, 0.0, 0.0), normal: Vec3::new(0.0, 0.0, 1.0) };
     let lods = vec![BoneLod { distance: 10, bone: "A".into() }, BoneLod { distance: 20, bone: "B".into() }];
     let bone_translations = vec![BoneTranslation { bone: "Spine".into(), translation: Vec3::new(1.0, 2.0, 3.0) }];
-    let positions = vec![FurniturePosition { offset: Vec3::new(1.0, 0.0, 0.0), heading: 1.5, animation_type: 1, entry_points: 3, ..Default::default() }];
+    let positions = vec![FurniturePosition { offset: Vec3::new(1.0, 0.0, 0.0), heading: 1.5, animation_type: 1, entry_points: EntryPoints::FRONT | EntryPoints::BEHIND, ..Default::default() }];
     let points = vec![ConnectPoint {
         parent: "Root".into(),
         name: "P-Point".into(),
@@ -128,7 +129,7 @@ fn lists_and_records() {
     set::<BsDecalPlacementVectorExtraData>(&mut nif, decal, |b| assert!(b.set_blocks([vec![point(1.0), point(2.0)], vec![point(3.0)]])));
     set::<NiFloatExtraData>(&mut nif, decal, |b| b.set_value(0.5));
     set::<BsBoneLodExtraData>(&mut nif, bone_lods, |b| b.set_bone_lods(&lods));
-    set::<BsDistantObjectExtraData>(&mut nif, distant, |b| b.set_flags(0x13));
+    set::<BsDistantObjectExtraData>(&mut nif, distant, |b| b.set_raw_flags(0x13));
     set::<BsDistantObjectLargeRefExtraData>(&mut nif, large_ref, |b| b.set_large_ref(true));
     set::<BoneTranslations>(&mut nif, translations, |b| b.set_translations(&bone_translations));
     set::<BsFurnitureMarker>(&mut nif, furniture, |b| b.set_positions(&positions));
@@ -159,7 +160,7 @@ fn lists_and_records() {
     assert_eq!(get::<BsDecalPlacementVectorExtraData>(&nif, decal).blocks(), [vec![point(1.0), point(2.0)], vec![point(3.0)]]);
     assert_eq!(get::<NiFloatExtraData>(&nif, decal).value(), 0.5);
     assert_eq!(get::<BsBoneLodExtraData>(&nif, bone_lods).bone_lods(), lods);
-    assert_eq!(get::<BsDistantObjectExtraData>(&nif, distant).flags(), 0x13);
+    assert_eq!(get::<BsDistantObjectExtraData>(&nif, distant).raw_flags(), 0x13);
     assert!(get::<BsDistantObjectLargeRefExtraData>(&nif, large_ref).large_ref());
     assert_eq!(get::<BoneTranslations>(&nif, translations).translations(), bone_translations);
     assert_eq!(get::<BsFurnitureMarker>(&nif, furniture).positions(), positions);

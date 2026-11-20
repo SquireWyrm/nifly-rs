@@ -32,7 +32,7 @@ fn summary(nif: &NifFile) -> Vec<String> {
     let mut out = Vec::new();
     out.extend(nif.blocks().map(|b| b.block_name().to_owned()));
     for node in nif.nodes() {
-        out.push(format!("{} {:?} {:#x}", node.name(), node.transform(), node.flags()));
+        out.push(format!("{} {:?} {:#x}", node.name(), node.transform(), node.raw_flags()));
         out.push(format!("global {:?}", nif.node_transform_to_global(node.name())));
     }
     for shape in nif.blocks_of::<NiShape>() {

@@ -15,6 +15,7 @@
 
 use std::pin::Pin;
 
+use bitflags::bitflags;
 use bstr::{BStr, BString, ByteSlice};
 
 use nifly_sys::{extra_data::ffi, extra_data_types::ffi as types_ffi, nif_file::ffi as nif_ffi};
@@ -147,6 +148,41 @@ impl NiIntegerExtraData {
 
     pub fn set_value(self: Pin<&mut Self>, value: u32) {
         ffi::set_integer_extra_data(self.ffi_mut(), value);
+    }
+}
+
+impl BsxFlags {
+    /// The flags, from the [value](NiIntegerExtraData::value).
+    pub fn flags(&self) -> BsxBitflags {
+        BsxBitflags::from_bits_retain(self.value())
+    }
+
+    pub fn set_flags(self: Pin<&mut Self>, flags: BsxBitflags) {
+        self.upcast_mut().set_value(flags.bits());
+    }
+}
+
+bitflags! {
+    /// The flags of a [`BsxFlags`] block. The names are Skyrim's; Oblivion files use bits 0–5
+    /// for havok, collision, skeleton, animation, flame nodes and editor markers. Other bits
+    /// are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct BsxBitflags: u32 {
+        const ANIMATED = 1;
+        const HAVOK = 1 << 1;
+        const RAGDOLL = 1 << 2;
+        const COMPLEX = 1 << 3;
+        const ADDON = 1 << 4;
+        const EDITOR_MARKER = 1 << 5;
+        const DYNAMIC = 1 << 6;
+        const ARTICULATED = 1 << 7;
+        const NEEDS_TRANSFORM_UPDATES = 1 << 8;
+        const EXTERNAL_EMITTANCE = 1 << 9;
+        const MAGIC_SHADER_PARTICLES = 1 << 10;
+        const LIGHTS = 1 << 11;
+        const BREAKABLE = 1 << 12;
+        const SEARCHED_BREAKABLE = 1 << 13;
+        const _ = !0;
     }
 }
 
@@ -597,11 +633,11 @@ impl BsBoneLodExtraData {
 }
 
 impl BsDistantObjectExtraData {
-    pub fn flags(&self) -> u32 {
+    pub fn raw_flags(&self) -> u32 {
         ffi::distant_object_flags(&self.0)
     }
 
-    pub fn set_flags(self: Pin<&mut Self>, flags: u32) {
+    pub fn set_raw_flags(self: Pin<&mut Self>, flags: u32) {
         ffi::set_distant_object_flags(self.ffi_mut(), flags);
     }
 }
@@ -668,9 +704,21 @@ pub struct FurniturePosition {
     pub heading: f32,
     /// 1 sit, 2 sleep, 4 lean.
     pub animation_type: u16,
-    /// Which sides the position can be entered from, as flags: 1 front, 2 behind, 4 right, 8
-    /// left, 16 up.
-    pub entry_points: u16,
+    /// Which sides the position can be entered from.
+    pub entry_points: EntryPoints,
+}
+
+bitflags! {
+    /// The sides a [`FurniturePosition`] can be entered from. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct EntryPoints: u16 {
+        const FRONT = 1;
+        const BEHIND = 1 << 1;
+        const RIGHT = 1 << 2;
+        const LEFT = 1 << 3;
+        const UP = 1 << 4;
+        const _ = !0;
+    }
 }
 
 impl FurniturePosition {
@@ -682,7 +730,7 @@ impl FurniturePosition {
             position_ref_2: p.position_ref_2,
             heading: p.heading,
             animation_type: p.animation_type,
-            entry_points: p.entry_points,
+            entry_points: EntryPoints::from_bits_retain(p.entry_points),
         }
     }
 
@@ -694,7 +742,7 @@ impl FurniturePosition {
             position_ref_2: self.position_ref_2,
             heading: self.heading,
             animation_type: self.animation_type,
-            entry_points: self.entry_points,
+            entry_points: self.entry_points.bits(),
         }
     }
 }
@@ -803,7 +851,7 @@ pub struct ExtraIntegers<N: AsRef<[u8]>, V: AsRef<[u32]>>(pub N, pub V);
 
 /// A [`BsxFlags`] block with these flags. Its name is always "BSX".
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct ExtraBsxFlags(pub u32);
+pub struct ExtraBsxFlags(pub BsxBitflags);
 
 /// A [`BsClothExtraData`] block holding this raw Havok cloth data (e.g. read from a `.hkx` file).
 /// It has no name.
@@ -854,7 +902,7 @@ impl<N: AsRef<[u8]>, V: AsRef<[u32]>> IntoExtraData for ExtraIntegers<N, V> {
 impl Sealed for ExtraBsxFlags {}
 impl IntoExtraData for ExtraBsxFlags {
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
-        nif_ffi::assign_bsx_flags(file, target, self.0)
+        nif_ffi::assign_bsx_flags(file, target, self.0.bits())
     }
 }
 

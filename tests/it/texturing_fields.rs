@@ -37,7 +37,7 @@ fn morrowind_map_fields() {
     let index = first(&nif);
     assert!(property(&nif, index).has_map(TextureMap::Base));
     let mut p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
-    p.as_mut().set_flags(3);
+    p.as_mut().set_raw_flags(3);
     assert!(p.as_mut().set_map_ps2(TextureMap::Base, [-3, 5]));
     assert!(p.as_mut().set_map_unknown(TextureMap::Base, 9));
     assert!(p.as_mut().set_map_transform(TextureMap::Base, Some(TRANSFORM)));
@@ -46,7 +46,7 @@ fn morrowind_map_fields() {
 
     let saved = reload(&mut nif);
     let p = property(&saved, index);
-    assert_eq!(p.flags(), 3);
+    assert_eq!(p.raw_flags(), 3);
     assert_eq!((p.map_ps2(TextureMap::Base), p.map_unknown(TextureMap::Base)), (Some([-3, 5]), Some(9)));
     assert_eq!(p.map_transform(TextureMap::Base), None, "not saved in Morrowind");
 }
@@ -83,16 +83,16 @@ fn fallout_3_fields() {
     let parallax = nif.add_source_texture(r"textures\parallax.dds");
     assert!(nif.edit::<NiTexturingProperty>(index).unwrap().set_map_source(TextureMap::Parallax, Some(parallax)));
     let mut p = nif.block_of_mut::<NiTexturingProperty>(index).unwrap();
-    p.as_mut().set_flags(0x5);
+    p.as_mut().set_raw_flags(0x5);
     p.as_mut().set_parallax_offset(0.125);
-    assert!(p.as_mut().set_map_flags(TextureMap::Base, 0x3201));
+    assert!(p.as_mut().set_map_raw_flags(TextureMap::Base, 0x3201));
     assert!(p.as_mut().set_map_max_anisotropy(TextureMap::Base, 4));
     p.set_map_uv_set(TextureMap::Base, 3);
 
     let saved = reload(&mut nif);
     let p = property(&saved, index);
-    assert_eq!((p.flags(), p.parallax_offset()), (0x5, 0.125));
-    assert_eq!(p.map_flags(TextureMap::Base), Some(0x3201));
+    assert_eq!((p.raw_flags(), p.parallax_offset()), (0x5, 0.125));
+    assert_eq!(p.map_raw_flags(TextureMap::Base), Some(0x3201));
     assert_eq!(p.map_uv_set(TextureMap::Base), Some(0), "kept in the flags from Fallout 3 on");
     assert_eq!(p.map_max_anisotropy(TextureMap::Base), Some(0), "not saved in Fallout 3");
     assert_eq!(p.texture_count(), 8);

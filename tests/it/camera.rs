@@ -24,7 +24,7 @@ const VIEWPORT: Viewport = Viewport { left: 0.25, right: 0.75, top: 0.5, bottom:
 fn set_fields(nif: &mut NifFile, camera: usize) {
     let mut edit = nif.edit::<NiCamera>(camera).unwrap();
     let mut c = edit.block();
-    c.as_mut().set_flags(7);
+    c.as_mut().set_raw_flags(7);
     c.as_mut().set_frustum(FRUSTUM);
     c.as_mut().set_orthographic(true);
     c.as_mut().set_viewport(VIEWPORT);
@@ -49,7 +49,7 @@ fn add_camera_defaults() {
         Frustum { left: -0.63707, right: 0.63707, top: 0.385714, bottom: -0.385714, near: 1.0, far: 5000.0 }
     );
     assert_eq!(c.viewport(), Viewport { left: 0.0, right: 1.0, top: 1.0, bottom: 0.0 });
-    assert_eq!((c.flags(), c.orthographic(), c.lod_adjust()), (0, false, 1.0));
+    assert_eq!((c.raw_flags(), c.orthographic(), c.lod_adjust()), (0, false, 1.0));
     assert!(c.scene().is_none());
 }
 
@@ -80,9 +80,9 @@ fn fields_survive_save() {
         assert_eq!((c.frustum(), c.viewport(), c.lod_adjust()), (FRUSTUM, VIEWPORT, 2.5), "{name}");
         // Morrowind doesn't save the flags or the projection type.
         if version_saves_flags {
-            assert_eq!((c.flags(), c.orthographic()), (7, true), "{name}");
+            assert_eq!((c.raw_flags(), c.orthographic()), (7, true), "{name}");
         } else {
-            assert_eq!((c.flags(), c.orthographic()), (0, false), "{name}");
+            assert_eq!((c.raw_flags(), c.orthographic()), (0, false), "{name}");
         }
     }
 }

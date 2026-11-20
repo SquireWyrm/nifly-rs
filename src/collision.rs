@@ -13,6 +13,7 @@
 
 use std::pin::Pin;
 
+use bitflags::bitflags;
 use bstr::{BStr, ByteSlice};
 use int_enum::IntEnum;
 use nifly_sys::{collision::ffi, nif_file::ffi::{self as nif_ffi, RefKind}};
@@ -246,9 +247,31 @@ pub enum CollisionMode {
 }
 
 impl BhkNiCollisionObject {
-    fields! {
-        /// The raw flags. For example, bit 0 makes the collision active.
-        flags, set_flags: u16 = bhk_collision_flags, set_bhk_collision_flags;
+    converted_fields! {
+        flags, set_flags: CollisionObjectFlags = bhk_collision_flags, set_bhk_collision_flags,
+            CollisionObjectFlags::from_bits_retain, |f: CollisionObjectFlags| f.bits();
+    }
+}
+
+bitflags! {
+    /// The flags of a [`BhkNiCollisionObject`]. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct CollisionObjectFlags: u16 {
+        const ACTIVE = 1;
+        const RESET_TRANSFORM = 1 << 1;
+        const NOTIFY = 1 << 2;
+        const SET_LOCAL = 1 << 3;
+        const DEBUG_DISPLAY = 1 << 4;
+        const USE_VELOCITY = 1 << 5;
+        const RESET = 1 << 6;
+        const SYNC_ON_UPDATE = 1 << 7;
+        /// Only used by a [`BhkBlendCollisionObject`].
+        const BLEND_POSITION = 1 << 8;
+        /// Only used by a [`BhkBlendCollisionObject`].
+        const ALWAYS_BLEND = 1 << 9;
+        const ANIM_TARGETED = 1 << 10;
+        const DISMEMBERED_LIMB = 1 << 11;
+        const _ = !0;
     }
 }
 
@@ -587,7 +610,7 @@ impl BhkRigidBody {
         auto_remove_level, set_auto_remove_level: u8 =
             rigid_body_auto_remove_level, set_rigid_body_auto_remove_level;
         /// Only saved from Skyrim on.
-        response_modifier_flags, set_response_modifier_flags: u8 =
+        response_modifier_raw_flags, set_response_modifier_raw_flags: u8 =
             rigid_body_response_modifier_flags, set_rigid_body_response_modifier_flags;
         /// The number of shape keys in contact point properties. Only saved from Skyrim on.
         shape_keys_in_contact_points, set_shape_keys_in_contact_points: u8 =
@@ -596,11 +619,11 @@ impl BhkRigidBody {
         force_collide_onto_ppu, set_force_collide_onto_ppu: bool =
             rigid_body_force_collide_onto_ppu, set_rigid_body_force_collide_onto_ppu;
         /// The body flags. Only saved from Skyrim on; older files save
-        /// [`body_flags_32`](Self::body_flags_32) instead.
-        body_flags, set_body_flags: u16 = rigid_body_body_flags, set_rigid_body_body_flags;
+        /// [`body_raw_flags_32`](Self::body_raw_flags_32) instead.
+        body_raw_flags, set_body_raw_flags: u16 = rigid_body_body_flags, set_rigid_body_body_flags;
         /// The body flags as 32 bits. Only saved before Skyrim. The two aren't converted into
         /// each other.
-        body_flags_32, set_body_flags_32: u32 = rigid_body_body_flags_int, set_rigid_body_body_flags_int;
+        body_raw_flags_32, set_body_raw_flags_32: u32 = rigid_body_body_flags_int, set_rigid_body_body_flags_int;
     }
 }
 

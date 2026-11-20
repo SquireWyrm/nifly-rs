@@ -2,6 +2,7 @@
 
 use std::{collections::BTreeMap, pin::Pin};
 
+use bitflags::bitflags;
 use bstr::BString;
 use nifly_sys::{
     nif_file::ffi::{self as nif_ffi, RefKind, RefList},
@@ -179,7 +180,7 @@ impl BsDismemberSkinInstance {
 
     /// The flags of partition `index`, or `None` if `index` is out of range.
     pub fn flags(&self, index: usize) -> Option<PartitionFlags> {
-        (index < self.len()).then(|| PartitionFlags(ffi::dismember_partition_flags(&self.0, index)))
+        (index < self.len()).then(|| PartitionFlags::from_bits_retain(ffi::dismember_partition_flags(&self.0, index)))
     }
 
     /// The body part of partition `index`, or `None` if `index` is out of range.
@@ -217,49 +218,15 @@ pub struct PartitionInfo {
     pub body_part: u16,
 }
 
-/// The flags of a [`BsDismemberSkinInstance`] partition.
-///
-/// Bits:
-/// - 0: visible in the editor
-/// - 8: starts a new set of bones
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub struct PartitionFlags(u16);
-
-impl PartitionFlags {
-    const EDITOR_VISIBLE: u16 = 1;
-    const START_BONE_SET: u16 = 1 << 8;
-
-    pub const fn from_bits(bits: u16) -> Self {
-        Self(bits)
-    }
-
-    pub const fn bits(self) -> u16 {
-        self.0
-    }
-
-    /// Whether the partition is visible in the editor.
-    pub fn editor_visible(self) -> bool {
-        self.0 & Self::EDITOR_VISIBLE != 0
-    }
-
-    /// Whether the partition starts a new set of bones, rather than using the previous
-    /// partition's.
-    pub fn starts_bone_set(self) -> bool {
-        self.0 & Self::START_BONE_SET != 0
-    }
-
-    #[must_use]
-    pub fn with_editor_visible(self, on: bool) -> Self {
-        Self::with_bit(self, Self::EDITOR_VISIBLE, on)
-    }
-
-    #[must_use]
-    pub fn with_starts_bone_set(self, on: bool) -> Self {
-        Self::with_bit(self, Self::START_BONE_SET, on)
-    }
-
-    fn with_bit(self, bit: u16, on: bool) -> Self {
-        Self(if on { self.0 | bit } else { self.0 & !bit })
+bitflags! {
+    /// The flags of a [`BsDismemberSkinInstance`] partition. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct PartitionFlags: u16 {
+        /// Visible in the editor.
+        const EDITOR_VISIBLE = 1;
+        /// Starts a new set of bones, rather than using the previous partition's.
+        const START_BONE_SET = 1 << 8;
+        const _ = !0;
     }
 }
 
@@ -623,7 +590,7 @@ impl<'a> View<'a, NiShape> {
         Some(ShapePartitions {
             partitions: info
                 .into_iter()
-                .map(|p| PartitionInfo { flags: PartitionFlags::from_bits(p.flags), body_part: p.body_part })
+                .map(|p| PartitionInfo { flags: PartitionFlags::from_bits_retain(p.flags), body_part: p.body_part })
                 .collect(),
             triangles: tri_parts.into_iter().map(|p| usize::try_from(p).ok()).collect(),
         })

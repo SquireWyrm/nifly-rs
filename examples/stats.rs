@@ -83,7 +83,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn print_tree(nif: &NifFile, idx: &dyn Fn(&NiObject) -> usize, obj: &NiAvObject, depth: usize) {
     let pad = depth * 2;
     println!("{:pad$}[{}] {} \"{}\"", "", idx(obj), obj.block_name(), obj.name());
-    println!("{:pad$}    flags:  {:#x}", "", obj.flags());
+    println!("{:pad$}    flags:  {:#x}", "", obj.raw_flags());
     println!("{:pad$}    local:  {}", "", fmt_transform(&obj.transform()));
 
     if let Some(node) = obj.downcast::<NiNode>() {

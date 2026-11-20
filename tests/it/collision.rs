@@ -3,6 +3,7 @@
 
 use nifly::{
     collision::{
+        CollisionObjectFlags,
         BhkBlendCollisionObject, BhkCollisionObject, BhkNiCollisionObject, BhkNpCollisionObject,
         BhkPhysicsSystem, BhkRagdollSystem, BhkRigidBody, BhkSimpleShapePhantom, CollisionMode,
         NiCollisionData, NiCollisionObject, PropagationMode,
@@ -35,7 +36,7 @@ fn reads_collision_object() {
     let target = collision.target().unwrap();
     assert_eq!(target.collision().unwrap().index(), index);
     assert!(collision.body().unwrap().cast::<BhkRigidBody>().is_some());
-    assert_eq!(collision.flags() & 1, 1, "active");
+    assert!(collision.flags().contains(CollisionObjectFlags::ACTIVE));
 }
 
 #[test]
@@ -49,11 +50,12 @@ fn target_and_body() {
     assert!(!edit.set_target(Some(body)), "not an NiAvObject");
     assert!(!edit.set_body(Some(shape)), "not a world object");
     assert!(edit.set_target(Some(shape)));
-    edit.block().upcast_mut().set_flags(0x81);
+    let flags = CollisionObjectFlags::ACTIVE | CollisionObjectFlags::SYNC_ON_UPDATE | CollisionObjectFlags::from_bits_retain(1 << 15);
+    edit.block().upcast_mut().set_flags(flags);
     let saved = reload(&mut nif);
     let collision = saved.view::<BhkCollisionObject>(index).unwrap();
     assert_eq!(collision.target().unwrap().index(), shape);
-    assert_eq!((collision.body().unwrap().index(), collision.flags()), (body, 0x81));
+    assert_eq!((collision.body().unwrap().index(), collision.flags()), (body, flags), "unnamed bits are kept");
 
     let mut nif = saved;
     assert!(nif.edit::<BhkNiCollisionObject>(index).unwrap().set_body(None));

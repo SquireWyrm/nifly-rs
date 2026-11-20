@@ -64,18 +64,18 @@ fn uv_sets_and_data_flags() {
     assert!(edit.set_uv_sets(&sets));
     let saved = reload(&mut nif);
     assert_eq!(data(&saved, index).uv_sets(), sets);
-    assert_eq!(data(&saved, index).data_flags() & 0x3F, 2);
+    assert_eq!(data(&saved, index).data_raw_flags() & 0x3F, 2);
 
     let mut nif = saved;
-    let flags = data(&nif, index).data_flags() & !0xF03F | 3;
-    nif.edit::<NiGeometryData>(index).unwrap().set_data_flags(flags);
+    let flags = data(&nif, index).data_raw_flags() & !0xF03F | 3;
+    nif.edit::<NiGeometryData>(index).unwrap().set_data_raw_flags(flags);
     let block = data(&nif, index);
     assert_eq!(block.uv_sets().len(), 3);
     assert_eq!(block.uv_sets()[2], vec![[0.0, 0.0]; n]);
     assert!(!block.has_tangents() && block.tangents().is_empty());
     // Saving drops the tangents' extra data block, moving the data.
     let saved = reload(&mut nif);
-    assert_eq!(data(&saved, first::<NiGeometryData>(&saved)).data_flags(), flags);
+    assert_eq!(data(&saved, first::<NiGeometryData>(&saved)).data_raw_flags(), flags);
 
     // Fallout 3 on stores one set at most.
     let mut nif = load("Bones");
@@ -93,13 +93,13 @@ fn scalar_fields() {
     let index = first::<NiGeometryData>(&nif);
     let mut block = nif.block_of_mut::<NiGeometryData>(index).unwrap();
     block.as_mut().set_geometry_group_id(-3);
-    block.as_mut().set_keep_flags(1);
-    block.as_mut().set_compress_flags(2);
+    block.as_mut().set_keep_raw_flags(1);
+    block.as_mut().set_compress_raw_flags(2);
     block.set_material_crc(0xDEAD);
     let saved = reload(&mut nif);
     let block = data(&saved, index);
     assert_eq!(
-        (block.geometry_group_id(), block.keep_flags(), block.compress_flags(), block.material_crc()),
+        (block.geometry_group_id(), block.keep_raw_flags(), block.compress_raw_flags(), block.material_crc()),
         (-3, 1, 2, 0xDEAD)
     );
 }

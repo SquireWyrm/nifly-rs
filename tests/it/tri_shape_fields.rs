@@ -3,17 +3,17 @@
 
 use nifly::{
     file::{Index, NifFile},
-    geometry::{BsSubIndexTriShape, BsTriShape, GeometrySegment, NiShape, ParticleData},
+    geometry::{BsSubIndexTriShape, BsTriShape, GeometrySegment, NiShape, ParticleData, VertexFlags},
     object3d::{BoundingSphere, Vec3},
 };
 
 use crate::common::{load, reload_in_place as reload, upstream};
 
-const COLORS: u16 = 0x20;
-const NORMALS: u16 = 0x8;
-const TANGENTS: u16 = 0x10;
-const SECOND_UVS: u16 = 0x4;
-const FULL_PRECISION: u16 = 0x400;
+const COLORS: VertexFlags = VertexFlags::COLORS;
+const NORMALS: VertexFlags = VertexFlags::NORMALS;
+const TANGENTS: VertexFlags = VertexFlags::TANGENTS;
+const SECOND_UVS: VertexFlags = VertexFlags::UVS_2;
+const FULL_PRECISION: VertexFlags = VertexFlags::FULL_PRECISION;
 
 fn first(nif: &NifFile) -> Index {
     nif.blocks_of::<BsTriShape>().indices().next().unwrap()
@@ -45,7 +45,7 @@ fn vertex_flags() {
     let mut nif = upstream("TestNifFile_Static_SE");
     let index = first(&nif);
     let flags = shape(&nif, index).vertex_flags();
-    assert_eq!(shape(&nif, index).vertex_desc() >> 44, u64::from(flags));
+    assert_eq!(shape(&nif, index).vertex_desc() >> 44, u64::from(flags.bits()));
     let mut edit = nif.edit::<BsTriShape>(index).unwrap();
     assert!(!edit.set_vertex_flags(flags | SECOND_UVS), "second UVs aren't stored");
     assert!(edit.set_vertex_flags(flags & !(NORMALS | TANGENTS) | COLORS));

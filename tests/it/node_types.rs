@@ -7,7 +7,7 @@ use nifly::{
     file::{Index, NifFile, NifVersion},
     nodes::{
         BillboardMode, BsBlastNode, BsOrderedNode, BsRangeNode, BsTreeNode, BsValueNode, NiBillboardNode, NiNode,
-        NiSortAdjustNode, NiSwitchNode, SortingMode,
+        NiSortAdjustNode, NiSwitchNode, SortingMode, SwitchNodeFlags, ValueNodeFlags,
     },
     object3d::Transform,
 };
@@ -40,7 +40,7 @@ fn skyrim_round_trip() {
 
     let mut v = nif.block_of_mut::<BsValueNode>(value).unwrap();
     v.as_mut().set_value(-7);
-    v.set_flags(0b10);
+    v.set_flags(ValueNodeFlags::USE_PLAYER_ADJUST);
     let mut o = nif.block_of_mut::<BsOrderedNode>(ordered).unwrap();
     o.as_mut().set_alpha_sort_bound([1.0, 2.0, 3.0, 4.0]);
     o.set_static_bound(true);
@@ -52,7 +52,7 @@ fn skyrim_round_trip() {
 
     let saved = reload(&mut nif);
     let v = saved.find_block_by_name::<BsValueNode>("Value").unwrap();
-    assert_eq!((v.value(), v.flags()), (-7, 0b10));
+    assert_eq!((v.value(), v.flags()), (-7, ValueNodeFlags::USE_PLAYER_ADJUST));
     let o = saved.find_block_by_name::<BsOrderedNode>("Ordered").unwrap();
     assert_eq!(o.alpha_sort_bound(), [1.0, 2.0, 3.0, 4.0]);
     assert!(o.is_static_bound());
@@ -69,13 +69,13 @@ fn oblivion_round_trip() {
     let sort = add::<NiSortAdjustNode>(&mut nif, "Sort");
 
     let mut s = nif.block_of_mut::<NiSwitchNode>(switch).unwrap();
-    s.as_mut().set_flags(0b11);
+    s.as_mut().set_flags(SwitchNodeFlags::all());
     s.set_active_index(2);
     nif.block_of_mut::<NiSortAdjustNode>(sort).unwrap().set_sorting_mode(SortingMode::Off);
 
     let saved = reload(&mut nif);
     let s = saved.find_block_by_name::<NiSwitchNode>("Switch").unwrap();
-    assert_eq!((s.flags(), s.active_index()), (0b11, 2));
+    assert_eq!((s.flags(), s.active_index()), (SwitchNodeFlags::all(), 2));
     let sort = saved.find_block_by_name::<NiSortAdjustNode>("Sort").unwrap();
     assert_eq!(sort.sorting_mode(), Some(SortingMode::Off));
 }

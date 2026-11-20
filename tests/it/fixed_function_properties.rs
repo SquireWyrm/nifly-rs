@@ -50,7 +50,7 @@ fn oblivion_round_trip() {
 
     add::<NiSpecularProperty>(&mut nif, shape).set_enabled(true);
     add::<NiDitherProperty>(&mut nif, shape).set_enabled(true);
-    add::<NiWireframeProperty>(&mut nif, shape).set_flags(1);
+    add::<NiWireframeProperty>(&mut nif, shape).set_raw_flags(1);
     let mut fog = add::<NiFogProperty>(&mut nif, shape);
     fog.as_mut().set_enabled(true);
     fog.as_mut().set_function(FogFunction::RangeSquared);
@@ -73,7 +73,7 @@ fn oblivion_round_trip() {
     let fog = saved.child_blocks_of::<NiFogProperty>(shape).next().unwrap();
     assert!(fog.enabled());
     assert_eq!(fog.function(), Some(FogFunction::RangeSquared));
-    assert_eq!(fog.flags(), 0b011);
+    assert_eq!(fog.raw_flags(), 0b011);
     assert_eq!(fog.depth(), 2.5);
     assert_eq!(fog.color(), [0.25, 0.5, 0.75]);
 

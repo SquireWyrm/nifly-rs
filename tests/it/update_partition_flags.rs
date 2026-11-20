@@ -40,7 +40,7 @@ fn restores_flags() {
         // One partition, visible and starting a bone set, for body part 32.
         assert_eq!(partitions(&nif, inst), [(257, 32)]);
         let flags = nif.block_of::<BsDismemberSkinInstance>(inst).unwrap().flags(0).unwrap();
-        assert!(flags.editor_visible() && flags.starts_bone_set());
+        assert_eq!(flags, PartitionFlags::EDITOR_VISIBLE | PartitionFlags::START_BONE_SET);
 
         clear_flags(&mut nif, inst);
         assert!(nif.edit::<nifly::geometry::NiShape>(shape).is_some_and(|mut e| e.update_partition_flags()));
@@ -109,8 +109,8 @@ fn partition_accessors_out_of_range() {
 }
 
 #[test]
-fn partition_flag_builders() {
-    let f = PartitionFlags::from_bits(0x8002).with_editor_visible(true).with_starts_bone_set(true);
+fn unnamed_partition_bits_are_kept() {
+    let f = PartitionFlags::from_bits_retain(0x8002) | PartitionFlags::EDITOR_VISIBLE | PartitionFlags::START_BONE_SET;
     assert_eq!(f.bits(), 0x8103);
-    assert!(f.editor_visible() && f.starts_bone_set());
+    assert_eq!((f - PartitionFlags::EDITOR_VISIBLE).bits(), 0x8102);
 }

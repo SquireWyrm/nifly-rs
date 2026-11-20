@@ -6,6 +6,7 @@ use crate::common::{upstream, reload};
 
 use nifly::{
     extra_data::{
+        EntryPoints,
         BoneLod, BoneTranslation, BoneTranslations, BsBehaviorGraphExtraData, BsBoneLodExtraData,
         BsBound, BsConnectPointChildren, BsConnectPointParents, BsDecalPlacementVectorExtraData,
         BsDistantObjectExtraData, BsDistantObjectLargeRefExtraData, BsEyeCenterExtraData,
@@ -40,7 +41,7 @@ fn reads_existing() {
     assert_eq!(frn.name(), "FRN");
     let positions = frn.positions();
     assert_eq!(positions.len(), 1);
-    assert_eq!((positions[0].animation_type, positions[0].entry_points), (1, 2));
+    assert_eq!((positions[0].animation_type, positions[0].entry_points), (1, EntryPoints::BEHIND));
 
     let nif = upstream("TestNifFile_Animated_LE");
     let graph = first::<BsBehaviorGraphExtraData>(&nif);
@@ -61,7 +62,7 @@ fn skyrim_round_trip() {
         offset: Vec3::new(1.0, 2.0, 3.0),
         heading: 1.5,
         animation_type: 4,
-        entry_points: 1 | 8,
+        entry_points: EntryPoints::FRONT | EntryPoints::LEFT,
         ..Default::default()
     };
     nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBinary("Bin", [1u8, 2, 3]))).unwrap();
@@ -98,7 +99,7 @@ fn furniture_fields_by_version() {
         position_ref_2: 8,
         heading: 1.5,
         animation_type: 1,
-        entry_points: 2,
+        entry_points: EntryPoints::BEHIND | EntryPoints::from_bits_retain(1 << 15),
     };
 
     // Oblivion stores the orientation and position references.
@@ -109,7 +110,7 @@ fn furniture_fields_by_version() {
     let p = first::<BsFurnitureMarker>(&saved).positions()[0];
     assert!(saved.blocks_of::<BsFurnitureMarkerNode>().next().is_none());
     assert_eq!((p.offset, p.orientation, p.position_ref_1, p.position_ref_2), (position.offset, 90, 7, 8));
-    assert_eq!((p.heading, p.animation_type, p.entry_points), (0.0, 0, 0));
+    assert_eq!((p.heading, p.animation_type, p.entry_points), (0.0, 0, EntryPoints::empty()));
 
     // Skyrim stores the heading, animation type and entry points.
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
@@ -117,7 +118,7 @@ fn furniture_fields_by_version() {
     nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraFurnitureMarkerNode("FRN", [position]))).unwrap();
     let saved = reload(&mut nif);
     let p = first::<BsFurnitureMarker>(&saved).positions()[0];
-    assert_eq!((p.offset, p.heading, p.animation_type, p.entry_points), (position.offset, 1.5, 1, 2));
+    assert_eq!((p.offset, p.heading, p.animation_type, p.entry_points), (position.offset, 1.5, 1, position.entry_points), "unnamed bits are kept");
     assert_eq!((p.orientation, p.position_ref_1, p.position_ref_2), (0, 0, 0));
 }
 
@@ -202,7 +203,7 @@ fn value_and_list_types_round_trip() {
     assert_eq!(first::<NiVertWeightsExtraData>(&saved).weights(), [0.0, 0.5, 1.0]);
     assert_eq!(first::<BsEyeCenterExtraData>(&saved).values(), [1.0, 2.0, 3.0, 4.0]);
     assert_eq!(first::<BsWArray>(&saved).values(), [7, 8, 9]);
-    assert_eq!(first::<BsDistantObjectExtraData>(&saved).flags(), 0x1234);
+    assert_eq!(first::<BsDistantObjectExtraData>(&saved).raw_flags(), 0x1234);
     assert!(!first::<BsDistantObjectLargeRefExtraData>(&saved).large_ref());
 }
 

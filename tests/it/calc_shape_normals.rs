@@ -1,4 +1,4 @@
-//! Tests for NifFile::calc_shape_normals and BsShaderProperty::set_flags_1/2.
+//! Tests for NifFile::calc_shape_normals and BsShaderProperty's flags.
 
 use crate::common::{load, upstream, reload};
 
@@ -6,10 +6,10 @@ use nifly::{
     file::{Index, NifFile},
     geometry::{NiShape, NormalOptions},
     object3d::Vec3,
-    shaders::BsShaderProperty,
+    shaders::{BsShaderProperty, SkyrimShaderFlags1},
 };
 
-const MODEL_SPACE: u32 = 1 << 12;
+const MODEL_SPACE: SkyrimShaderFlags1 = SkyrimShaderFlags1::MODEL_SPACE_NORMALS;
 
 fn index(nif: &NifFile, name: &str) -> Index {
     nif.shapes().indexed().find(|(_, s)| s.name() == name).unwrap().0
@@ -96,9 +96,9 @@ fn skips_model_space_unless_forced() {
         nif.view_of(s).unwrap().shader().unwrap().index()
     };
     let mut flags = nif.block_of_mut::<BsShaderProperty>(shader).unwrap();
-    let model_space = flags.flags_1() | MODEL_SPACE;
+    let model_space = flags.flags_1::<SkyrimShaderFlags1>() | MODEL_SPACE;
     flags.as_mut().set_flags_1(model_space);
-    assert_eq!(nif.block_of::<BsShaderProperty>(shader).unwrap().flags_1(), model_space);
+    assert_eq!(nif.block_of::<BsShaderProperty>(shader).unwrap().raw_flags_1(), model_space.bits());
 
     assert!(nif.edit::<nifly::geometry::NiShape>(shape).is_some_and(|mut e| e.set_normals(&[Vec3::Z; 14])));
     let before = normals(&nif, "Cube");
@@ -112,22 +112,22 @@ fn skips_model_space_unless_forced() {
     // The flags survive a save.
     let saved = reload(&mut nif);
     let s = saved.shapes().find(|s| s.name() == "Cube").unwrap();
-    let flags = saved.view_of(s).unwrap().shader().unwrap().downcast::<BsShaderProperty>().unwrap().flags_1();
+    let flags = saved.view_of(s).unwrap().shader().unwrap().downcast::<BsShaderProperty>().unwrap().flags_1::<SkyrimShaderFlags1>();
     assert_eq!(flags, model_space);
 }
 
 #[test]
-fn set_flags_2() {
+fn set_raw_flags_2() {
     let mut nif = cube();
     let (shader, before) = nif
         .blocks_of::<BsShaderProperty>()
         .indexed()
-        .map(|(i, s)| (i, s.flags_2()))
+        .map(|(i, s)| (i, s.raw_flags_2()))
         .next()
         .unwrap();
-    nif.block_of_mut::<BsShaderProperty>(shader).unwrap().set_flags_2(before ^ 0x10);
+    nif.block_of_mut::<BsShaderProperty>(shader).unwrap().set_raw_flags_2(before ^ 0x10);
     let saved = reload(&mut nif);
-    assert_eq!(saved.blocks_of::<BsShaderProperty>().next().unwrap().flags_2(), before ^ 0x10);
+    assert_eq!(saved.blocks_of::<BsShaderProperty>().next().unwrap().raw_flags_2(), before ^ 0x10);
 }
 
 #[test]
@@ -145,4 +145,21 @@ fn false_without_triangle_data() {
     for i in [0, count, usize::MAX] {
         assert!(!nif.edit::<nifly::geometry::NiShape>(i).is_some_and(|mut e| e.calc_normals(None)), "{i}");
     }
+}
+
+#[test]
+fn flag_sets_by_game() {
+    use nifly::shaders::{Fallout4ShaderFlags1, Fallout4ShaderFlags2, SkyrimShaderFlags2};
+    let nif = upstream("TestNifFile_Skinned_SE");
+    let shader = nif.blocks_of::<BsShaderProperty>().next().unwrap();
+    assert!(shader.flags_1::<SkyrimShaderFlags1>().contains(SkyrimShaderFlags1::SKINNED));
+    assert!(shader.flags_2::<SkyrimShaderFlags2>().contains(SkyrimShaderFlags2::Z_BUFFER_WRITE));
+
+    let mut nif = upstream("TestNifFile_Skinned_FO4");
+    let (index, shader) = nif.blocks_of::<BsShaderProperty>().indexed().next().unwrap();
+    assert!(shader.flags_1::<Fallout4ShaderFlags1>().contains(Fallout4ShaderFlags1::SKINNED));
+    let flags = Fallout4ShaderFlags2::DOUBLE_SIDED | Fallout4ShaderFlags2::TREE_ANIM;
+    nif.block_of_mut::<BsShaderProperty>(index).unwrap().set_flags_2(flags);
+    let saved = reload(&mut nif);
+    assert_eq!(saved.block_of::<BsShaderProperty>(index).unwrap().flags_2::<Fallout4ShaderFlags2>(), flags);
 }

@@ -33,7 +33,7 @@ fn skin_blocks(nif: &NifFile, name: &str) -> Vec<String> {
 
 fn shader_skinned(nif: &NifFile, name: &str) -> bool {
     let shader = nif.view_of(shape(nif, name)).unwrap().shader().unwrap();
-    shader.downcast::<BsShaderProperty>().unwrap().flags_1() & SKINNED_FLAG != 0
+    shader.downcast::<BsShaderProperty>().unwrap().raw_flags_1() & SKINNED_FLAG != 0
 }
 
 #[test]

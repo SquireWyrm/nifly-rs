@@ -8,6 +8,7 @@ use nifly::{
     file::{Index, NifFile, NifVersion},
     objects::NiType,
     shaders::{
+        WaterShaderFlags,
         BsShaderNoLightingProperty, BsShaderPpLightingProperty, BsSkyShaderProperty, BsWaterShaderProperty,
         ClampMode, LegacyShaderType, NewProperty, NiShader, SkyObjectType, SkyShaderProperty,
         TallGrassShaderProperty, TileShaderProperty,
@@ -95,7 +96,7 @@ fn fallout_3_round_trip() {
 #[test]
 fn skyrim_fields() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    add::<BsWaterShaderProperty>(&mut nif).set_flags(0b101);
+    add::<BsWaterShaderProperty>(&mut nif).set_flags(WaterShaderFlags::DISPLACEMENT | WaterShaderFlags::DEPTH);
     let mut sky = add::<BsSkyShaderProperty>(&mut nif);
     sky.as_mut().set_base_texture("textures\\sky\\moon.dds");
     sky.set_sky_object_type(SkyObjectType::Stars);
@@ -106,7 +107,7 @@ fn skyrim_fields() {
 
     // Skyrim doesn't save property lists, so the blocks are saved unattached.
     let saved = reload(&mut nif);
-    assert_eq!(first::<BsWaterShaderProperty>(&saved).flags(), 0b101);
+    assert_eq!(first::<BsWaterShaderProperty>(&saved).flags(), WaterShaderFlags::DISPLACEMENT | WaterShaderFlags::DEPTH);
     let sky = first::<BsSkyShaderProperty>(&saved);
     assert_eq!(sky.base_texture(), "textures\\sky\\moon.dds");
     assert_eq!(sky.sky_object_type(), Some(SkyObjectType::Stars));

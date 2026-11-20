@@ -6,6 +6,7 @@
 
 use std::pin::Pin;
 
+use bitflags::{bitflags, Flags};
 use bstr::{BStr, BString, ByteSlice};
 use int_enum::IntEnum;
 use nifly_sys::{
@@ -19,7 +20,7 @@ use crate::{
     iter::{BlockIter, RefIndices},
     geometry::{NiShape, TextureSource},
     object3d::Vec3,
-    objects::{IsA, NiAvObject, NiObject, NiObjectNet, NiType},
+    objects::{IsA, NiAvObject, NiObject, NiObjectNet, NiType, Sealed},
 };
 
 /// Getter and setter pairs over the bridge's field shims, converting with `$to` and `$from`.
@@ -202,39 +203,310 @@ impl BsShaderTextureSet {
     }
 }
 
+/// A game's meaning of [`BsShaderProperty::flags_1`]: [`Fallout3ShaderFlags1`],
+/// [`SkyrimShaderFlags1`] or [`Fallout4ShaderFlags1`].
+pub trait ShaderFlags1: Flags<Bits = u32> + Sealed {}
+
+/// A game's meaning of [`BsShaderProperty::flags_2`]: [`Fallout3ShaderFlags2`],
+/// [`SkyrimShaderFlags2`] or [`Fallout4ShaderFlags2`].
+pub trait ShaderFlags2: Flags<Bits = u32> + Sealed {}
+
+bitflags! {
+    /// [`BsShaderProperty::flags_1`] as Fallout 3 and New Vegas uses it. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct Fallout3ShaderFlags1: u32 {
+        const SPECULAR = 1;
+        const SKINNED = 1 << 1;
+        const LOW_DETAIL = 1 << 2;
+        const VERTEX_ALPHA = 1 << 3;
+        const SINGLE_PASS = 1 << 5;
+        const ENVIRONMENT_MAPPING = 1 << 7;
+        const ALPHA_TEXTURE = 1 << 8;
+        const FACE_GEN = 1 << 10;
+        const PARALLAX = 1 << 11;
+        const NON_PROJECTIVE_SHADOWS = 1 << 13;
+        const REFRACTION = 1 << 15;
+        const FIRE_REFRACTION = 1 << 16;
+        const EYE_ENVIRONMENT_MAPPING = 1 << 17;
+        const HAIR = 1 << 18;
+        const DYNAMIC_ALPHA = 1 << 19;
+        const LOCAL_MAP_HIDE_SECRET = 1 << 20;
+        const WINDOW_ENVIRONMENT_MAPPING = 1 << 21;
+        const TREE_BILLBOARD = 1 << 22;
+        const SHADOW_FRUSTUM = 1 << 23;
+        const MULTIPLE_TEXTURES = 1 << 24;
+        const REMAPPABLE_TEXTURES = 1 << 25;
+        const DECAL = 1 << 26;
+        const DYNAMIC_DECAL = 1 << 27;
+        const PARALLAX_OCCLUSION = 1 << 28;
+        const EXTERNAL_EMITTANCE = 1 << 29;
+        const SHADOW_MAP = 1 << 30;
+        const Z_BUFFER_TEST = 1 << 31;
+        const _ = !0;
+    }
+}
+
+impl Sealed for Fallout3ShaderFlags1 {}
+impl ShaderFlags1 for Fallout3ShaderFlags1 {}
+
+bitflags! {
+    /// [`BsShaderProperty::flags_2`] as Fallout 3 and New Vegas uses it. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct Fallout3ShaderFlags2: u32 {
+        const Z_BUFFER_WRITE = 1;
+        const LOD_LANDSCAPE = 1 << 1;
+        const LOD_BUILDING = 1 << 2;
+        const NO_FADE = 1 << 3;
+        const REFRACTION_TINT = 1 << 4;
+        const VERTEX_COLORS = 1 << 5;
+        const FIRST_LIGHT_IS_POINT_LIGHT = 1 << 7;
+        const SECOND_LIGHT = 1 << 8;
+        const THIRD_LIGHT = 1 << 9;
+        const VERTEX_LIGHTING = 1 << 10;
+        const UNIFORM_SCALE = 1 << 11;
+        const FIT_SLOPE = 1 << 12;
+        const BILLBOARD_AND_ENVMAP_LIGHT_FADE = 1 << 13;
+        const NO_LOD_LAND_BLEND = 1 << 14;
+        const ENVMAP_LIGHT_FADE = 1 << 15;
+        const WIREFRAME = 1 << 16;
+        const VATS_SELECTION = 1 << 17;
+        const SHOW_IN_LOCAL_MAP = 1 << 18;
+        const PREMULT_ALPHA = 1 << 19;
+        const SKIP_NORMAL_MAPS = 1 << 20;
+        const ALPHA_DECAL = 1 << 21;
+        const NO_TRANSPARENCY_MULTISAMPLING = 1 << 22;
+        const _ = !0;
+    }
+}
+
+impl Sealed for Fallout3ShaderFlags2 {}
+impl ShaderFlags2 for Fallout3ShaderFlags2 {}
+
+bitflags! {
+    /// [`BsShaderProperty::flags_1`] as Skyrim (LE and SE) uses it. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct SkyrimShaderFlags1: u32 {
+        const SPECULAR = 1;
+        const SKINNED = 1 << 1;
+        const TEMP_REFRACTION = 1 << 2;
+        const VERTEX_ALPHA = 1 << 3;
+        const GREYSCALE_TO_PALETTE_COLOR = 1 << 4;
+        const GREYSCALE_TO_PALETTE_ALPHA = 1 << 5;
+        const USE_FALLOFF = 1 << 6;
+        const ENVIRONMENT_MAPPING = 1 << 7;
+        const RECEIVE_SHADOWS = 1 << 8;
+        const CAST_SHADOWS = 1 << 9;
+        const FACE_GEN_DETAIL_MAP = 1 << 10;
+        const PARALLAX = 1 << 11;
+        const MODEL_SPACE_NORMALS = 1 << 12;
+        const NON_PROJECTIVE_SHADOWS = 1 << 13;
+        const LANDSCAPE = 1 << 14;
+        const REFRACTION = 1 << 15;
+        const FIRE_REFRACTION = 1 << 16;
+        const EYE_ENVIRONMENT_MAPPING = 1 << 17;
+        const HAIR_SOFT_LIGHTING = 1 << 18;
+        const SCREENDOOR_ALPHA_FADE = 1 << 19;
+        const LOCAL_MAP_HIDE_SECRET = 1 << 20;
+        const FACE_GEN_RGB_TINT = 1 << 21;
+        const OWN_EMIT = 1 << 22;
+        const PROJECTED_UV = 1 << 23;
+        const MULTIPLE_TEXTURES = 1 << 24;
+        const REMAPPABLE_TEXTURES = 1 << 25;
+        const DECAL = 1 << 26;
+        const DYNAMIC_DECAL = 1 << 27;
+        const PARALLAX_OCCLUSION = 1 << 28;
+        const EXTERNAL_EMITTANCE = 1 << 29;
+        const SOFT_EFFECT = 1 << 30;
+        const Z_BUFFER_TEST = 1 << 31;
+        const _ = !0;
+    }
+}
+
+impl Sealed for SkyrimShaderFlags1 {}
+impl ShaderFlags1 for SkyrimShaderFlags1 {}
+
+bitflags! {
+    /// [`BsShaderProperty::flags_2`] as Skyrim (LE and SE) uses it. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct SkyrimShaderFlags2: u32 {
+        const Z_BUFFER_WRITE = 1;
+        const LOD_LANDSCAPE = 1 << 1;
+        const LOD_OBJECTS = 1 << 2;
+        const NO_FADE = 1 << 3;
+        const DOUBLE_SIDED = 1 << 4;
+        const VERTEX_COLORS = 1 << 5;
+        const GLOW_MAP = 1 << 6;
+        const ASSUME_SHADOWMASK = 1 << 7;
+        const PACKED_TANGENT = 1 << 8;
+        const MULTI_INDEX_SNOW = 1 << 9;
+        const VERTEX_LIGHTING = 1 << 10;
+        const UNIFORM_SCALE = 1 << 11;
+        const FIT_SLOPE = 1 << 12;
+        const BILLBOARD = 1 << 13;
+        const NO_LOD_LAND_BLEND = 1 << 14;
+        const ENVMAP_LIGHT_FADE = 1 << 15;
+        const WIREFRAME = 1 << 16;
+        const WEAPON_BLOOD = 1 << 17;
+        const HIDE_ON_LOCAL_MAP = 1 << 18;
+        const PREMULT_ALPHA = 1 << 19;
+        const CLOUD_LOD = 1 << 20;
+        const ANISOTROPIC_LIGHTING = 1 << 21;
+        const NO_TRANSPARENCY_MULTISAMPLING = 1 << 22;
+        const MULTI_LAYER_PARALLAX = 1 << 24;
+        const SOFT_LIGHTING = 1 << 25;
+        const RIM_LIGHTING = 1 << 26;
+        const BACK_LIGHTING = 1 << 27;
+        const TREE_ANIM = 1 << 29;
+        const EFFECT_LIGHTING = 1 << 30;
+        const HD_LOD_OBJECTS = 1 << 31;
+        const _ = !0;
+    }
+}
+
+impl Sealed for SkyrimShaderFlags2 {}
+impl ShaderFlags2 for SkyrimShaderFlags2 {}
+
+bitflags! {
+    /// [`BsShaderProperty::flags_1`] as Fallout 4 uses it. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct Fallout4ShaderFlags1: u32 {
+        const SPECULAR = 1;
+        const SKINNED = 1 << 1;
+        const TEMP_REFRACTION = 1 << 2;
+        const VERTEX_ALPHA = 1 << 3;
+        const GREYSCALE_TO_PALETTE_COLOR = 1 << 4;
+        const GREYSCALE_TO_PALETTE_ALPHA = 1 << 5;
+        const USE_FALLOFF = 1 << 6;
+        const ENVIRONMENT_MAPPING = 1 << 7;
+        const RGB_FALLOFF = 1 << 8;
+        const CAST_SHADOWS = 1 << 9;
+        const FACE = 1 << 10;
+        const UI_MASK_RECTS = 1 << 11;
+        const MODEL_SPACE_NORMALS = 1 << 12;
+        const NON_PROJECTIVE_SHADOWS = 1 << 13;
+        const LANDSCAPE = 1 << 14;
+        const REFRACTION = 1 << 15;
+        const FIRE_REFRACTION = 1 << 16;
+        const EYE_ENVIRONMENT_MAPPING = 1 << 17;
+        const HAIR = 1 << 18;
+        const SCREENDOOR_ALPHA_FADE = 1 << 19;
+        const LOCAL_MAP_HIDE_SECRET = 1 << 20;
+        const SKIN_TINT = 1 << 21;
+        const OWN_EMIT = 1 << 22;
+        const PROJECTED_UV = 1 << 23;
+        const MULTIPLE_TEXTURES = 1 << 24;
+        const TESSELLATE = 1 << 25;
+        const DECAL = 1 << 26;
+        const DYNAMIC_DECAL = 1 << 27;
+        const CHARACTER_LIGHTING = 1 << 28;
+        const EXTERNAL_EMITTANCE = 1 << 29;
+        const SOFT_EFFECT = 1 << 30;
+        const Z_BUFFER_TEST = 1 << 31;
+        const _ = !0;
+    }
+}
+
+impl Sealed for Fallout4ShaderFlags1 {}
+impl ShaderFlags1 for Fallout4ShaderFlags1 {}
+
+bitflags! {
+    /// [`BsShaderProperty::flags_2`] as Fallout 4 uses it. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct Fallout4ShaderFlags2: u32 {
+        const Z_BUFFER_WRITE = 1;
+        const LOD_LANDSCAPE = 1 << 1;
+        const LOD_OBJECTS = 1 << 2;
+        const NO_FADE = 1 << 3;
+        const DOUBLE_SIDED = 1 << 4;
+        const VERTEX_COLORS = 1 << 5;
+        const GLOW_MAP = 1 << 6;
+        const TRANSFORM_CHANGED = 1 << 7;
+        const DISMEMBERMENT_MEATCUFF = 1 << 8;
+        const TINT = 1 << 9;
+        const GRASS_VERTEX_LIGHTING = 1 << 10;
+        const GRASS_UNIFORM_SCALE = 1 << 11;
+        const GRASS_FIT_SLOPE = 1 << 12;
+        const GRASS_BILLBOARD = 1 << 13;
+        const NO_LOD_LAND_BLEND = 1 << 14;
+        const DISMEMBERMENT = 1 << 15;
+        const WIREFRAME = 1 << 16;
+        const WEAPON_BLOOD = 1 << 17;
+        const HIDE_ON_LOCAL_MAP = 1 << 18;
+        const PREMULT_ALPHA = 1 << 19;
+        const VATS_TARGET = 1 << 20;
+        const ANISOTROPIC_LIGHTING = 1 << 21;
+        const SKEW_SPECULAR_ALPHA = 1 << 22;
+        const MENU_SCREEN = 1 << 23;
+        const MULTI_LAYER_PARALLAX = 1 << 24;
+        const ALPHA_TEST = 1 << 25;
+        const GRADIENT_REMAP = 1 << 26;
+        const VATS_TARGET_DRAW_ALL = 1 << 27;
+        const PIPBOY_SCREEN = 1 << 28;
+        const TREE_ANIM = 1 << 29;
+        const EFFECT_LIGHTING = 1 << 30;
+        const REFRACTION_WRITES_DEPTH = 1 << 31;
+        const _ = !0;
+    }
+}
+
+impl Sealed for Fallout4ShaderFlags2 {}
+impl ShaderFlags2 for Fallout4ShaderFlags2 {}
+
 impl NiShadeProperty {
     fields! {
         /// The shading flags, as raw bits: bit 0 is smooth shading. Only saved before Skyrim.
-        shading_flags, set_shading_flags: u16 = shade_flags, set_shade_flags, same, same;
+        shading_raw_flags, set_shading_raw_flags: u16 = shade_flags, set_shade_flags, same, same;
     }
 }
 
 impl BsShaderProperty {
-    /// The first shader flags field, as raw bits.
-    /// For example, bit 7 is environment mapping and bit 29 external emittance.
+    /// The first shader flags field, as raw bits. Their meaning depends on the game; read them
+    /// with [`flags_1`](Self::flags_1).
     ///
     /// Not saved from stream version 132 on (Fallout 76, Starfield and the latest Fallout 4
     /// files), which save [`crc_flags_1`](Self::crc_flags_1) instead. The two aren't converted
     /// into each other.
-    pub fn flags_1(&self) -> u32 {
+    pub fn raw_flags_1(&self) -> u32 {
         ffi::shader_flags_1(&self.0)
     }
 
-    /// The second shader flags field, as raw bits.
-    /// For example, bit 4 is double-sided and bit 5 vertex colors.
+    /// The second shader flags field, as raw bits. Their meaning depends on the game; read
+    /// them with [`flags_2`](Self::flags_2).
     ///
     /// Not saved from stream version 132 on. Those files save [`crc_flags_2`](Self::crc_flags_2)
     /// instead.
-    pub fn flags_2(&self) -> u32 {
+    pub fn raw_flags_2(&self) -> u32 {
         ffi::shader_flags_2(&self.0)
     }
 
-    pub fn set_flags_1(self: Pin<&mut Self>, flags: u32) {
+    pub fn set_raw_flags_1(self: Pin<&mut Self>, flags: u32) {
         ffi::set_shader_flags_1(self.ffi_mut(), flags);
     }
 
-    pub fn set_flags_2(self: Pin<&mut Self>, flags: u32) {
+    pub fn set_raw_flags_2(self: Pin<&mut Self>, flags: u32) {
         ffi::set_shader_flags_2(self.ffi_mut(), flags);
+    }
+
+    /// The first shader flags field as the flags of the file's game: [`Fallout3ShaderFlags1`],
+    /// [`SkyrimShaderFlags1`] or [`Fallout4ShaderFlags1`]. Not checked against the file.
+    pub fn flags_1<F: ShaderFlags1>(&self) -> F {
+        F::from_bits_retain(self.raw_flags_1())
+    }
+
+    /// The second shader flags field as the flags of the file's game: [`Fallout3ShaderFlags2`],
+    /// [`SkyrimShaderFlags2`] or [`Fallout4ShaderFlags2`]. Not checked against the file.
+    pub fn flags_2<F: ShaderFlags2>(&self) -> F {
+        F::from_bits_retain(self.raw_flags_2())
+    }
+
+    /// Sets the [first shader flags](Self::flags_1) from a game's flags.
+    pub fn set_flags_1<F: ShaderFlags1>(self: Pin<&mut Self>, flags: F) {
+        self.set_raw_flags_1(flags.bits());
+    }
+
+    /// Sets the [second shader flags](Self::flags_2) from a game's flags.
+    pub fn set_flags_2<F: ShaderFlags2>(self: Pin<&mut Self>, flags: F) {
+        self.set_raw_flags_2(flags.bits());
     }
 
     /// The first list of shader flags, each the CRC32 of a flag's name. Only saved by a
@@ -696,7 +968,7 @@ impl NiMaterialProperty {
     fields! {
         /// Flags of unknown meaning. Only saved in files from version 3.0 up to 10.0.1.2, which
         /// include Morrowind's.
-        legacy_flags, set_legacy_flags: u16 = material_legacy_flags, set_material_legacy_flags, same, same;
+        legacy_raw_flags, set_legacy_raw_flags: u16 = material_legacy_flags, set_material_legacy_flags, same, same;
     }
 
     /// Ambient color. Only saved in Oblivion and older files.
@@ -797,7 +1069,7 @@ impl NiStencilProperty {
     fields! {
         /// Flags of unknown meaning. Only saved in files from version 3.0 up to 10.0.1.2, which
         /// include Morrowind's.
-        legacy_flags, set_legacy_flags: u16 = stencil_legacy_flags, set_stencil_legacy_flags, same, same;
+        legacy_raw_flags, set_legacy_raw_flags: u16 = stencil_legacy_flags, set_stencil_legacy_flags, same, same;
     }
 
     /// The packed settings (Fallout 3 and later).
@@ -1240,7 +1512,7 @@ impl StencilFlags {
 impl NiTexturingProperty {
     /// How the base map combines with the vertex and material colors, or `None` if the stored
     /// value isn't an apply mode. Saved only before Fallout 3; later files keep it in
-    /// [`flags`](Self::flags).
+    /// [`raw_flags`](Self::raw_flags).
     pub fn apply_mode(&self) -> Option<ApplyMode> {
         ApplyMode::try_from(ffi::texturing_apply_mode(&self.0)).ok()
     }
@@ -1252,7 +1524,7 @@ impl NiTexturingProperty {
     fields! {
         /// The raw flags. From Fallout 3 on, bits 1–3 hold the apply mode. Saved in files up to
         /// version 10.0.1.2 and from 20.1.0.2 on.
-        flags, set_flags: u16 = texturing_flags, set_texturing_flags, same, same;
+        raw_flags, set_raw_flags: u16 = texturing_flags, set_texturing_flags, same, same;
         /// The number of map slots saved. The first five maps (base to glow) are always saved;
         /// later maps past the count aren't, and are lost on save. Files before Fallout 3 have no
         /// normal or parallax maps, so there the decals are slots 6 to 9.
@@ -1282,19 +1554,19 @@ impl NiTexturingProperty {
 
     /// How `map` is repeated outside its UV range, or `None` if the stored value isn't a clamp
     /// mode. Only saved up to version 20.0.0.5 (Oblivion); later files keep it in
-    /// [`map_flags`](Self::map_flags).
+    /// [`map_raw_flags`](Self::map_raw_flags).
     pub fn map_clamp_mode(&self, map: impl Into<MapSlot>) -> Option<ClampMode> {
         ClampMode::try_from(self.map_field(map, ffi::texturing_map_clamp_mode)?).ok()
     }
 
     /// How `map` is filtered, or `None` if the stored value isn't a filter mode. Only saved up
-    /// to version 20.0.0.5 (Oblivion); later files keep it in [`map_flags`](Self::map_flags).
+    /// to version 20.0.0.5 (Oblivion); later files keep it in [`map_raw_flags`](Self::map_raw_flags).
     pub fn map_filter_mode(&self, map: impl Into<MapSlot>) -> Option<FilterMode> {
         FilterMode::try_from(self.map_field(map, ffi::texturing_map_filter_mode)?).ok()
     }
 
     /// The UV set `map` uses. Only saved up to version 20.0.0.5 (Oblivion); later files keep it
-    /// in [`map_flags`](Self::map_flags).
+    /// in [`map_raw_flags`](Self::map_raw_flags).
     pub fn map_uv_set(&self, map: impl Into<MapSlot>) -> Option<u32> {
         self.map_field(map, ffi::texturing_map_uv_set)
     }
@@ -1302,7 +1574,7 @@ impl NiTexturingProperty {
     /// `map`'s raw flags: bits 0–7 are the UV set, 8–11 the [filter mode](FilterMode) and 12–15
     /// the [clamp mode](ClampMode). Only saved from version 20.1.0.3 (Fallout 3) on; the
     /// separate fields aren't converted into them.
-    pub fn map_flags(&self, map: impl Into<MapSlot>) -> Option<u16> {
+    pub fn map_raw_flags(&self, map: impl Into<MapSlot>) -> Option<u16> {
         self.map_field(map, ffi::texturing_map_flags).map(|v| v as u16)
     }
 
@@ -1344,7 +1616,7 @@ impl NiTexturingProperty {
         ffi::set_texturing_map_uv_set(self.ffi_mut(), map.into().to_ffi(), uv_set)
     }
 
-    pub fn set_map_flags(self: Pin<&mut Self>, map: impl Into<MapSlot>, flags: u16) -> bool {
+    pub fn set_map_raw_flags(self: Pin<&mut Self>, map: impl Into<MapSlot>, flags: u16) -> bool {
         ffi::set_texturing_map_flags(self.ffi_mut(), map.into().to_ffi(), flags.into())
     }
 
@@ -2047,7 +2319,7 @@ impl TextureRenderData {
         /// The format's extra data value (not an extra data block).
         format_extra_data, set_format_extra_data: u32 =
             render_data_extra_data, set_render_data_extra_data, same, same;
-        flags, set_flags: u8 = render_data_flags, set_render_data_flags, same, same;
+        raw_flags, set_raw_flags: u8 = render_data_flags, set_render_data_flags, same, same;
         /// Bytes of unknown meaning used to compare formats. Only saved up to version 10.4.0.1.
         old_fast_compare, set_old_fast_compare: [u8; 8] =
             render_data_old_fast_compare, set_render_data_old_fast_compare, same, same;
@@ -2471,22 +2743,22 @@ new_property! {
 macro_rules! switch_property {
     ($($ty:ty: $what:literal, $get:ident, $set:ident;)*) => {$(
         impl $ty {
-            #[doc = concat!("Whether ", $what, " is on: bit 0 of [`flags`](Self::flags).")]
+            #[doc = concat!("Whether ", $what, " is on: bit 0 of [`raw_flags`](Self::raw_flags).")]
             pub fn enabled(&self) -> bool {
-                self.flags() & 1 != 0
+                self.raw_flags() & 1 != 0
             }
 
             /// The raw flags. Only bit 0 is used.
-            pub fn flags(&self) -> u16 {
+            pub fn raw_flags(&self) -> u16 {
                 ffi::$get(&self.0)
             }
 
             pub fn set_enabled(self: Pin<&mut Self>, enabled: bool) {
-                let flags = (self.flags() & !1) | u16::from(enabled);
-                self.set_flags(flags);
+                let flags = (self.raw_flags() & !1) | u16::from(enabled);
+                self.set_raw_flags(flags);
             }
 
-            pub fn set_flags(self: Pin<&mut Self>, flags: u16) {
+            pub fn set_raw_flags(self: Pin<&mut Self>, flags: u16) {
                 ffi::$set(self.ffi_mut(), flags);
             }
         }
@@ -2504,7 +2776,7 @@ impl NiFogProperty {
 
     fields! {
         /// The raw flags: bit 0 turns fog on, bits 1–2 hold the [function](Self::function).
-        flags, set_flags: u16 = fog_flags, set_fog_flags, same, same;
+        raw_flags, set_raw_flags: u16 = fog_flags, set_fog_flags, same, same;
         /// How far the fog reaches.
         depth, set_depth: f32 = fog_depth, set_fog_depth, same, same;
         /// The fog color, as `[r, g, b]`.
@@ -2513,22 +2785,22 @@ impl NiFogProperty {
 
     /// Whether fog is on.
     pub fn enabled(&self) -> bool {
-        self.flags() & 1 != 0
+        self.raw_flags() & 1 != 0
     }
 
     /// How fog thickens with distance. `None` if the bits hold 3.
     pub fn function(&self) -> Option<FogFunction> {
-        FogFunction::try_from(get_bits(self.flags(), Self::FUNCTION)).ok()
+        FogFunction::try_from(get_bits(self.raw_flags(), Self::FUNCTION)).ok()
     }
 
     pub fn set_enabled(self: Pin<&mut Self>, enabled: bool) {
-        let flags = (self.flags() & !1) | u16::from(enabled);
-        self.set_flags(flags);
+        let flags = (self.raw_flags() & !1) | u16::from(enabled);
+        self.set_raw_flags(flags);
     }
 
     pub fn set_function(self: Pin<&mut Self>, function: FogFunction) {
-        let flags = set_bits(self.flags(), Self::FUNCTION, function.into());
-        self.set_flags(flags);
+        let flags = set_bits(self.raw_flags(), Self::FUNCTION, function.into());
+        self.set_raw_flags(flags);
     }
 }
 
@@ -2856,8 +3128,30 @@ impl TallGrassShaderProperty {
 /// In Fallout 76 and Starfield, a shader with a name saves none of its fields.
 impl BsWaterShaderProperty {
     fields! {
-        /// The water flags, as raw bits.
-        flags, set_flags: u32 = bs_water_flags, set_bs_water_flags, same, same;
+        flags, set_flags: WaterShaderFlags = bs_water_flags, set_bs_water_flags,
+            WaterShaderFlags::from_bits_retain, |f: WaterShaderFlags| f.bits();
+    }
+}
+
+bitflags! {
+    /// The flags of a [`BsWaterShaderProperty`]. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct WaterShaderFlags: u32 {
+        const DISPLACEMENT = 1;
+        const LOD = 1 << 1;
+        const DEPTH = 1 << 2;
+        const ACTOR_IN_WATER = 1 << 3;
+        const ACTOR_IN_WATER_IS_MOVING = 1 << 4;
+        const UNDERWATER = 1 << 5;
+        const REFLECTIONS = 1 << 6;
+        const REFRACTIONS = 1 << 7;
+        const VERTEX_UV = 1 << 8;
+        const VERTEX_ALPHA_DEPTH = 1 << 9;
+        const PROCEDURAL = 1 << 10;
+        const FOG = 1 << 11;
+        const UPDATE_CONSTANTS = 1 << 12;
+        const CUBEMAP = 1 << 13;
+        const _ = !0;
     }
 }
 

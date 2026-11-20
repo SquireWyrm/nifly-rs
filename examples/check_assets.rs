@@ -547,7 +547,7 @@ fn summary(nif: &NifFile) -> Vec<String> {
             "node {:?} {:?} {:#x} children {}",
             node.name(),
             node.transform(),
-            node.flags(),
+            node.raw_flags(),
             nif.view_of(node).unwrap().children().count()
         ));
         for extra in nif.view_of(node).unwrap().extra_data() {
@@ -555,7 +555,7 @@ fn summary(nif: &NifFile) -> Vec<String> {
         }
     }
     for shape in nif.blocks_of::<NiShape>() {
-        out.push(format!("shape {:?} {:?} {:#x}", shape.name(), shape.transform(), shape.flags()));
+        out.push(format!("shape {:?} {:?} {:#x}", shape.name(), shape.transform(), shape.raw_flags()));
         out.push(format!("  textures {:?}", nif.view_of(shape).unwrap().texture_paths()));
         let bones = nif.view_of(shape).unwrap().bone_list();
         out.push(format!("  bones {bones:?} {:?}", nif.view_of(shape).unwrap().bone_ids()));

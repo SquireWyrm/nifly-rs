@@ -28,7 +28,7 @@ fn consistent_shaders_are_unchanged() {
     // Every asset's shader is a default shader without either environment flag.
     for asset in ["Bones", "Cone", "Cube", "Suzanne"] {
         let mut nif = load(asset);
-        let f1 = lighting(&nif).flags_1();
+        let f1 = lighting(&nif).raw_flags_1();
         assert_eq!(f1 & (ENVIRONMENT_MAPPING | EYE_ENVIRONMENT_MAPPING), 0, "{asset}");
 
         let before = raw(&mut nif);

@@ -180,12 +180,12 @@ impl NiAvObject {
         ffi::set_transform(self.ffi_mut(), transform.to_ffi());
     }
 
-    pub fn flags(&self) -> u32 {
+    pub fn raw_flags(&self) -> u32 {
         ffi::flags(&self.0)
     }
 
     /// Sets the flags. Files before Fallout 3 save only the low 16 bits.
-    pub fn set_flags(self: Pin<&mut Self>, flags: u32) {
+    pub fn set_raw_flags(self: Pin<&mut Self>, flags: u32) {
         ffi::set_flags(self.ffi_mut(), flags);
     }
 

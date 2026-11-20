@@ -30,43 +30,43 @@ fn crc_flag_lists() {
     let mut nif = upstream("TestNifFile_FO76");
     let shader = nif.block_of::<BsShaderProperty>(231).unwrap();
     assert_eq!((shader.crc_flags_1().len(), shader.crc_flags_2().len()), (4, 1));
-    let flags_1 = shader.flags_1();
+    let flags_1 = shader.raw_flags_1();
 
     let mut shader = nif.block_of_mut::<BsShaderProperty>(231).unwrap();
     shader.as_mut().set_crc_flags_1(&[1, 2, 3, 4, 5, 6]);
     shader.as_mut().set_crc_flags_2(&[]);
-    shader.set_flags_1(flags_1 ^ 1);
+    shader.set_raw_flags_1(flags_1 ^ 1);
     let saved = reload(&mut nif);
     let shader = saved.block_of::<BsShaderProperty>(231).unwrap();
     assert_eq!((shader.crc_flags_1(), shader.crc_flags_2()), (&[1, 2, 3, 4, 5, 6][..], &[][..]));
-    assert_eq!(shader.flags_1(), flags_1, "not saved in Fallout 76");
+    assert_eq!(shader.raw_flags_1(), flags_1, "not saved in Fallout 76");
 }
 
 #[test]
-fn shading_flags() {
+fn shading_raw_flags() {
     let (mut nif, shape) = triangle(NifVersion::FALLOUT_3);
     let shader = nif.view::<NiShape>(shape).unwrap().shader().unwrap().index();
-    assert_eq!(nif.block_of::<NiShadeProperty>(shader).unwrap().shading_flags(), 1);
-    nif.block_of_mut::<NiShadeProperty>(shader).unwrap().set_shading_flags(0);
-    assert_eq!(reload(&mut nif).block_of::<NiShadeProperty>(shader).unwrap().shading_flags(), 0);
+    assert_eq!(nif.block_of::<NiShadeProperty>(shader).unwrap().shading_raw_flags(), 1);
+    nif.block_of_mut::<NiShadeProperty>(shader).unwrap().set_shading_raw_flags(0);
+    assert_eq!(reload(&mut nif).block_of::<NiShadeProperty>(shader).unwrap().shading_raw_flags(), 0);
 
     let (mut nif, shape) = triangle(NifVersion::SKYRIM_SE);
     let shader = nif.view::<NiShape>(shape).unwrap().shader().unwrap().index();
-    nif.block_of_mut::<NiShadeProperty>(shader).unwrap().set_shading_flags(0);
-    assert_eq!(reload(&mut nif).block_of::<NiShadeProperty>(shader).unwrap().shading_flags(), 1, "not saved");
+    nif.block_of_mut::<NiShadeProperty>(shader).unwrap().set_shading_raw_flags(0);
+    assert_eq!(reload(&mut nif).block_of::<NiShadeProperty>(shader).unwrap().shading_raw_flags(), 1, "not saved");
 }
 
 #[test]
-fn legacy_flags() {
+fn legacy_raw_flags() {
     let mut nif = upstream("TestNifFile_Static_MW");
     let material = first::<NiMaterialProperty>(&nif);
     let shape = nif.shapes().indices().next().unwrap();
     let stencil = nif.edit::<NiShape>(shape).unwrap().add_property::<NiStencilProperty, _>();
-    nif.block_of_mut::<NiMaterialProperty>(material).unwrap().set_legacy_flags(5);
-    nif.block_of_mut::<NiStencilProperty>(stencil).unwrap().set_legacy_flags(7);
+    nif.block_of_mut::<NiMaterialProperty>(material).unwrap().set_legacy_raw_flags(5);
+    nif.block_of_mut::<NiStencilProperty>(stencil).unwrap().set_legacy_raw_flags(7);
     let saved = reload(&mut nif);
-    assert_eq!(saved.block_of::<NiMaterialProperty>(material).unwrap().legacy_flags(), 5);
-    assert_eq!(saved.block_of::<NiStencilProperty>(stencil).unwrap().legacy_flags(), 7);
+    assert_eq!(saved.block_of::<NiMaterialProperty>(material).unwrap().legacy_raw_flags(), 5);
+    assert_eq!(saved.block_of::<NiStencilProperty>(stencil).unwrap().legacy_raw_flags(), 7);
 }
 
 #[test]

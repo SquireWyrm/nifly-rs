@@ -2,6 +2,7 @@
 
 use std::{collections::HashSet, io, pin::Pin};
 
+use bitflags::bitflags;
 use bstr::{BStr, BString, ByteSlice};
 use int_enum::IntEnum;
 use nifly_sys::{
@@ -302,8 +303,8 @@ impl NiGeometryData {
     }
 
     /// The data flags: the UV set count (bits 0–5, or bit 0 from Fallout 3 on) and the tangent
-    /// method (bits 12–15). Set with [`Edit::set_data_flags`](crate::handle::Edit::set_data_flags).
-    pub fn data_flags(&self) -> u16 {
+    /// method (bits 12–15). Set with [`Edit::set_data_raw_flags`](crate::handle::Edit::set_data_raw_flags).
+    pub fn data_raw_flags(&self) -> u16 {
         ffi::geometry_data_flags(&self.0)
     }
 
@@ -317,20 +318,20 @@ impl NiGeometryData {
     }
 
     /// Saved in files from version 10.1.0.0.
-    pub fn keep_flags(&self) -> u8 {
+    pub fn keep_raw_flags(&self) -> u8 {
         ffi::geometry_data_byte(&self.0, 0)
     }
 
-    pub fn set_keep_flags(self: Pin<&mut Self>, flags: u8) {
+    pub fn set_keep_raw_flags(self: Pin<&mut Self>, flags: u8) {
         ffi::set_geometry_data_byte(self.ffi_mut(), 0, flags);
     }
 
     /// Saved in files from version 10.1.0.0.
-    pub fn compress_flags(&self) -> u8 {
+    pub fn compress_raw_flags(&self) -> u8 {
         ffi::geometry_data_byte(&self.0, 1)
     }
 
-    pub fn set_compress_flags(self: Pin<&mut Self>, flags: u8) {
+    pub fn set_compress_raw_flags(self: Pin<&mut Self>, flags: u8) {
         ffi::set_geometry_data_byte(self.ffi_mut(), 1, flags);
     }
 
@@ -751,15 +752,15 @@ impl BsGeometry {
     /// Whether the meshes' data is stored in the file (flag `0x200`) rather than in external
     /// `.mesh` files.
     pub fn has_internal_geometry(&self) -> bool {
-        self.flags() & 0x200 != 0
+        self.raw_flags() & 0x200 != 0
     }
 
     /// Sets where the meshes' data is saved. Mesh data never loaded (see
     /// [`load_mesh`](crate::handle::Edit::load_mesh)) is saved empty when made internal, and
     /// mesh paths are saved empty when made external.
     pub fn set_internal_geometry(self: Pin<&mut Self>, internal: bool) {
-        let flags = self.flags() & !0x200 | if internal { 0x200 } else { 0 };
-        self.upcast_mut().upcast_mut().set_flags(flags);
+        let flags = self.raw_flags() & !0x200 | if internal { 0x200 } else { 0 };
+        self.upcast_mut().upcast_mut().set_raw_flags(flags);
     }
 
     /// The number of meshes: one per level of detail, at most 4.
@@ -1006,6 +1007,28 @@ pub struct ParticleData {
     pub triangles: Vec<[u16; 3]>,
 }
 
+bitflags! {
+    /// The vertex attributes a [`BsTriShape`] stores. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct VertexFlags: u16 {
+        const POSITIONS = 1;
+        const UVS = 1 << 1;
+        /// Second UVs, which aren't read or saved, only flagged.
+        const UVS_2 = 1 << 2;
+        const NORMALS = 1 << 3;
+        const TANGENTS = 1 << 4;
+        const COLORS = 1 << 5;
+        const SKINNED = 1 << 6;
+        /// Land data, which isn't read or saved, only flagged.
+        const LAND_DATA = 1 << 7;
+        const EYE_DATA = 1 << 8;
+        const INSTANCE = 1 << 9;
+        /// Positions saved as 32-bit floats rather than 16-bit.
+        const FULL_PRECISION = 1 << 10;
+        const _ = !0;
+    }
+}
+
 impl BsTriShape {
     /// The sphere enclosing the vertices, as stored.
     pub fn bounds(&self) -> BoundingSphere {
@@ -1040,12 +1063,9 @@ impl BsTriShape {
         ffi::bs_tri_shape_vertex_desc(&self.0)
     }
 
-    /// The vertex attributes stored: positions `0x1`, UVs `0x2`, second UVs `0x4`, normals
-    /// `0x8`, tangents `0x10`, colors `0x20`, skinning `0x40`, land data `0x80`, eye data
-    /// `0x100` and full-precision positions `0x400`. Second UVs and land data aren't read or
-    /// saved, only flagged. Set with [`Edit::set_vertex_flags`].
-    pub fn vertex_flags(&self) -> u16 {
-        ffi::bs_tri_shape_vertex_flags(&self.0)
+    /// The vertex attributes stored. Set with [`Edit::set_vertex_flags`].
+    pub fn vertex_flags(&self) -> VertexFlags {
+        VertexFlags::from_bits_retain(ffi::bs_tri_shape_vertex_flags(&self.0))
     }
 
     /// Each vertex's extra floats, stored between its position and bitangent.
@@ -1099,12 +1119,12 @@ impl<T: NiType> Edit<'_, T> {
     /// second UVs, or the vertices couldn't be saved: [extra floats](BsTriShape::vertex_extra_floats)
     /// need full-precision positions (always the case in Skyrim SE), and a vertex is at most
     /// 60 bytes.
-    pub fn set_vertex_flags<I>(&mut self, flags: u16) -> bool
+    pub fn set_vertex_flags<I>(&mut self, flags: VertexFlags) -> bool
     where
         T: IsA<BsTriShape, I>,
     {
         let (shape, sse) = self.bs_tri_shape();
-        ffi::set_bs_tri_shape_vertex_flags(shape.ffi_mut(), flags, sse)
+        ffi::set_bs_tri_shape_vertex_flags(shape.ffi_mut(), flags.bits(), sse)
     }
 
     /// Replaces each vertex's [extra floats](BsTriShape::vertex_extra_floats). Returns
@@ -2172,7 +2192,7 @@ impl<T: NiType> Edit<'_, T> {
     }
 
     /// Replaces the texture coordinate sets and their count in the
-    /// [data flags](NiGeometryData::data_flags). Returns `false`, changing nothing, unless each
+    /// [data flags](NiGeometryData::data_raw_flags). Returns `false`, changing nothing, unless each
     /// set has one UV per vertex and there are at most 63 sets, or one from Fallout 3 on.
     pub fn set_uv_sets<S: AsRef<[[f32; 2]]>, I>(&mut self, sets: &[S]) -> bool
     where
@@ -2185,10 +2205,10 @@ impl<T: NiType> Edit<'_, T> {
         ffi::set_geometry_data_uv_sets(data.ffi_mut(), &flat, sets.len(), bethesda)
     }
 
-    /// Sets the [data flags](NiGeometryData::data_flags), adding zeroed UV sets or removing
+    /// Sets the [data flags](NiGeometryData::data_raw_flags), adding zeroed UV sets or removing
     /// them to match the count, and adding zeroed tangents and bitangents or removing them to
     /// match the tangent method.
-    pub fn set_data_flags<I>(&mut self, flags: u16)
+    pub fn set_data_raw_flags<I>(&mut self, flags: u16)
     where
         T: IsA<NiGeometryData, I>,
     {

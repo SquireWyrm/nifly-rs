@@ -86,11 +86,11 @@ fn rigid_body_fields() {
     b.as_mut().set_solver_deactivation(3);
     b.as_mut().set_quality_type(5);
     b.as_mut().set_auto_remove_level(1);
-    b.as_mut().set_response_modifier_flags(2);
+    b.as_mut().set_response_modifier_raw_flags(2);
     b.as_mut().set_shape_keys_in_contact_points(3);
     b.as_mut().set_force_collide_onto_ppu(true);
-    b.as_mut().set_body_flags(9);
-    b.set_body_flags_32(10);
+    b.as_mut().set_body_raw_flags(9);
+    b.set_body_raw_flags_32(10);
 
     let saved = reload(&mut nif);
     let b = saved.block_of::<BhkRigidBody>(body).unwrap();
@@ -105,21 +105,21 @@ fn rigid_body_fields() {
     assert_eq!((b.rolling_friction_multiplier(), b.restitution()), (0.6, 0.5));
     assert_eq!((b.max_linear_velocity(), b.max_angular_velocity(), b.penetration_depth()), (100.0, 30.0, 0.25));
     assert_eq!((b.motion_system(), b.deactivator_type(), b.solver_deactivation(), b.quality_type()), (4, 2, 3, 5));
-    assert_eq!((b.auto_remove_level(), b.response_modifier_flags(), b.shape_keys_in_contact_points()), (1, 2, 3));
+    assert_eq!((b.auto_remove_level(), b.response_modifier_raw_flags(), b.shape_keys_in_contact_points()), (1, 2, 3));
     assert!(b.force_collide_onto_ppu());
-    assert_eq!((b.body_flags(), b.body_flags_32()), (9, 0), "only the 16-bit flags are saved in Skyrim");
+    assert_eq!((b.body_raw_flags(), b.body_raw_flags_32()), (9, 0), "only the 16-bit flags are saved in Skyrim");
 }
 
 #[test]
 fn oblivion_rigid_body() {
     let (mut nif, body) = with_body::<BhkRigidBody>(NifVersion::OBLIVION);
     let mut b = nif.block_of_mut::<BhkRigidBody>(body).unwrap();
-    b.as_mut().set_body_flags_32(0x10001);
+    b.as_mut().set_body_raw_flags_32(0x10001);
     b.as_mut().set_gravity_factor(0.5);
     b.set_mass(3.0);
     let saved = reload(&mut nif);
     let b = saved.block_of::<BhkRigidBody>(body).unwrap();
-    assert_eq!((b.body_flags_32(), b.mass()), (0x10001, 3.0));
+    assert_eq!((b.body_raw_flags_32(), b.mass()), (0x10001, 3.0));
     assert_eq!(b.gravity_factor(), 1.0, "not saved before Skyrim");
 }
 

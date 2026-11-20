@@ -65,7 +65,7 @@ fn render_data_fields() {
     d.as_mut().set_bytes_per_pixel(4);
     d.as_mut().set_renderer_hint(7);
     d.as_mut().set_format_extra_data(8);
-    d.as_mut().set_flags(1);
+    d.as_mut().set_raw_flags(1);
     d.as_mut().set_tiling(PixelTiling::Xenon);
     d.as_mut().set_channels([channel; 4]);
     d.as_mut().set_color_masks([1, 2, 3, 4]);
@@ -75,7 +75,7 @@ fn render_data_fields() {
     let d = texture_data(&saved);
     assert_eq!(d.pixel_format(), Some(PixelFormat::Dxt5));
     assert_eq!((d.bits_per_pixel(), d.bytes_per_pixel()), (32, 4));
-    assert_eq!((d.renderer_hint(), d.format_extra_data(), d.flags()), (7, 8, 1));
+    assert_eq!((d.renderer_hint(), d.format_extra_data(), d.raw_flags()), (7, 8, 1));
     assert_eq!(d.tiling(), Some(PixelTiling::Xenon));
     assert_eq!(d.channels(), [channel; 4]);
     assert_eq!(d.channels()[0].component(), Some(PixelComponent::Red));

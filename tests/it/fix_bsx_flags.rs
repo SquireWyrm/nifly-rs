@@ -4,7 +4,7 @@ use crate::common::{load};
 use std::io::Cursor;
 
 use nifly::{
-    extra_data::{BsxFlags, ExtraBsxFlags},
+    extra_data::{BsxBitflags, BsxFlags, ExtraBsxFlags},
     file::{NifFile, NifVersion, OptimizeOptions, SaveOptions},
 };
 
@@ -27,7 +27,7 @@ fn bsx_values(nif: &NifFile) -> Vec<u32> {
 fn with_bsx(version: NifVersion, flags: u32) -> NifFile {
     let mut nif = NifFile::create(version);
     let root = nif.root_node().unwrap().index();
-    nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(flags))).unwrap();
+    nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(BsxBitflags::from_bits_retain(flags)))).unwrap();
     nif
 }
 
@@ -63,7 +63,7 @@ fn no_bsx_block_does_nothing() {
 fn only_the_first_bsx_block_is_fixed() {
     let mut nif = with_bsx(NifVersion::SKYRIM_SE, EMITTANCE | 2);
     let root = nif.root_node().unwrap().index();
-    nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(EMITTANCE | 4))).unwrap();
+    nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(BsxBitflags::EXTERNAL_EMITTANCE | BsxBitflags::RAGDOLL))).unwrap();
 
     nif.fix_bsx_flags();
     assert_eq!(bsx_values(&nif), [2, EMITTANCE | 4]);

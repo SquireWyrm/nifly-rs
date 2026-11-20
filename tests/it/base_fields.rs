@@ -43,22 +43,22 @@ fn object_fields_round_trip() {
     let root = root(&nif);
     let transform = Transform::new(Vec3::new(1.0, 2.0, 3.0), Matrix3::IDENTITY, 2.0);
     let mut node = nif.block_of_mut::<NiAvObject>(root).unwrap();
-    node.as_mut().set_flags(0x1234);
+    node.as_mut().set_raw_flags(0x1234);
     node.as_mut().set_transform(transform);
     node.as_mut().set_velocity(Vec3::new(0.5, 0.0, -1.0));
     node.as_mut().set_bounding_volume(Some(&volume()));
     let saved = reload(&mut nif);
     let node = saved.block_of::<NiAvObject>(root).unwrap();
-    assert_eq!((node.flags(), node.transform(), node.velocity()), (0x1234, transform, Vec3::new(0.5, 0.0, -1.0)));
+    assert_eq!((node.raw_flags(), node.transform(), node.velocity()), (0x1234, transform, Vec3::new(0.5, 0.0, -1.0)));
     assert_eq!(node.bounding_volume(), Some(volume()));
 
     // Removing it, and files before Fallout 3 keep 16 bits of the flags.
     let mut node = nif.block_of_mut::<NiAvObject>(root).unwrap();
     node.as_mut().set_bounding_volume(None);
-    node.set_flags(0x1_0005);
+    node.set_raw_flags(0x1_0005);
     let node = reload(&mut nif);
     let node = node.block_of::<NiAvObject>(root).unwrap();
-    assert_eq!((node.bounding_volume(), node.flags()), (None, 5));
+    assert_eq!((node.bounding_volume(), node.raw_flags()), (None, 5));
 }
 
 #[test]
@@ -79,10 +79,10 @@ fn shape_transform_and_flags() {
     let transform = Transform::new(Vec3::new(0.0, 0.0, 5.0), Matrix3::IDENTITY, 0.5);
     let mut block = nif.block_of_mut::<NiAvObject>(shape).unwrap();
     block.as_mut().set_transform(transform);
-    block.set_flags(0x0008_0000);
+    block.set_raw_flags(0x0008_0000);
     let saved = reload(&mut nif);
     let shape = saved.block_of::<NiAvObject>(shape).unwrap();
-    assert_eq!((shape.transform(), shape.flags()), (transform, 0x0008_0000));
+    assert_eq!((shape.transform(), shape.raw_flags()), (transform, 0x0008_0000));
 }
 
 #[test]

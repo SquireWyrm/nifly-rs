@@ -6,7 +6,7 @@ use std::io::Cursor;
 use nifly::{
     extra_data::{
         BsClothExtraData, BsCollisionQueryProxyExtraData, BsExtraData, BsxFlags, ExtraBoolean,
-        ExtraBsCloth, ExtraBsCollisionQueryProxy, ExtraBsxFlags, ExtraFloat, ExtraInteger,
+        ExtraBsCloth, ExtraBsCollisionQueryProxy, BsxBitflags, ExtraBsxFlags, ExtraFloat, ExtraInteger,
         ExtraString, NiBooleanExtraData, NiExtraData, NiFloatExtraData, NiIntegerExtraData,
         NiStringExtraData,
     },
@@ -81,7 +81,7 @@ fn assign_each_named_type() {
 fn assign_bsx_flags() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let root = root_index(&nif);
-    let index = nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(0x82))).unwrap();
+    let index = nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(BsxBitflags::HAVOK | BsxBitflags::ARTICULATED))).unwrap();
 
     let bsx = nif.block_of::<BsxFlags>(index).unwrap();
     assert_eq!(bsx.block_name(), "BSXFlags");
@@ -168,7 +168,7 @@ fn invalid_target_changes_nothing() {
     // Block 1 is the existing BSXFlags: extra data, not an NiAVObject.
     assert_eq!(nif.block(1).unwrap().block_name(), "BSXFlags");
     assert_eq!(nif.edit::<nifly::objects::NiAvObject>(1).and_then(|mut e| e.assign_extra_data(ExtraInteger("Bad", 1))), None);
-    assert_eq!(nif.edit::<nifly::objects::NiAvObject>(1).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(1))), None);
+    assert_eq!(nif.edit::<nifly::objects::NiAvObject>(1).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(BsxBitflags::ANIMATED))), None);
     assert_eq!(nif.edit::<nifly::objects::NiAvObject>(1).and_then(|mut e| e.assign_extra_data(ExtraBsCloth(b"x"))), None);
     assert_eq!(nif.edit::<nifly::objects::NiAvObject>(count).and_then(|mut e| e.assign_extra_data(ExtraBoolean("Bad", true))), None);
     assert_eq!(nif.edit::<nifly::objects::NiAvObject>(u32::MAX as usize).and_then(|mut e| e.assign_extra_data(ExtraBoolean("Bad", true))), None);
@@ -191,7 +191,7 @@ fn non_utf8_name_and_value() {
 fn assigned_extra_data_survives_save() {
     let mut nif = load("Cube");
     let root = root_index(&nif);
-    nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(0x2))).unwrap();
+    nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(BsxBitflags::HAVOK))).unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraString("Prn", "SHIELD"))).unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraFloat("Scale", 0.25))).unwrap();
 

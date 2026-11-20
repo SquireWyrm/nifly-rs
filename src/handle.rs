@@ -13,7 +13,7 @@
 //! | [`NiObjectNet`](crate::objects::NiObjectNet) and subtypes | `extra_data`, `extra_data_chain`, `controller` | `assign_extra_data`, `set_extra_data`, `set_extra_data_chain`, `controller`, `set_controller` |
 //! | [`NiAvObject`](crate::objects::NiAvObject) and subtypes | `parent`, `properties`, `collision` | `parent`, `set_parent`, `add_property`, `set_properties`, `collision`, `set_collision`, `assign_collision` |
 //! | [`NiNode`](crate::nodes::NiNode) and subtypes | `children`, `children_of`, `effects` | `set_children`, `add_child`, `add_child_of`, `clone_node`, `set_effects`, `add_effect` |
-//! | [`NiGeometryData`](crate::geometry::NiGeometryData) and subtypes | `additional_data` | `additional_data`, `assign_additional_data`, `set_additional_data`, `remove_additional_data`, `set_uv_sets`, `set_data_flags` |
+//! | [`NiGeometryData`](crate::geometry::NiGeometryData) and subtypes | `additional_data` | `additional_data`, `assign_additional_data`, `set_additional_data`, `remove_additional_data`, `set_uv_sets`, `set_data_raw_flags` |
 //! | [`NiExtraData`](crate::extra_data::NiExtraData) | `next_extra_data` | `next_extra_data`, `set_next_extra_data` |
 //! | [`NiDynamicEffect`](crate::effects::NiDynamicEffect) and subtypes | `affected_nodes` | `set_affected_nodes` |
 //! | [`NiTextureEffect`](crate::effects::NiTextureEffect) | `source_texture` | `source_texture`, `set_source_texture` |

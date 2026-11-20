@@ -5,6 +5,7 @@
 
 use std::pin::Pin;
 
+use bitflags::bitflags;
 use bstr::{BStr, BString, ByteSlice};
 use int_enum::IntEnum;
 use nifly_sys::{
@@ -147,8 +148,26 @@ impl BsValueNode {
     fields! {
         /// The node's value, such as the add-on index of an `AddOnNode` node.
         value, set_value: i32 = value_node_value, set_value_node_value;
-        /// Raw flags. Bit 0: billboard around the world Z axis. Bit 1: use the player adjustment.
-        flags, set_flags: u8 = value_node_flags, set_value_node_flags;
+    }
+
+    pub fn flags(&self) -> ValueNodeFlags {
+        ValueNodeFlags::from_bits_retain(ffi::value_node_flags(&self.0))
+    }
+
+    pub fn set_flags(self: Pin<&mut Self>, flags: ValueNodeFlags) {
+        ffi::set_value_node_flags(self.ffi_mut(), flags.bits());
+    }
+}
+
+bitflags! {
+    /// The flags of a [`BsValueNode`]. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct ValueNodeFlags: u8 {
+        /// Billboard around the world Z axis.
+        const BILLBOARD_WORLD_Z = 1;
+        /// Use the player adjustment.
+        const USE_PLAYER_ADJUST = 1 << 1;
+        const _ = !0;
     }
 }
 
@@ -504,7 +523,7 @@ pub struct Viewport {
 impl NiCamera {
     fields! {
         /// Flags with no known use. Saved from Oblivion on.
-        flags, set_flags: u16 = camera_flags, set_camera_flags;
+        raw_flags, set_raw_flags: u16 = camera_flags, set_camera_flags;
         /// Whether the projection is orthographic rather than perspective. Saved from Oblivion
         /// on; Morrowind cameras are always perspective.
         orthographic, set_orthographic: bool = camera_orthographic, set_camera_orthographic;
@@ -697,12 +716,29 @@ pub enum BillboardMode {
 }
 
 impl NiSwitchNode {
+    pub fn flags(&self) -> SwitchNodeFlags {
+        SwitchNodeFlags::from_bits_retain(ffi::switch_node_flags(&self.0))
+    }
+
+    pub fn set_flags(self: Pin<&mut Self>, flags: SwitchNodeFlags) {
+        ffi::set_switch_node_flags(self.ffi_mut(), flags.bits());
+    }
+
     fields! {
-        /// Raw flags. Bit 0: update only the active child. Bit 1: update controllers.
-        flags, set_flags: u16 = switch_node_flags, set_switch_node_flags;
         /// The position of the active child among the node's children. Not checked against the
         /// number of children.
         active_index, set_active_index: u32 = switch_node_index, set_switch_node_index;
+    }
+}
+
+bitflags! {
+    /// The flags of an [`NiSwitchNode`]. Other bits are kept as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct SwitchNodeFlags: u16 {
+        /// Update only the active child.
+        const UPDATE_ONLY_ACTIVE_CHILD = 1;
+        const UPDATE_CONTROLLERS = 1 << 1;
+        const _ = !0;
     }
 }
 

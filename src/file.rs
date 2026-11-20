@@ -267,7 +267,8 @@ impl NifFile {
         }
     }
 
-    /// Sets the external emittance flag (`0x200`) of the "BSX" [`BsxFlags`] block if any
+    /// Sets the [external emittance flag](crate::extra_data::BsxBitflags::EXTERNAL_EMITTANCE) of
+    /// the "BSX" [`BsxFlags`] block if any
     /// [`BsShaderProperty`] in the file has external emittance, and clears it otherwise. Only the
     /// first "BSX" block is changed, and only that bit. Run by
     /// [`optimize_for`](Self::optimize_for) by default.
@@ -279,10 +280,11 @@ impl NifFile {
     }
 
     /// Makes two flags of every [`BsLightingShaderProperty`] in the file match its
-    /// [shader type](crate::shaders::BsLightingShaderProperty::shader_type): environment mapping
-    /// (bit 7 of [`flags_1`](crate::shaders::BsShaderProperty::flags_1)) is set only for
-    /// environment map shaders (type 1), and eye environment mapping (bit 17) only for eye
-    /// shaders (type 16). Run by [`optimize_for`](Self::optimize_for) by default.
+    /// [shader type](crate::shaders::BsLightingShaderProperty::shader_type):
+    /// [environment mapping](crate::shaders::SkyrimShaderFlags1::ENVIRONMENT_MAPPING) is set
+    /// only for environment map shaders (type 1), and
+    /// [eye environment mapping](crate::shaders::SkyrimShaderFlags1::EYE_ENVIRONMENT_MAPPING) only
+    /// for eye shaders (type 16). Run by [`optimize_for`](Self::optimize_for) by default.
     ///
     /// [`BsLightingShaderProperty`]: crate::shaders::BsLightingShaderProperty
     pub fn fix_shader_flags(&mut self) {
@@ -675,7 +677,7 @@ impl<T: NiType> Edit<'_, T> {
     /// let mut root = nif.edit::<NiNode>(root).unwrap();
     /// root.assign_extra_data(ExtraString("Prn", "SHIELD")).unwrap();
     /// root.assign_extra_data(ExtraFloat("Scale", 1.5)).unwrap();
-    /// root.assign_extra_data(ExtraBsxFlags(0x82)).unwrap();
+    /// root.assign_extra_data(ExtraBsxFlags(BsxBitflags::HAVOK | BsxBitflags::ARTICULATED)).unwrap();
     /// root.assign_extra_data(ExtraBsCloth(&cloth_hkx)).unwrap();
     /// ```
     pub fn assign_extra_data<I>(&mut self, value: impl IntoExtraData) -> Option<Index>
