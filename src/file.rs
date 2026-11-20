@@ -1,3 +1,7 @@
+//! [`NifFile`], a NIF file in memory, with its version and its load, save and optimize options.
+//!
+//! Blocks are addressed by [`Index`], their position in the file's block list.
+
 use std::io;
 
 use bstr::BString;
@@ -33,15 +37,29 @@ pub struct NifVersion {
 }
 
 impl NifVersion {
+    /// Morrowind: 4.0.0.2.
     pub const MORROWIND: Self = Self::new(0x04000002, 0, 0);
+    /// Oblivion: 20.0.0.5, user version 11, stream 11.
     pub const OBLIVION: Self = Self::new(0x14000005, 11, 11);
+    /// Fallout 3 and New Vegas: 20.2.0.7, user version 11, stream 34.
     pub const FALLOUT_3: Self = Self::new(0x14020007, 11, 34);
+    /// Skyrim (LE): 20.2.0.7, user version 12, stream 83.
     pub const SKYRIM: Self = Self::new(0x14020007, 12, 83);
+    /// Skyrim Special Edition: 20.2.0.7, user version 12, stream 100.
     pub const SKYRIM_SE: Self = Self::new(0x14020007, 12, 100);
+    /// Fallout 4: 20.2.0.7, user version 12, stream 130.
     pub const FALLOUT_4: Self = Self::new(0x14020007, 12, 130);
+    /// Fallout 76: 20.2.0.7, user version 12, stream 155.
     pub const FALLOUT_76: Self = Self::new(0x14020007, 12, 155);
+    /// Starfield: 20.2.0.7, user version 12, stream 172.
     pub const STARFIELD: Self = Self::new(0x14020007, 12, 172);
 
+    /// A version from its file version, user version and stream.
+    ///
+    /// ```
+    /// # use nifly::file::NifVersion;
+    /// assert_eq!(NifVersion::new(0x14020007, 12, 100), NifVersion::SKYRIM_SE);
+    /// ```
     pub const fn new(file: u32, user: u32, stream: u32) -> Self {
         Self { file, user, stream }
     }
@@ -67,8 +85,8 @@ impl NifVersion {
 /// Options for [`NifFile::load`]. `Default` disables all.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct LoadOptions {
-    /// Load as a terrain file. Affects texture path cleanup and shape names.
-    /// See [`NifFile::is_terrain`].
+    /// Load as a terrain file, which changes how texture paths are cleaned up and shapes are
+    /// named. See [`NifFile::is_terrain`].
     pub is_terrain: bool,
 }
 
@@ -122,11 +140,18 @@ impl Default for OptimizeOptions {
 pub struct OptimizeReport {
     /// Shapes with duplicate names were renamed.
     pub duplicates_renamed: bool,
+    /// Shapes whose vertex colors were all white and were removed, with the shader's vertex
+    /// color and alpha flags. Only with [`OptimizeOptions::remove_parallax`], and not for
+    /// shaders with the tree animation flag.
     pub vertex_colors_removed: Vec<BString>,
+    /// Shapes whose normals were removed because their shader uses model space normals.
     pub normals_removed: Vec<BString>,
     /// Shapes whose skin partitions were converted from strips to triangles.
     pub partitions_triangulated: Vec<BString>,
+    /// Shapes that gained tangents.
     pub tangents_added: Vec<BString>,
+    /// Shapes whose parallax shader type, flag and texture were removed
+    /// ([`OptimizeOptions::remove_parallax`]).
     pub parallax_removed: Vec<BString>,
 }
 
@@ -144,17 +169,42 @@ fn names_from_ffi(names: &cxx::CxxVector<cxx::CxxString>) -> Vec<BString> {
 /// [`NifFile::optimize_for`]).
 pub type Index = usize;
 
-/// A loaded or new NIF file and its blocks.
+/// A loaded or new NIF file: a header and a list of blocks, each an [`NiObject`] subclass.
+///
+/// The file owns its blocks. They're borrowed from it as `&T` (from [`block_of`](Self::block_of),
+/// [`blocks_of`](Self::blocks_of), ...) or `&mut T` (from [`block_of_mut`](Self::block_of_mut))
+/// for their fields, and as a [`View`] or [`Edit`] for what involves other blocks. Methods that
+/// change the file take blocks by [`Index`].
+///
+/// ```
+/// # use nifly::{file::NifFile, nodes::NiNode, shaders::NiMaterialProperty};
+/// # use std::{fs::File, io::Cursor};
+/// let mut nif = NifFile::load(
+///     File::open("nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_MW.nif")?,
+///     None,
+/// )?;
+/// for node in nif.blocks_of::<NiNode>() {
+///     println!("{}", node.name());
+/// }
+/// let index = nif.blocks_of::<NiMaterialProperty>().indices().next().unwrap();
+/// nif.block_of_mut::<NiMaterialProperty>(index).unwrap().set_alpha(0.5);
+/// nif.save(Cursor::new(Vec::new()), None)?;
+/// # Ok::<(), nifly::error::Error>(())
+/// ```
 ///
 /// # Methods by topic
 ///
-/// - **General:** [`load`](Self::load), [`save`](Self::save), [`create`](Self::create),
-///   [`block`](Self::block), [`block_of`](Self::block_of), [`block_mut`](Self::block_mut),
-///   [`block_of_mut`](Self::block_of_mut), [`view`](Self::view), [`view_of`](Self::view_of),
-///   [`edit`](Self::edit),
-///   [`blocks_of`](Self::blocks_of),
-///   [`find_block_by_name`](Self::find_block_by_name), [`child_blocks`](Self::child_blocks),
-///   [`tree`](Self::tree), [`optimize_for`](Self::optimize_for).
+/// The main methods of each section below:
+///
+/// - **General:** [`create`](Self::create), [`load`](Self::load), [`save`](Self::save),
+///   [`version`](Self::version), [`block`](Self::block), [`block_of`](Self::block_of),
+///   [`block_mut`](Self::block_mut), [`block_of_mut`](Self::block_of_mut),
+///   [`view`](Self::view), [`view_of`](Self::view_of), [`edit`](Self::edit),
+///   [`block_index`](Self::block_index), [`blocks`](Self::blocks),
+///   [`blocks_of`](Self::blocks_of), [`find_block_by_name`](Self::find_block_by_name),
+///   [`child_blocks`](Self::child_blocks), [`tree`](Self::tree), [`subtree`](Self::subtree),
+///   [`delete_unreferenced_blocks`](Self::delete_unreferenced_blocks),
+///   [`sort_blocks`](Self::sort_blocks), [`optimize_for`](Self::optimize_for).
 /// - **Nodes:** [`nodes`](Self::nodes), [`root_node`](Self::root_node),
 ///   [`add_node`](Self::add_node), [`add_node_of`](Self::add_node_of), [`add_camera`](Self::add_camera),
 ///   [`delete_node`](Self::delete_node),
@@ -316,7 +366,8 @@ impl NifFile {
         ffi::delete_unreferenced_blocks(self.inner.pin_mut(), matches::<T>) as usize
     }
 
-    /// Update geometry bounds and delete unreferenced blocks.
+    /// Updates every shape's bounds and deletes unreferenced blocks. Block indices change. Run
+    /// by [`save`](Self::save) when [`SaveOptions::optimize`] is set.
     pub fn optimize(&mut self) {
         ffi::NifFile::Optimize(self.inner.pin_mut());
     }
@@ -356,36 +407,38 @@ impl NifFile {
         })
     }
 
-    /// Fills string refs, links `NiGeometryData` pointers, cleans up texture paths and removes invalid triangles.
-    /// For skinned `BSTriShape` blocks, copies mesh data from skin partitions to shape.
-    /// Already automatically called by [`NifFile::load`].
+    /// Fills in what loading leaves out: resolves string refs, links geometry data to its
+    /// shapes, cleans up texture paths and removes invalid triangles. Skinned `BSTriShape`s get
+    /// their mesh data from their skin partitions. Run by [`load`](Self::load).
     pub fn prepare_data(&mut self) {
         ffi::NifFile::PrepareData(self.inner.pin_mut());
     }
 
-    /// Calculates data sizes required for saving.
-    /// For skinned `BSTriShape` blocks, copies mesh data back from shape to skin partitions
-    /// Already automatically called by [`NifFile::save`].
+    /// Updates the sizes and counts saving writes. Skinned `BSTriShape`s copy their mesh data
+    /// back to their skin partitions. Run by [`save`](Self::save).
     pub fn finalize_data(&mut self) {
         ffi::NifFile::FinalizeData(self.inner.pin_mut());
     }
 
-    /// Indicates that the file was fully loaded or otherwise initialized.
+    /// Whether the file was loaded or created, and not [cleared](Self::clear) since.
     pub fn is_valid(&self) -> bool {
         ffi::NifFile::IsValid(&self.inner)
     }
 
-    /// Indicates if there have been any unknown block types during load.
+    /// Whether the file has blocks of unknown types. They're kept and saved as they were read,
+    /// but their refs aren't known, so [`delete_unreferenced_blocks`](Self::delete_unreferenced_blocks)
+    /// and block sorting do nothing.
     pub fn has_unknown(&self) -> bool {
         ffi::NifFile::HasUnknown(&self.inner)
     }
     
-    /// Indicates if the file was loaded as terrain.
+    /// Whether the file was loaded with [`LoadOptions::is_terrain`].
     pub fn is_terrain(&self) -> bool {
         ffi::NifFile::IsTerrain(&self.inner)
     }
 
-    /// Deletes all blocks, header strings and resets the valid status.
+    /// Deletes every block and header string, leaving an empty file that isn't
+    /// [valid](Self::is_valid).
     pub fn clear(&mut self) {
         ffi::NifFile::Clear(self.inner.pin_mut())
     }
