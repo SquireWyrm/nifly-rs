@@ -43,15 +43,15 @@ impl Edit<'_, BsTreeNode> {
     /// Replaces the first bone list with these nodes. Returns `false`, changing nothing, if a
     /// bone isn't a node.
     pub fn set_bones_1(&mut self, bones: &[Index]) -> bool {
-        self.set_bones(1, bones)
+        self.set_tree_bones(1, bones)
     }
 
     /// Like [`set_bones_1`](Self::set_bones_1), for the second bone list.
     pub fn set_bones_2(&mut self, bones: &[Index]) -> bool {
-        self.set_bones(2, bones)
+        self.set_tree_bones(2, bones)
     }
 
-    fn set_bones(&mut self, list: u8, bones: &[Index]) -> bool {
+    fn set_tree_bones(&mut self, list: u8, bones: &[Index]) -> bool {
         let Some(bones) = bones
             .iter()
             .map(|&b| block_index_to_ffi(b))
@@ -90,7 +90,7 @@ impl Edit<'_, BsMultiBoundNode> {
     /// let shape = MultiBoundShape::Aabb { center: Vec3::ZERO, half_extent: Vec3::new(64.0, 64.0, 32.0) };
     /// nif.edit::<BsMultiBoundNode>(node).unwrap().assign_multi_bound(shape);
     /// let node = nif.view::<BsMultiBoundNode>(node).unwrap();
-    /// let data = node.multi_bound().unwrap().data().unwrap();
+    /// let data = node.multi_bound().unwrap().multi_bound_data().unwrap();
     /// assert!(data.cast::<BsMultiBoundAabb>().is_some());
     /// ```
     pub fn assign_multi_bound(&mut self, shape: MultiBoundShape) -> Index {
@@ -139,21 +139,21 @@ impl Edit<'_, BsMultiBoundNode> {
 impl<'a> View<'a, BsMultiBound> {
     /// The multi-bound's shape, or `None` if it has none. Cast it to a [`BsMultiBoundAabb`],
     /// [`BsMultiBoundObb`] or [`BsMultiBoundSphere`].
-    pub fn data(&self) -> Option<View<'a, BsMultiBoundData>> {
+    pub fn multi_bound_data(&self) -> Option<View<'a, BsMultiBoundData>> {
         self.resolve(index_from_ffi(ffi::multi_bound_data(&self.get().0)))
     }
 }
 
 impl Edit<'_, BsMultiBound> {
-    /// Like [`View::data`], for editing.
-    pub fn data(&mut self) -> Option<Edit<'_, BsMultiBoundData>> {
-        let index = self.view().data()?.index();
+    /// Like [`View::multi_bound_data`], for editing.
+    pub fn multi_bound_data(&mut self) -> Option<Edit<'_, BsMultiBoundData>> {
+        let index = self.view().multi_bound_data()?.index();
         self.resolve(Some(index))
     }
 
     /// Points the multi-bound at the [`BsMultiBoundData`] at `data`, or clears it with `None`.
     /// Returns `false`, changing nothing, if that block isn't one.
-    pub fn set_data(&mut self, data: Option<Index>) -> bool {
+    pub fn set_multi_bound_data(&mut self, data: Option<Index>) -> bool {
         self.set_ref(RefKind::MultiBoundData, data)
     }
 }
@@ -305,7 +305,7 @@ pub struct PaletteObject<'a> {
 /// The scene and objects of an [`NiDefaultAvObjectPalette`].
 impl<'a> View<'a, NiDefaultAvObjectPalette> {
     /// The root of the objects, or `None` if it has none.
-    pub fn scene(&self) -> Option<View<'a, NiAvObject>> {
+    pub fn scene_root(&self) -> Option<View<'a, NiAvObject>> {
         self.resolve(index_from_ffi(ffi::palette_scene(&self.get().0)))
     }
 
@@ -325,15 +325,15 @@ impl<'a> View<'a, NiDefaultAvObjectPalette> {
 }
 
 impl Edit<'_, NiDefaultAvObjectPalette> {
-    /// Like [`View::scene`], for editing.
-    pub fn scene(&mut self) -> Option<Edit<'_, NiAvObject>> {
-        let index = self.view().scene()?.index();
+    /// Like [`View::scene_root`], for editing.
+    pub fn scene_root(&mut self) -> Option<Edit<'_, NiAvObject>> {
+        let index = self.view().scene_root()?.index();
         self.resolve(Some(index))
     }
 
     /// Sets the scene to the [`NiAvObject`] at block index `scene`, or none if `None`. Returns
     /// `false`, changing nothing, if that block isn't an `NiAvObject`.
-    pub fn set_scene(&mut self, scene: Option<Index>) -> bool {
+    pub fn set_scene_root(&mut self, scene: Option<Index>) -> bool {
         let Some(scene) = optional_index_to_ffi(scene) else {
             return false;
         };

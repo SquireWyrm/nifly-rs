@@ -71,6 +71,7 @@ use crate::{collision::NiCollisionObject, extra_data::joined, objects::NiAvObjec
 ni_types! { ffi;
     /// A scene graph node that can have children, from [`View::children`].
     NiNode(NiNode): NiAvObject => upcast_ni_node, downcast_ni_node;
+    /// The usual root node of Bethesda models.
     BsFadeNode(BSFadeNode): NiNode => upcast_bs_fade_node, downcast_bs_fade_node;
     /// Morrowind only. Marks a node holding the collision mesh.
     RootCollisionNode(RootCollisionNode): NiNode => upcast_root_collision_node, downcast_root_collision_node;
@@ -80,11 +81,14 @@ ni_types! { ffi;
     NiBsAnimationNode(NiBSAnimationNode): NiNode => upcast_ni_bs_animation_node, downcast_ni_bs_animation_node;
     /// Bethesda extension of `NiNode` used together with `NiBSPArrayController`.
     NiBsParticleNode(NiBSParticleNode): NiNode => upcast_ni_bs_particle_node, downcast_ni_bs_particle_node;
+    /// A node with a value and flags, such as an add-on node.
     BsValueNode(BSValueNode): NiNode => upcast_bs_value_node, downcast_bs_value_node;
+    /// A node whose children animate as leaves.
     BsLeafAnimNode(BSLeafAnimNode): NiNode => upcast_bs_leaf_anim_node, downcast_bs_leaf_anim_node;
     /// A Skyrim tree's root node, with its trunk and branch bones in [`View::bones_1`] and
     /// [`View::bones_2`], set by [`Edit::set_bones_1`] and [`Edit::set_bones_2`].
     BsTreeNode(BSTreeNode): NiNode => upcast_bs_tree_node, downcast_bs_tree_node;
+    /// A node that draws its children in order, with an alpha sort bound.
     BsOrderedNode(BSOrderedNode): NiNode => upcast_bs_ordered_node, downcast_bs_ordered_node;
     /// A node culled by a [`BsMultiBound`], from [`View::multi_bound`].
     BsMultiBoundNode(BSMultiBoundNode): NiNode => upcast_bs_multi_bound_node, downcast_bs_multi_bound_node;
@@ -96,12 +100,17 @@ ni_types! { ffi;
     /// only be set on a node made with [`NifFile::add_node_of`]. The subclasses are read
     /// normally.
     BsRangeNode(BSRangeNode): NiNode => upcast_bs_range_node, downcast_bs_range_node;
+    /// A [`BsRangeNode`] for debris.
     BsDebrisNode(BSDebrisNode): BsRangeNode => upcast_bs_debris_node, downcast_bs_debris_node;
+    /// A [`BsRangeNode`] for explosions.
     BsBlastNode(BSBlastNode): BsRangeNode => upcast_bs_blast_node, downcast_bs_blast_node;
+    /// A [`BsBlastNode`] for one stage of damage.
     BsDamageStage(BSDamageStage): BsBlastNode => upcast_bs_damage_stage, downcast_bs_damage_stage;
     /// A node placing other models by reference (Starfield).
     BsWeakReferenceNode(BSWeakReferenceNode): NiNode => upcast_bs_weak_reference_node, downcast_bs_weak_reference_node;
+    /// A node of a generated face.
     BsFaceGenNiNode(BSFaceGenNiNode): NiNode => upcast_bs_face_gen_ni_node, downcast_bs_face_gen_ni_node;
+    /// A node that turns to face the camera.
     NiBillboardNode(NiBillboardNode): NiNode => upcast_ni_billboard_node, downcast_ni_billboard_node;
     /// A node showing only its [active child](NiSwitchNode::active_index). Supported from
     /// Oblivion on: Morrowind files have no switch flags, which are read anyway, so such a file
@@ -111,8 +120,11 @@ ni_types! { ffi;
     /// [LOD data](View::lod_data). Supported from Oblivion on: Morrowind stores the LOD levels
     /// in the node itself, which isn't read, so such a file loads wrongly.
     NiLodNode(NiLODNode): NiSwitchNode => upcast_ni_lod_node, downcast_ni_lod_node;
+    /// A node used as a bone.
     NiBone(NiBone): NiNode => upcast_ni_bone, downcast_ni_bone;
+    /// A node that sets how its children are sorted for drawing.
     NiSortAdjustNode(NiSortAdjustNode): NiNode => upcast_ni_sort_adjust_node, downcast_ni_sort_adjust_node;
+    /// A node grouping particle systems, from [`View::particle_systems`].
     BsMasterParticleSystem(BSMasterParticleSystem): NiNode => upcast_bs_master_particle_system, downcast_bs_master_particle_system;
     /// Base class of an [`NiLodNode`]'s LOD data, from [`View::lod_data`].
     NiLodData(NiLODData): NiObject => upcast_ni_lod_data, downcast_ni_lod_data;
@@ -121,9 +133,9 @@ ni_types! { ffi;
     /// LOD data choosing a child by the proportion of the screen it covers.
     NiScreenLodData(NiScreenLODData): NiLodData => upcast_ni_screen_lod_data, downcast_ni_screen_lod_data;
     /// The culling bound of a [`BsMultiBoundNode`], from [`View::multi_bound`]. Its shape is in
-    /// a [`BsMultiBoundData`], from [`View::data`].
+    /// a [`BsMultiBoundData`], from [`View::multi_bound_data`].
     BsMultiBound(BSMultiBound): NiObject => upcast_bs_multi_bound, downcast_bs_multi_bound;
-    /// Base class of a [`BsMultiBound`]'s shape, from [`View::data`].
+    /// Base class of a [`BsMultiBound`]'s shape, from [`View::multi_bound_data`].
     BsMultiBoundData(BSMultiBoundData): NiObject => upcast_bs_multi_bound_data, downcast_bs_multi_bound_data;
     /// A [`BsMultiBound`] box with any rotation.
     BsMultiBoundObb(BSMultiBoundOBB): BsMultiBoundData => upcast_bs_multi_bound_obb, downcast_bs_multi_bound_obb;
@@ -137,8 +149,8 @@ ni_types! { ffi;
     /// Base of [`NiDefaultAvObjectPalette`], the only kind of palette.
     NiAvObjectPalette(NiAVObjectPalette): NiObject => upcast_ni_av_object_palette, downcast_ni_av_object_palette;
     /// Scene objects by name, where an animation's controller manager finds its targets. Its
-    /// scene and objects are on [`View::scene`] and [`View::objects`], set by
-    /// [`Edit::set_scene`] and [`Edit::set_objects`].
+    /// scene and objects are on [`View::scene_root`] and [`View::objects`], set by
+    /// [`Edit::set_scene_root`] and [`Edit::set_objects`].
     NiDefaultAvObjectPalette(NiDefaultAVObjectPalette): NiAvObjectPalette => upcast_ni_default_av_object_palette, downcast_ni_default_av_object_palette;
 }
 

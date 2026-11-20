@@ -153,24 +153,33 @@ ni_types! { ffi;
     BsGeometry(BSGeometry): NiShape => upcast_bs_geometry, downcast_bs_geometry;
     /// Geometry with its vertex data in a separate `NiGeometryData` block.
     NiGeometry(NiGeometry): NiShape => upcast_ni_geometry, downcast_ni_geometry;
+    /// Base class of geometry made of triangles, with its data in an [`NiTriBasedGeomData`].
     NiTriBasedGeom(NiTriBasedGeom): NiGeometry => upcast_ni_tri_based_geom, downcast_ni_tri_based_geom;
+    /// Geometry stored as a triangle list, with its data in an [`NiTriShapeData`].
     NiTriShape(NiTriShape): NiTriBasedGeom => upcast_ni_tri_shape, downcast_ni_tri_shape;
     /// Geometry stored as triangle strips. Not supported by Skyrim SE.
     NiTriStrips(NiTriStrips): NiTriBasedGeom => upcast_ni_tri_strips, downcast_ni_tri_strips;
+    /// Geometry drawn as lines between its vertices.
     NiLines(NiLines): NiTriBasedGeom => upcast_ni_lines, downcast_ni_lines;
     /// `BSLODTriShape`.
     BsLodTriShape(BSLODTriShape): NiTriBasedGeom => upcast_bs_lod_tri_shape, downcast_bs_lod_tri_shape;
+    /// An [`NiTriShape`] of 2D elements drawn in screen space.
     NiScreenElements(NiScreenElements): NiTriShape => upcast_ni_screen_elements, downcast_ni_screen_elements;
     /// An [`NiTriShape`] split into segments.
     BsSegmentedTriShape(BSSegmentedTriShape): NiTriShape => upcast_bs_segmented_tri_shape, downcast_bs_segmented_tri_shape;
+    /// Base class of particle geometry, with its data on [`View::particles_data`].
     NiParticles(NiParticles): NiGeometry => upcast_ni_particles, downcast_ni_particles;
+    /// Particles whose normals are computed automatically.
     NiAutoNormalParticles(NiAutoNormalParticles): NiParticles => upcast_ni_auto_normal_particles, downcast_ni_auto_normal_particles;
+    /// Particles drawn as copies of meshes.
     NiParticleMeshes(NiParticleMeshes): NiParticles => upcast_ni_particle_meshes, downcast_ni_particle_meshes;
+    /// Particles that rotate.
     NiRotatingParticles(NiRotatingParticles): NiParticles => upcast_ni_rotating_particles, downcast_ni_rotating_particles;
 
     /// The vertex data of a shape, from
     /// [`NifFile::geometry_data`](crate::handle::View::geometry_data).
     NiGeometryData(NiGeometryData): NiObject => upcast_ni_geometry_data, downcast_ni_geometry_data;
+    /// Base class of the vertex and triangle data of an [`NiTriBasedGeom`].
     NiTriBasedGeomData(NiTriBasedGeomData): NiGeometryData => upcast_ni_tri_based_geom_data, downcast_ni_tri_based_geom_data;
     /// The data of an [`NiTriShape`].
     NiTriShapeData(NiTriShapeData): NiTriBasedGeomData => upcast_ni_tri_shape_data, downcast_ni_tri_shape_data;

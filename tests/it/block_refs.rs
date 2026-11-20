@@ -128,24 +128,24 @@ fn ni_skin_instance() {
         .index();
     let view = nif.view::<NiSkinInstance>(skin).unwrap();
     let (data, partition) = (
-        view.data().unwrap().index(),
-        view.partition().unwrap().index(),
+        view.skin_data().unwrap().index(),
+        view.skin_partition().unwrap().index(),
     );
 
     let mut edit = nif.edit::<NiSkinInstance>(skin).unwrap();
-    assert!(!edit.set_data(Some(partition)));
-    assert!(!edit.set_partition(Some(data)));
-    assert!(edit.set_partition(None));
+    assert!(!edit.set_skin_data(Some(partition)));
+    assert!(!edit.set_skin_partition(Some(data)));
+    assert!(edit.set_skin_partition(None));
     assert!(
         reload(&mut nif)
             .view::<NiSkinInstance>(skin)
             .unwrap()
-            .partition()
+            .skin_partition()
             .is_none()
     );
     let mut edit = nif.edit::<NiSkinInstance>(skin).unwrap();
-    assert!(edit.set_partition(Some(partition)) && edit.set_data(Some(data)));
-    assert!(edit.data().is_some() && edit.partition().is_some());
+    assert!(edit.set_skin_partition(Some(partition)) && edit.set_skin_data(Some(data)));
+    assert!(edit.skin_data().is_some() && edit.skin_partition().is_some());
 
     let mut shape_edit = nif.edit::<NiShape>(shape).unwrap();
     assert!(!shape_edit.set_skin_instance(Some(data)));
@@ -202,26 +202,26 @@ fn bs_skin_instance() {
     let mut nif = upstream("TestNifFile_Skinned_FO4");
     let skin = nif.blocks_of::<BsSkinInstance>().indices().next().unwrap();
     let mut edit = nif.edit::<BsSkinInstance>(skin).unwrap();
-    let data = edit.data().unwrap().index();
-    assert!(!edit.set_data(Some(skin)));
-    assert!(edit.set_data(None));
+    let data = edit.bone_data().unwrap().index();
+    assert!(!edit.set_bone_data(Some(skin)));
+    assert!(edit.set_bone_data(None));
     assert!(
         reload(&mut nif)
             .view::<BsSkinInstance>(skin)
             .unwrap()
-            .data()
+            .bone_data()
             .is_none()
     );
     assert!(
         nif.edit::<BsSkinInstance>(skin)
             .unwrap()
-            .set_data(Some(data))
+            .set_bone_data(Some(data))
     );
     assert_eq!(
         reload(&mut nif)
             .view::<BsSkinInstance>(skin)
             .unwrap()
-            .data()
+            .bone_data()
             .unwrap()
             .index(),
         data
@@ -238,12 +238,18 @@ fn multi_bound() {
         .unwrap();
     let mut edit = nif.edit::<BsMultiBoundNode>(node).unwrap();
     let bound = edit.view().multi_bound().unwrap().index();
-    let data = edit.view().multi_bound().unwrap().data().unwrap().index();
+    let data = edit
+        .view()
+        .multi_bound()
+        .unwrap()
+        .multi_bound_data()
+        .unwrap()
+        .index();
     assert!(!edit.set_multi_bound(Some(data)));
     assert!(edit.set_multi_bound(None));
     let mut bound_edit = nif.edit::<BsMultiBound>(bound).unwrap();
-    assert!(!bound_edit.set_data(Some(bound)));
-    assert!(bound_edit.set_data(None));
+    assert!(!bound_edit.set_multi_bound_data(Some(bound)));
+    assert!(bound_edit.set_multi_bound_data(None));
     let saved = reload(&mut nif);
     assert!(
         saved
@@ -252,12 +258,18 @@ fn multi_bound() {
             .multi_bound()
             .is_none()
     );
-    assert!(saved.view::<BsMultiBound>(bound).unwrap().data().is_none());
+    assert!(
+        saved
+            .view::<BsMultiBound>(bound)
+            .unwrap()
+            .multi_bound_data()
+            .is_none()
+    );
 
     assert!(
         nif.edit::<BsMultiBound>(bound)
             .unwrap()
-            .set_data(Some(data))
+            .set_multi_bound_data(Some(data))
     );
     assert!(
         nif.edit::<BsMultiBoundNode>(node)
@@ -270,7 +282,7 @@ fn multi_bound() {
         .unwrap()
         .multi_bound()
         .unwrap();
-    assert_eq!(bound.data().map(|d| d.index()), Some(data));
+    assert_eq!(bound.multi_bound_data().map(|d| d.index()), Some(data));
 }
 
 #[test]

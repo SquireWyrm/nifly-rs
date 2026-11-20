@@ -97,22 +97,22 @@ impl NiParticleSystem {
 /// The refs of a particle system. These are on the exact type: for a subtype, `upcast` first.
 impl<'a> View<'a, NiParticleSystem> {
     /// The particle data, or `None` if it has none.
-    pub fn data(&self) -> Option<View<'a, NiPSysData>> {
+    pub fn psys_data(&self) -> Option<View<'a, NiPSysData>> {
         self.follow(RefKind::ParticleData)
     }
 
     /// The skin instance, or `None` if it has none.
-    pub fn skin_instance(&self) -> Option<View<'a, NiBoneContainer>> {
+    pub fn psys_skin_instance(&self) -> Option<View<'a, NiBoneContainer>> {
         self.follow(RefKind::ParticleSkinInstance)
     }
 
     /// The shader, or `None` if it has none. Saved from Skyrim on.
-    pub fn shader(&self) -> Option<View<'a, BsShaderProperty>> {
+    pub fn psys_shader(&self) -> Option<View<'a, BsShaderProperty>> {
         self.follow(RefKind::ParticleShader)
     }
 
     /// The alpha property, or `None` if it has none. Saved from Skyrim on.
-    pub fn alpha_property(&self) -> Option<View<'a, NiAlphaProperty>> {
+    pub fn psys_alpha_property(&self) -> Option<View<'a, NiAlphaProperty>> {
         self.follow(RefKind::ParticleAlpha)
     }
 
@@ -123,47 +123,47 @@ impl<'a> View<'a, NiParticleSystem> {
 }
 
 impl Edit<'_, NiParticleSystem> {
-    /// Like [`View::data`], for editing.
-    pub fn data(&mut self) -> Option<Edit<'_, NiPSysData>> {
+    /// Like [`View::psys_data`], for editing.
+    pub fn psys_data(&mut self) -> Option<Edit<'_, NiPSysData>> {
         self.follow(RefKind::ParticleData)
     }
 
-    /// Sets the [data](View::data), or clears it with `None`. Returns `false`, changing nothing,
+    /// Sets the [data](View::psys_data), or clears it with `None`. Returns `false`, changing nothing,
     /// unless `data` is an [`NiPSysData`].
-    pub fn set_data(&mut self, data: Option<Index>) -> bool {
+    pub fn set_psys_data(&mut self, data: Option<Index>) -> bool {
         self.set_ref(RefKind::ParticleData, data)
     }
 
-    /// Like [`View::skin_instance`], for editing.
-    pub fn skin_instance(&mut self) -> Option<Edit<'_, NiBoneContainer>> {
+    /// Like [`View::psys_skin_instance`], for editing.
+    pub fn psys_skin_instance(&mut self) -> Option<Edit<'_, NiBoneContainer>> {
         self.follow(RefKind::ParticleSkinInstance)
     }
 
-    /// Sets the [skin instance](View::skin_instance), or clears it with `None`. Returns `false`,
+    /// Sets the [skin instance](View::psys_skin_instance), or clears it with `None`. Returns `false`,
     /// changing nothing, unless `skin` is an [`NiBoneContainer`].
-    pub fn set_skin_instance(&mut self, skin: Option<Index>) -> bool {
+    pub fn set_psys_skin_instance(&mut self, skin: Option<Index>) -> bool {
         self.set_ref(RefKind::ParticleSkinInstance, skin)
     }
 
-    /// Like [`View::shader`], for editing.
-    pub fn shader(&mut self) -> Option<Edit<'_, BsShaderProperty>> {
+    /// Like [`View::psys_shader`], for editing.
+    pub fn psys_shader(&mut self) -> Option<Edit<'_, BsShaderProperty>> {
         self.follow(RefKind::ParticleShader)
     }
 
-    /// Sets the [shader](View::shader), or clears it with `None`. Returns `false`, changing
+    /// Sets the [shader](View::psys_shader), or clears it with `None`. Returns `false`, changing
     /// nothing, unless `shader` is a [`BsShaderProperty`].
-    pub fn set_shader(&mut self, shader: Option<Index>) -> bool {
+    pub fn set_psys_shader(&mut self, shader: Option<Index>) -> bool {
         self.set_ref(RefKind::ParticleShader, shader)
     }
 
-    /// Like [`View::alpha_property`], for editing.
-    pub fn alpha_property(&mut self) -> Option<Edit<'_, NiAlphaProperty>> {
+    /// Like [`View::psys_alpha_property`], for editing.
+    pub fn psys_alpha_property(&mut self) -> Option<Edit<'_, NiAlphaProperty>> {
         self.follow(RefKind::ParticleAlpha)
     }
 
-    /// Sets the [alpha property](View::alpha_property), or clears it with `None`. Returns
+    /// Sets the [alpha property](View::psys_alpha_property), or clears it with `None`. Returns
     /// `false`, changing nothing, unless `alpha` is an [`NiAlphaProperty`].
-    pub fn set_alpha_property(&mut self, alpha: Option<Index>) -> bool {
+    pub fn set_psys_alpha_property(&mut self, alpha: Option<Index>) -> bool {
         self.set_ref(RefKind::ParticleAlpha, alpha)
     }
 

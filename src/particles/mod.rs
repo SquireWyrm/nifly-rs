@@ -138,7 +138,7 @@ ni_types! { ffi;
     BsStripPSysData(BSStripPSysData): NiPSysData => upcast_bs_strip_psys_data, downcast_bs_strip_psys_data;
     /// Keys of an [`NiPSysEmitterCtlr`]: birth rate and emitter activity. Used up to 10.1.0.103; later controllers use interpolators.
     NiPSysEmitterCtlrData(NiPSysEmitterCtlrData): NiObject => upcast_ni_psys_emitter_ctlr_data, downcast_ni_psys_emitter_ctlr_data;
-    /// A particle system: its [data](crate::handle::View::data) and the [modifiers](crate::handle::View::modifiers) that emit and move the particles. Add one with [`Edit::add_particle_system`](crate::handle::Edit::add_particle_system).
+    /// A particle system: its [data](crate::handle::View::psys_data) and the [modifiers](crate::handle::View::modifiers) that emit and move the particles. Add one with [`Edit::add_particle_system`](crate::handle::Edit::add_particle_system).
     NiParticleSystem(NiParticleSystem): NiAvObject => upcast_ni_particle_system, downcast_ni_particle_system;
     /// A particle system whose particles are meshes.
     NiMeshParticleSystem(NiMeshParticleSystem): NiParticleSystem => upcast_ni_mesh_particle_system, downcast_ni_mesh_particle_system;

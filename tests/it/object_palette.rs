@@ -54,7 +54,9 @@ fn reads_palette() {
     );
     let palette = nif.view::<NiDefaultAvObjectPalette>(PALETTE).unwrap();
     assert_eq!(
-        palette.scene().map(|s| (s.index(), s.name().to_owned())),
+        palette
+            .scene_root()
+            .map(|s| (s.index(), s.name().to_owned())),
         Some((0, "Scene Root".into()))
     );
 
@@ -94,7 +96,7 @@ fn survives_save() {
             .next()
             .unwrap();
         assert_eq!(
-            palette.scene().map(|s| s.index()),
+            palette.scene_root().map(|s| s.index()),
             saved.root_node().map(|r| r.index()),
             "{name}"
         );
@@ -108,16 +110,16 @@ fn set_scene() {
     let mut edit = nif.edit::<NiDefaultAvObjectPalette>(PALETTE).unwrap();
     // The palette isn't an object; the others don't exist.
     for bad in [PALETTE, count, usize::MAX] {
-        assert!(!edit.set_scene(Some(bad)), "{bad}");
+        assert!(!edit.set_scene_root(Some(bad)), "{bad}");
     }
-    assert_eq!(edit.view().scene().map(|s| s.index()), Some(0));
+    assert_eq!(edit.view().scene_root().map(|s| s.index()), Some(0));
 
-    assert!(edit.set_scene(Some(48)));
-    edit.scene().unwrap().set_name("Scene");
+    assert!(edit.set_scene_root(Some(48)));
+    edit.scene_root().unwrap().set_name("Scene");
     assert_eq!(
         nif.view::<NiDefaultAvObjectPalette>(PALETTE)
             .unwrap()
-            .scene()
+            .scene_root()
             .unwrap()
             .name(),
         "Scene"
@@ -127,14 +129,14 @@ fn set_scene() {
         saved
             .view::<NiDefaultAvObjectPalette>(PALETTE)
             .unwrap()
-            .scene()
+            .scene_root()
             .map(|s| s.index()),
         Some(48)
     );
 
     let mut edit = nif.edit::<NiDefaultAvObjectPalette>(PALETTE).unwrap();
-    assert!(edit.set_scene(None));
-    assert!(edit.scene().is_none());
+    assert!(edit.set_scene_root(None));
+    assert!(edit.scene_root().is_none());
 }
 
 #[test]

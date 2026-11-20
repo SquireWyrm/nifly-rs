@@ -108,16 +108,21 @@ ni_types! { ffi;
     /// Base class of shaders. Subclasses are also returned as `NiShader`; use
     /// [`block_name`](crate::objects::NiObject::block_name) to see the concrete type.
     NiShader(NiShader): NiProperty => upcast_ni_shader, downcast_ni_shader;
+    /// Shading flags (files before Skyrim), and the base of the Bethesda shaders.
     NiShadeProperty(NiShadeProperty): NiShader => upcast_ni_shade_property, downcast_ni_shade_property;
     /// Base class of Bethesda shaders.
     BsShaderProperty(BSShaderProperty): NiShadeProperty => upcast_bs_shader_property, downcast_bs_shader_property;
+    /// A Fallout 3 and New Vegas shader for water.
     WaterShaderProperty(WaterShaderProperty): BsShaderProperty => upcast_water_shader_property, downcast_water_shader_property;
+    /// A Fallout 3 and New Vegas shader for hair.
     HairShaderProperty(HairShaderProperty): BsShaderProperty => upcast_hair_shader_property, downcast_hair_shader_property;
     /// `DistantLODShaderProperty`.
     DistantLodShaderProperty(DistantLODShaderProperty): BsShaderProperty => upcast_distant_lod_shader_property, downcast_distant_lod_shader_property;
     /// `BSDistantTreeShaderProperty`.
     BsDistantTreeShaderProperty(BSDistantTreeShaderProperty): BsShaderProperty => upcast_bs_distant_tree_shader_property, downcast_bs_distant_tree_shader_property;
+    /// A Fallout 3 and New Vegas shader for tall grass.
     TallGrassShaderProperty(TallGrassShaderProperty): BsShaderProperty => upcast_tall_grass_shader_property, downcast_tall_grass_shader_property;
+    /// A Fallout 3 and New Vegas shader for volumetric fog.
     VolumetricFogShaderProperty(VolumetricFogShaderProperty): BsShaderProperty => upcast_volumetric_fog_shader_property, downcast_volumetric_fog_shader_property;
     /// The usual shader from Skyrim on.
     BsLightingShaderProperty(BSLightingShaderProperty): BsShaderProperty => upcast_bs_lighting_shader_property, downcast_bs_lighting_shader_property;
@@ -129,23 +134,26 @@ ni_types! { ffi;
     BsSkyShaderProperty(BSSkyShaderProperty): BsShaderProperty => upcast_bs_sky_shader_property, downcast_bs_sky_shader_property;
     /// `BSShaderLightingProperty`.
     BsShaderLightingProperty(BSShaderLightingProperty): BsShaderProperty => upcast_bs_shader_lighting_property, downcast_bs_shader_lighting_property;
+    /// A Fallout 3 and New Vegas shader for the sky.
     SkyShaderProperty(SkyShaderProperty): BsShaderLightingProperty => upcast_sky_shader_property, downcast_sky_shader_property;
+    /// A Fallout 3 and New Vegas shader for interface tiles.
     TileShaderProperty(TileShaderProperty): BsShaderLightingProperty => upcast_tile_shader_property, downcast_tile_shader_property;
     /// `BSShaderNoLightingProperty`.
     BsShaderNoLightingProperty(BSShaderNoLightingProperty): BsShaderLightingProperty => upcast_bs_shader_no_lighting_property, downcast_bs_shader_no_lighting_property;
     /// The usual shader in Fallout 3 and New Vegas.
     BsShaderPpLightingProperty(BSShaderPPLightingProperty): BsShaderLightingProperty => upcast_bs_shader_pp_lighting_property, downcast_bs_shader_pp_lighting_property;
+    /// A Fallout 3 and New Vegas lighting shader.
     Lighting30ShaderProperty(Lighting30ShaderProperty): BsShaderPpLightingProperty => upcast_lighting30_shader_property, downcast_lighting30_shader_property;
     /// Material colors and alpha (files before Skyrim), from
-    /// [`NifFile::material_property`](crate::handle::View::material_property).
-    /// [`NifFile::shader`](crate::handle::View::shader) only returns it when a shape has no other
+    /// [`View::material_property`](crate::handle::View::material_property).
+    /// [`View::shader`](crate::handle::View::shader) only returns it when a shape has no other
     /// shader.
     ///
     /// Colors are `[r, g, b]`, usually in `0.0..=1.0`. To change one, get it with
-    /// [`NifFile::material_property`](crate::handle::Edit::material_property).
+    /// [`Edit::material_property`](crate::handle::Edit::material_property).
     NiMaterialProperty(NiMaterialProperty): NiShader => upcast_ni_material_property, downcast_ni_material_property;
     /// Alpha blending and testing of a shape, from
-    /// [`NifFile::alpha_property`](crate::handle::View::alpha_property).
+    /// [`View::alpha_property`](crate::handle::View::alpha_property).
     NiAlphaProperty(NiAlphaProperty): NiProperty => upcast_ni_alpha_property, downcast_ni_alpha_property;
     /// Stencil testing and which sides of a shape are drawn (files before Skyrim), from
     /// [`NifFile::stencil_property`](crate::handle::View::stencil_property).

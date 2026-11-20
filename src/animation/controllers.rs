@@ -399,11 +399,7 @@ impl LooksAt for NiLookAtController {}
 /// This trait is sealed.
 pub trait HasInterpolator: NiType {}
 
-macro_rules! has_interpolator {
-    ($($t:ident)*) => {$(impl HasInterpolator for $t {})*};
-}
-
-has_interpolator! {
+impl_marker! { HasInterpolator:
     NiSingleInterpController NiRollController NiPoint3InterpController NiMaterialColorController
     NiLightColorController NiExtraDataController NiFloatExtraDataController NiBoolInterpController
     NiVisController NiFloatInterpController BsRefractionFirePeriodController NiFlipController

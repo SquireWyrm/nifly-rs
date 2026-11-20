@@ -27,7 +27,7 @@ fn node_index(nif: &NifFile) -> Index {
 
 fn data(nif: &NifFile) -> View<'_, BsMultiBoundData> {
     let node = nif.blocks_of::<BsMultiBoundNode>().views().next().unwrap();
-    node.multi_bound().unwrap().data().unwrap()
+    node.multi_bound().unwrap().multi_bound_data().unwrap()
 }
 
 fn assign(nif: &mut NifFile, shape: MultiBoundShape) -> Index {
@@ -58,7 +58,7 @@ fn edits_round_trip() {
     edit.set_culling_mode(CullingMode::AllFail);
     let mut bound = edit.multi_bound().unwrap();
     let mut obb = bound
-        .data()
+        .multi_bound_data()
         .unwrap()
         .into_cast::<BsMultiBoundObb>()
         .unwrap();

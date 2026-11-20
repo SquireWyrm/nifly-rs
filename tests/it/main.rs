@@ -1,6 +1,7 @@
 //! Integration tests, one module per topic. All in one binary, so the library is linked once.
 
 mod common;
+mod source;
 
 mod add_node;
 mod additional_geometry_data;
@@ -50,6 +51,7 @@ mod fix_shader_flags;
 mod fixed_function_properties;
 mod geometry_data;
 mod geometry_fields;
+mod handle_methods;
 mod handles;
 mod icosphere;
 mod interpolators;

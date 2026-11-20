@@ -242,7 +242,7 @@ fn partition_details() {
     assert!(
         nif.edit::<nifly::skin::NiSkinInstance>(skin)
             .unwrap()
-            .set_partition(None)
+            .set_skin_partition(None)
     );
     let block = nif.block_of_mut::<NiSkinPartition>(part).unwrap();
     block.set_vertex_desc(0x5678);

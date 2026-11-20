@@ -360,10 +360,6 @@ pub trait HasColorData: NiType {}
 /// This trait is sealed.
 pub trait HasParticleMeshes: NiType {}
 
-macro_rules! impl_marker {
-    ($tr:ident: $($t:ident)*) => {$(impl $tr for $t {})*};
-}
-
 impl_marker! { HasSpawnModifier:
     NiPSysAgeDeathModifier NiPSysCollider NiPSysSphericalCollider NiPSysPlanarCollider
 }

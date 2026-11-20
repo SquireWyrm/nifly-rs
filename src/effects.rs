@@ -40,6 +40,7 @@ ni_types! { ffi;
     /// A texture projected onto the nodes it affects, such as an environment map. Its texture is
     /// on [`View::source_texture`].
     NiTextureEffect(NiTextureEffect): NiDynamicEffect => upcast_ni_texture_effect, downcast_ni_texture_effect;
+    /// A light, with its dimmer and colors.
     NiLight(NiLight): NiDynamicEffect => upcast_ni_light, downcast_ni_light;
     /// A light lighting everything equally.
     NiAmbientLight(NiAmbientLight): NiLight => upcast_ni_ambient_light, downcast_ni_ambient_light;

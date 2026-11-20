@@ -48,7 +48,7 @@ fn add_particle_system() {
         (strip, "BSStripPSysData"),
     ] {
         let v = nif.view::<NiParticleSystem>(system).unwrap();
-        assert_eq!(v.data().unwrap().block_name(), data);
+        assert_eq!(v.psys_data().unwrap().block_name(), data);
         assert!(v.world_space());
         assert_eq!(v.modifiers().count(), 0);
     }
@@ -69,23 +69,23 @@ fn system_refs() {
     let other_data = nif
         .view::<NiParticleSystem>(other)
         .unwrap()
-        .data()
+        .psys_data()
         .unwrap()
         .index();
 
     let mut e = nif.edit::<NiParticleSystem>(system).unwrap();
-    assert!(!e.set_data(Some(0)), "a node isn't particle data");
+    assert!(!e.set_psys_data(Some(0)), "a node isn't particle data");
     assert!(
-        !e.set_shader(Some(0))
-            && !e.set_alpha_property(Some(shader))
-            && !e.set_skin_instance(Some(0))
+        !e.set_psys_shader(Some(0))
+            && !e.set_psys_alpha_property(Some(shader))
+            && !e.set_psys_skin_instance(Some(0))
     );
-    assert!(e.set_data(Some(other_data)) && e.set_shader(Some(shader)));
+    assert!(e.set_psys_data(Some(other_data)) && e.set_psys_shader(Some(shader)));
     let nif = reload_in_place(&mut nif);
     let v = nif.view::<NiParticleSystem>(system).unwrap();
-    assert_eq!(v.data().unwrap().index(), other_data);
-    assert_eq!(v.shader().unwrap().index(), shader);
-    assert!(v.alpha_property().is_none() && v.skin_instance().is_none());
+    assert_eq!(v.psys_data().unwrap().index(), other_data);
+    assert_eq!(v.psys_shader().unwrap().index(), shader);
+    assert!(v.psys_alpha_property().is_none() && v.psys_skin_instance().is_none());
 
     // Older files save the data in the other ref, which follows.
     let (mut nif, system) = with_system(NifVersion::OBLIVION);
@@ -96,19 +96,19 @@ fn system_refs() {
     let other_data = nif
         .view::<NiParticleSystem>(other)
         .unwrap()
-        .data()
+        .psys_data()
         .unwrap()
         .index();
     assert!(
         nif.edit::<NiParticleSystem>(system)
             .unwrap()
-            .set_data(Some(other_data))
+            .set_psys_data(Some(other_data))
     );
     let nif = reload_in_place(&mut nif);
     assert_eq!(
         nif.view::<NiParticleSystem>(system)
             .unwrap()
-            .data()
+            .psys_data()
             .unwrap()
             .index(),
         other_data
@@ -376,7 +376,7 @@ fn particle_data() {
     let data = nif
         .view::<NiParticleSystem>(system)
         .unwrap()
-        .data()
+        .psys_data()
         .unwrap()
         .index();
     let d = nif.block_of_mut::<NiParticlesData>(data).unwrap();
@@ -443,7 +443,7 @@ fn bethesda_particle_data() {
     let data = nif
         .view::<NiParticleSystem>(system)
         .unwrap()
-        .data()
+        .psys_data()
         .unwrap()
         .index();
     let d = nif.block_of_mut::<NiParticlesData>(data).unwrap();
@@ -696,7 +696,7 @@ fn mesh_particle_data() {
     let data = nif
         .view::<NiParticleSystem>(system)
         .unwrap()
-        .data()
+        .psys_data()
         .unwrap()
         .index();
     let mut d = nif.edit::<NiMeshPSysData>(data).unwrap();
@@ -730,7 +730,7 @@ fn old_versions() {
         let data = nif
             .view::<NiParticleSystem>(system)
             .unwrap()
-            .data()
+            .psys_data()
             .unwrap()
             .index();
         let mut e = nif.edit::<NiParticleSystem>(system).unwrap();
@@ -827,7 +827,7 @@ fn geometry_data_base() {
     let data = nif
         .view::<NiParticleSystem>(system)
         .unwrap()
-        .data()
+        .psys_data()
         .unwrap()
         .index();
     nif.block_of_mut::<NiParticlesData>(data)

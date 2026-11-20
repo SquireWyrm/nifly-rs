@@ -496,37 +496,37 @@ impl Edit<'_, NiBoneContainer> {
 /// The data and partition of an [`NiSkinInstance`].
 impl<'a> View<'a, NiSkinInstance> {
     /// The skin's data, or `None` if it has none.
-    pub fn data(&self) -> Option<View<'a, NiSkinData>> {
+    pub fn skin_data(&self) -> Option<View<'a, NiSkinData>> {
         self.follow(RefKind::SkinData)
     }
 
     /// The skin's partition, or `None` if it has none.
-    pub fn partition(&self) -> Option<View<'a, NiSkinPartition>> {
+    pub fn skin_partition(&self) -> Option<View<'a, NiSkinPartition>> {
         self.follow(RefKind::SkinPartition)
     }
 }
 
 impl Edit<'_, NiSkinInstance> {
-    /// Like [`View::data`], for editing.
-    pub fn data(&mut self) -> Option<Edit<'_, NiSkinData>> {
+    /// Like [`View::skin_data`], for editing.
+    pub fn skin_data(&mut self) -> Option<Edit<'_, NiSkinData>> {
         self.follow(RefKind::SkinData)
     }
 
-    /// Like [`View::partition`], for editing.
-    pub fn partition(&mut self) -> Option<Edit<'_, NiSkinPartition>> {
+    /// Like [`View::skin_partition`], for editing.
+    pub fn skin_partition(&mut self) -> Option<Edit<'_, NiSkinPartition>> {
         self.follow(RefKind::SkinPartition)
     }
 
     /// Points the skin at the [`NiSkinData`] at `data`, or clears it with `None`. The data
     /// should have one entry per bone. Returns `false`, changing nothing, if that block isn't
     /// one.
-    pub fn set_data(&mut self, data: Option<Index>) -> bool {
+    pub fn set_skin_data(&mut self, data: Option<Index>) -> bool {
         self.set_ref(RefKind::SkinData, data)
     }
 
     /// Points the skin at the [`NiSkinPartition`] at `partition`, or clears it with `None`.
     /// Returns `false`, changing nothing, if that block isn't one.
-    pub fn set_partition(&mut self, partition: Option<Index>) -> bool {
+    pub fn set_skin_partition(&mut self, partition: Option<Index>) -> bool {
         self.set_ref(RefKind::SkinPartition, partition)
     }
 }
@@ -555,21 +555,21 @@ impl Edit<'_, NiSkinData> {
 /// The bone data of a [`BsSkinInstance`].
 impl<'a> View<'a, BsSkinInstance> {
     /// The skin's bone data, or `None` if it has none.
-    pub fn data(&self) -> Option<View<'a, BsSkinBoneData>> {
+    pub fn bone_data(&self) -> Option<View<'a, BsSkinBoneData>> {
         self.follow(RefKind::SkinBoneData)
     }
 }
 
 impl Edit<'_, BsSkinInstance> {
-    /// Like [`View::data`], for editing.
-    pub fn data(&mut self) -> Option<Edit<'_, BsSkinBoneData>> {
+    /// Like [`View::bone_data`], for editing.
+    pub fn bone_data(&mut self) -> Option<Edit<'_, BsSkinBoneData>> {
         self.follow(RefKind::SkinBoneData)
     }
 
     /// Points the skin at the [`BsSkinBoneData`] at `data`, or clears it with `None`. The data
     /// should have one entry per bone. Returns `false`, changing nothing, if that block isn't
     /// one.
-    pub fn set_data(&mut self, data: Option<Index>) -> bool {
+    pub fn set_bone_data(&mut self, data: Option<Index>) -> bool {
         self.set_ref(RefKind::SkinBoneData, data)
     }
 }

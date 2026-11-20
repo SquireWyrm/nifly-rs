@@ -63,6 +63,7 @@ use ref_cast::{RefCastCustom, ref_cast_custom};
 use crate::object3d::{BoundingVolume, Transform, Vec3};
 
 /// Root of the object hierarchy. Every block in a NIF file is a `NiObject`.
+#[doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/docs/handle_methods/NiObject.md"))]
 #[derive(RefCastCustom)]
 #[repr(transparent)]
 pub struct NiObject(ffi::NiObject);
@@ -123,6 +124,7 @@ impl NiObject {
 }
 
 /// An object with a name, extra data and controllers.
+#[doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/docs/handle_methods/NiObjectNet.md"))]
 #[derive(RefCastCustom)]
 #[repr(transparent)]
 pub struct NiObjectNet(ffi::NiObjectNET);
@@ -204,6 +206,7 @@ impl DerefMut for NiAvObject {
 }
 
 /// An object that lives in the scene graph, with a transform relative to its parent.
+#[doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/docs/handle_methods/NiAvObject.md"))]
 #[derive(RefCastCustom)]
 #[repr(transparent)]
 pub struct NiAvObject(ffi::NiAVObject);
