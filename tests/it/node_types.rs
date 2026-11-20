@@ -6,18 +6,26 @@ use std::fs;
 use nifly::{
     file::{Index, NifFile, NifVersion},
     nodes::{
-        BillboardMode, BsBlastNode, BsOrderedNode, BsRangeNode, BsTreeNode, BsValueNode, NiBillboardNode, NiNode,
-        NiSortAdjustNode, NiSwitchNode, SortingMode, SwitchNodeFlags, ValueNodeFlags,
+        BillboardMode, BsBlastNode, BsOrderedNode, BsRangeNode, BsTreeNode, BsValueNode,
+        NiBillboardNode, NiNode, NiSortAdjustNode, NiSwitchNode, SortingMode, SwitchNodeFlags,
+        ValueNodeFlags,
     },
     object3d::Transform,
 };
 
 fn load(name: &str) -> NifFile {
-    NifFile::load(fs::read(format!("{UPSTREAM}/{name}.nif")).unwrap().as_slice(), None).unwrap()
+    NifFile::load(
+        fs::read(format!("{UPSTREAM}/{name}.nif"))
+            .unwrap()
+            .as_slice(),
+        None,
+    )
+    .unwrap()
 }
 
 fn add<T: nifly::nodes::NewNode>(nif: &mut NifFile, name: &str) -> Index {
-    nif.add_node_of::<T>(name, Transform::default(), None).unwrap()
+    nif.add_node_of::<T>(name, Transform::default(), None)
+        .unwrap()
 }
 
 #[test]
@@ -48,17 +56,26 @@ fn skyrim_round_trip() {
     r.set_min(1);
     r.set_max(5);
     r.set_current(3);
-    nif.block_of_mut::<NiBillboardNode>(billboard).unwrap().set_mode(BillboardMode::RotateAboutUp2);
+    nif.block_of_mut::<NiBillboardNode>(billboard)
+        .unwrap()
+        .set_mode(BillboardMode::RotateAboutUp2);
 
     let saved = reload(&mut nif);
     let v = saved.find_block_by_name::<BsValueNode>("Value").unwrap();
-    assert_eq!((v.value(), v.flags()), (-7, ValueNodeFlags::USE_PLAYER_ADJUST));
-    let o = saved.find_block_by_name::<BsOrderedNode>("Ordered").unwrap();
+    assert_eq!(
+        (v.value(), v.flags()),
+        (-7, ValueNodeFlags::USE_PLAYER_ADJUST)
+    );
+    let o = saved
+        .find_block_by_name::<BsOrderedNode>("Ordered")
+        .unwrap();
     assert_eq!(o.alpha_sort_bound(), [1.0, 2.0, 3.0, 4.0]);
     assert!(o.is_static_bound());
     let r = saved.find_block_by_name::<BsBlastNode>("Range").unwrap();
     assert_eq!((r.min(), r.max(), r.current()), (1, 5, 3));
-    let b = saved.find_block_by_name::<NiBillboardNode>("Billboard").unwrap();
+    let b = saved
+        .find_block_by_name::<NiBillboardNode>("Billboard")
+        .unwrap();
     assert_eq!(b.mode(), Some(BillboardMode::RotateAboutUp2));
 }
 
@@ -71,12 +88,16 @@ fn oblivion_round_trip() {
     let s = nif.block_of_mut::<NiSwitchNode>(switch).unwrap();
     s.set_flags(SwitchNodeFlags::all());
     s.set_active_index(2);
-    nif.block_of_mut::<NiSortAdjustNode>(sort).unwrap().set_sorting_mode(SortingMode::Off);
+    nif.block_of_mut::<NiSortAdjustNode>(sort)
+        .unwrap()
+        .set_sorting_mode(SortingMode::Off);
 
     let saved = reload(&mut nif);
     let s = saved.find_block_by_name::<NiSwitchNode>("Switch").unwrap();
     assert_eq!((s.flags(), s.active_index()), (SwitchNodeFlags::all(), 2));
-    let sort = saved.find_block_by_name::<NiSortAdjustNode>("Sort").unwrap();
+    let sort = saved
+        .find_block_by_name::<NiSortAdjustNode>("Sort")
+        .unwrap();
     assert_eq!(sort.sorting_mode(), Some(SortingMode::Off));
 }
 
@@ -93,7 +114,9 @@ fn range_node_reads_as_unknown() {
 fn morrowind_billboard_mode_not_saved() {
     let mut nif = load("TestNifFile_Billboard_MW");
     let index = nif.blocks_of::<NiBillboardNode>().indices().next().unwrap();
-    nif.block_of_mut::<NiBillboardNode>(index).unwrap().set_mode(BillboardMode::RigidFaceCenter);
+    nif.block_of_mut::<NiBillboardNode>(index)
+        .unwrap()
+        .set_mode(BillboardMode::RigidFaceCenter);
     let saved = reload(&mut nif);
     let b = saved.blocks_of::<NiBillboardNode>().next().unwrap();
     assert_eq!(b.mode(), Some(BillboardMode::AlwaysFaceCamera));
@@ -111,7 +134,11 @@ fn tree_bones() {
 
     let names = |nif: &NifFile, list: u8| -> Vec<String> {
         let tree = nif.blocks_of::<BsTreeNode>().views().next().unwrap();
-        let bones = if list == 1 { tree.bones_1() } else { tree.bones_2() };
+        let bones = if list == 1 {
+            tree.bones_1()
+        } else {
+            tree.bones_2()
+        };
         bones.map(|n| n.name().to_string()).collect()
     };
     let saved = reload(&mut nif);
@@ -129,7 +156,10 @@ fn tree_bones_reject_invalid() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let tree = add::<BsTreeNode>(&mut nif, "Tree");
     let plain = nif.add_node("Plain", Transform::default(), None).unwrap();
-    let extra = nif.edit::<nifly::objects::NiAvObject>(tree).and_then(|mut e| e.assign_extra_data(nifly::extra_data::ExtraFloat("F", 1.0))).unwrap();
+    let extra = nif
+        .edit::<nifly::objects::NiAvObject>(tree)
+        .and_then(|mut e| e.assign_extra_data(nifly::extra_data::ExtraFloat("F", 1.0)))
+        .unwrap();
     let count = nif.blocks().count();
 
     let mut edit = nif.edit::<BsTreeNode>(tree).unwrap();
@@ -147,13 +177,31 @@ fn tree_bones_reject_invalid() {
 fn add_node_of_parents() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let range = add::<BsRangeNode>(&mut nif, "Range");
-    let child = nif.add_node_of::<NiNode>("Child", Transform::default(), Some(range)).unwrap();
+    let child = nif
+        .add_node_of::<NiNode>("Child", Transform::default(), Some(range))
+        .unwrap();
     let range_node = nif.block_of::<BsRangeNode>(range).unwrap();
-    assert_eq!(nif.view_of(range_node).unwrap().children().indices().collect::<Vec<_>>(), [child]);
+    assert_eq!(
+        nif.view_of(range_node)
+            .unwrap()
+            .children()
+            .indices()
+            .collect::<Vec<_>>(),
+        [child]
+    );
 
     let blocks = nif.blocks().count();
-    let extra = nif.edit::<nifly::objects::NiAvObject>(range).and_then(|mut e| e.assign_extra_data(nifly::extra_data::ExtraFloat("F", 1.0))).unwrap();
-    assert_eq!(nif.add_node_of::<BsRangeNode>("X", Transform::default(), Some(extra)), None);
-    assert_eq!(nif.add_node_of::<BsRangeNode>("X", Transform::default(), Some(usize::MAX)), None);
+    let extra = nif
+        .edit::<nifly::objects::NiAvObject>(range)
+        .and_then(|mut e| e.assign_extra_data(nifly::extra_data::ExtraFloat("F", 1.0)))
+        .unwrap();
+    assert_eq!(
+        nif.add_node_of::<BsRangeNode>("X", Transform::default(), Some(extra)),
+        None
+    );
+    assert_eq!(
+        nif.add_node_of::<BsRangeNode>("X", Transform::default(), Some(usize::MAX)),
+        None
+    );
     assert_eq!(nif.blocks().count(), blocks + 1);
 }

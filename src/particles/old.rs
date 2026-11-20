@@ -166,13 +166,20 @@ impl NiPlanarCollider {
 impl NiParticleSystemController {
     /// The particles' records: the most particles alive at once, and each one's motion.
     pub fn particles(&self) -> Vec<ParticleInfo> {
-        ffi::particle_system_ctlr_particles(&self.0).into_iter().map(ParticleInfo::from_ffi).collect()
+        ffi::particle_system_ctlr_particles(&self.0)
+            .into_iter()
+            .map(ParticleInfo::from_ffi)
+            .collect()
     }
 
     /// Replaces [`particles`](Self::particles). Returns `false`, changing nothing, if there are
     /// more than 65535.
     pub fn set_particles(&mut self, particles: &[ParticleInfo]) -> bool {
-        let particles: Vec<_> = particles.iter().copied().map(ParticleInfo::to_ffi).collect();
+        let particles: Vec<_> = particles
+            .iter()
+            .copied()
+            .map(ParticleInfo::to_ffi)
+            .collect();
         ffi::set_particle_system_ctlr_particles(self.ffi_mut(), &particles)
     }
 }

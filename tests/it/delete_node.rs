@@ -1,6 +1,6 @@
 //! Tests for NifFile::delete_node, NifFile::can_delete_node and NiNode::can_delete.
 
-use crate::common::{load};
+use crate::common::load;
 use std::io::Cursor;
 
 use nifly::{file::NifFile, geometry::NiShape, nodes::NiNode, objects::NiObject};
@@ -28,7 +28,10 @@ fn can_delete_only_nodes_without_refs() {
 
     let ico = load("Icosphere");
     assert!(!ico.can_delete_node("Indirect1"));
-    assert!(!ico.can_delete_node("Indirect2"), "has the shape as a child");
+    assert!(
+        !ico.can_delete_node("Indirect2"),
+        "has the shape as a child"
+    );
 
     // Suzanne's root has extra data and collision as well as children.
     let suzanne = load("Suzanne");
@@ -59,7 +62,10 @@ fn delete_leaf_node() {
     assert!(nif.can_delete_node(""));
     assert!(nif.delete_node(""));
 
-    assert_eq!(block_names(&nif), ["NiNode", "BSLightingShaderProperty", "BSTriShape"]);
+    assert_eq!(
+        block_names(&nif),
+        ["NiNode", "BSLightingShaderProperty", "BSTriShape"]
+    );
     // The root's child ref moved from index 3 to 2 along with the shape.
     let root = nif.root_node().unwrap();
     assert_eq!(indices(&nif, nif.child_blocks(&root)), [2]);
@@ -126,5 +132,8 @@ fn delete_then_add_reuses_nothing() {
     let identity = nif.root_node().unwrap().transform();
     let index = nif.add_node("New", identity, None).unwrap();
     assert_eq!(index, 3);
-    assert_eq!(block_names(&nif), ["NiNode", "BSLightingShaderProperty", "BSTriShape", "NiNode"]);
+    assert_eq!(
+        block_names(&nif),
+        ["NiNode", "BSLightingShaderProperty", "BSTriShape", "NiNode"]
+    );
 }

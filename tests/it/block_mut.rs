@@ -34,7 +34,10 @@ fn same_block_as_shared_form() {
     assert_eq!(shader_index, 8);
 
     assert_eq!(nif.root_node_mut().map(|r| ptr::from_ref(&*r)), Some(root));
-    assert_eq!(addr(nif.find_block_by_name_mut::<NiShape>("Suzanne:6")), Some(named));
+    assert_eq!(
+        addr(nif.find_block_by_name_mut::<NiShape>("Suzanne:6")),
+        Some(named)
+    );
     let mut shape_edit = nif.edit::<NiShape>(shape).unwrap();
     assert_eq!(ptr::from_ref(&*shape_edit.shader().unwrap()), shader);
     let mut edit = nif.edit::<NiShader>(shader_index).unwrap();
@@ -53,11 +56,20 @@ fn same_block_as_shared_form() {
 fn material_and_shader_in_older_files() {
     let mut nif = upstream("TestNifFile_Static_MW");
     let shape = shape_index(&nif);
-    let material = ptr::from_ref(nif.view::<NiShape>(shape).unwrap().material_property().unwrap().get());
+    let material = ptr::from_ref(
+        nif.view::<NiShape>(shape)
+            .unwrap()
+            .material_property()
+            .unwrap()
+            .get(),
+    );
     let mut edit = nif.edit::<NiShape>(shape).unwrap();
     assert_eq!(ptr::from_ref(&*edit.material_property().unwrap()), material);
     // With no other shader, the shader is the material.
-    assert_eq!(ptr::from_ref(&*edit.shader().unwrap()).cast::<u8>(), material.cast());
+    assert_eq!(
+        ptr::from_ref(&*edit.shader().unwrap()).cast::<u8>(),
+        material.cast()
+    );
 }
 
 #[test]
@@ -66,11 +78,25 @@ fn none_cases() {
     let root = nif.root_node().unwrap().index();
     let count = nif.blocks().count();
     for index in [root, 9, count, usize::MAX] {
-        assert!(nif.view::<nifly::geometry::NiShape>(index).and_then(|v| v.shader()).is_none(), "shader of {index}");
-        assert!(nif.view::<nifly::geometry::NiShape>(index).and_then(|v| v.material_property()).is_none(), "material of {index}");
+        assert!(
+            nif.view::<nifly::geometry::NiShape>(index)
+                .and_then(|v| v.shader())
+                .is_none(),
+            "shader of {index}"
+        );
+        assert!(
+            nif.view::<nifly::geometry::NiShape>(index)
+                .and_then(|v| v.material_property())
+                .is_none(),
+            "material of {index}"
+        );
     }
     // Suzanne's shape has a shader but no material property.
-    assert!(nif.view::<nifly::geometry::NiShape>(shape_index(&nif)).and_then(|v| v.material_property()).is_none());
+    assert!(
+        nif.view::<nifly::geometry::NiShape>(shape_index(&nif))
+            .and_then(|v| v.material_property())
+            .is_none()
+    );
     // The shape isn't a shader; block 9 is the texture set itself.
     assert!(nif.edit::<NiShader>(shape_index(&nif)).is_none());
     assert!(nif.edit::<NiShader>(9).is_none());
@@ -82,30 +108,68 @@ fn none_cases() {
     // The second Morrowind shape has no properties.
     let mw = upstream("TestNifFile_Static_MW");
     let second = mw.shapes().indices().nth(1).unwrap();
-    assert!(mw.view::<nifly::geometry::NiShape>(second).and_then(|v| v.material_property()).is_none());
-    assert!(mw.view::<nifly::geometry::NiShape>(second).and_then(|v| v.shader()).is_none());
+    assert!(
+        mw.view::<nifly::geometry::NiShape>(second)
+            .and_then(|v| v.material_property())
+            .is_none()
+    );
+    assert!(
+        mw.view::<nifly::geometry::NiShape>(second)
+            .and_then(|v| v.shader())
+            .is_none()
+    );
 }
 
 #[test]
 fn set_through_material_property_mut() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let shape = shape_index(&nif);
-    nif.edit::<nifly::geometry::NiShape>(shape).unwrap().material_property().unwrap().set_alpha(0.5);
-    assert_eq!(nif.shapes().views().next().unwrap().material_property().unwrap().alpha(), 0.5);
+    nif.edit::<nifly::geometry::NiShape>(shape)
+        .unwrap()
+        .material_property()
+        .unwrap()
+        .set_alpha(0.5);
+    assert_eq!(
+        nif.shapes()
+            .views()
+            .next()
+            .unwrap()
+            .material_property()
+            .unwrap()
+            .alpha(),
+        0.5
+    );
 
     let mut cur = Cursor::new(Vec::new());
     nif.save(&mut cur, None).unwrap();
     let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
-    assert_eq!(saved.shapes().views().next().unwrap().material_property().unwrap().alpha(), 0.5);
+    assert_eq!(
+        saved
+            .shapes()
+            .views()
+            .next()
+            .unwrap()
+            .material_property()
+            .unwrap()
+            .alpha(),
+        0.5
+    );
 }
 
 #[test]
 fn block_of_matches_downcast() {
     let nif = upstream("TestNifFile_Static_MW");
-    let index = nif.blocks_of::<NiMaterialProperty>().indices().next().unwrap();
+    let index = nif
+        .blocks_of::<NiMaterialProperty>()
+        .indices()
+        .next()
+        .unwrap();
     let block = nif.block(index).unwrap();
     let material = nif.block_of::<NiMaterialProperty>(index).unwrap();
-    assert!(ptr::eq(material, block.downcast::<NiMaterialProperty>().unwrap()));
+    assert!(ptr::eq(
+        material,
+        block.downcast::<NiMaterialProperty>().unwrap()
+    ));
     // Base types work too; other types and missing blocks give `None`.
     assert!(ptr::eq(nif.block_of::<NiObject>(index).unwrap(), block));
     assert!(nif.block_of::<NiShader>(index).is_some());
@@ -119,7 +183,11 @@ fn block_of_matches_downcast() {
 #[test]
 fn block_mut_and_downcast_mut() {
     let mut nif = upstream("TestNifFile_Static_MW");
-    let index = nif.blocks_of::<NiMaterialProperty>().indices().next().unwrap();
+    let index = nif
+        .blocks_of::<NiMaterialProperty>()
+        .indices()
+        .next()
+        .unwrap();
     let shared: *const NiObject = nif.block(index).unwrap();
     assert_eq!(addr(nif.block_mut(index)), Some(shared));
     let count = nif.blocks().count();
@@ -129,16 +197,42 @@ fn block_mut_and_downcast_mut() {
 
     // Downcasting reaches the type's setters, and is the same block as block_of_mut.
     let material: *const NiMaterialProperty = nif.block_of::<NiMaterialProperty>(index).unwrap();
-    assert_eq!(addr(nif.block_mut(index).unwrap().downcast_mut::<NiMaterialProperty>()), Some(material));
-    assert_eq!(addr(nif.block_of_mut::<NiMaterialProperty>(index)), Some(material));
-    nif.block_mut(index).unwrap().downcast_mut::<NiMaterialProperty>().unwrap().set_alpha(0.25);
-    assert_eq!(nif.block_of::<NiMaterialProperty>(index).unwrap().alpha(), 0.25);
+    assert_eq!(
+        addr(
+            nif.block_mut(index)
+                .unwrap()
+                .downcast_mut::<NiMaterialProperty>()
+        ),
+        Some(material)
+    );
+    assert_eq!(
+        addr(nif.block_of_mut::<NiMaterialProperty>(index)),
+        Some(material)
+    );
+    nif.block_mut(index)
+        .unwrap()
+        .downcast_mut::<NiMaterialProperty>()
+        .unwrap()
+        .set_alpha(0.25);
+    assert_eq!(
+        nif.block_of::<NiMaterialProperty>(index).unwrap().alpha(),
+        0.25
+    );
 
     // The wrong type gives `None`; `NiObject` always succeeds.
-    assert!(nif.block_mut(index).unwrap().downcast_mut::<NiNode>().is_none());
+    assert!(
+        nif.block_mut(index)
+            .unwrap()
+            .downcast_mut::<NiNode>()
+            .is_none()
+    );
     for i in 0..count {
         let block: *const NiObject = nif.block(i).unwrap();
-        assert_eq!(addr(nif.block_mut(i).unwrap().downcast_mut::<NiObject>()), Some(block), "{i}");
+        assert_eq!(
+            addr(nif.block_mut(i).unwrap().downcast_mut::<NiObject>()),
+            Some(block),
+            "{i}"
+        );
     }
 }
 
@@ -151,7 +245,11 @@ fn deref_mut() {
 
     // A subclass reaches its base type's setters, on the same object.
     let mut nif = load("Cube");
-    let index = nif.blocks_of::<BsLightingShaderProperty>().indices().next().unwrap();
+    let index = nif
+        .blocks_of::<BsLightingShaderProperty>()
+        .indices()
+        .next()
+        .unwrap();
     let shader = nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap();
     shader.set_alpha(0.5);
     let base: &mut BsShaderProperty = shader;

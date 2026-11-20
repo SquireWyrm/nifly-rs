@@ -1,6 +1,6 @@
 //! Tests for NifFile::delete_unreferenced_blocks.
 
-use crate::common::{load};
+use crate::common::load;
 use std::io::Cursor;
 
 use nifly::{
@@ -14,7 +14,10 @@ use nifly::{
 /// The file as it is in memory: no optimizing or sorting on save.
 fn raw(nif: &mut NifFile) -> Vec<u8> {
     let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions { optimize: false, sort_blocks: false };
+    let options = SaveOptions {
+        optimize: false,
+        sort_blocks: false,
+    };
     nif.save(&mut cur, Some(options)).unwrap();
     cur.into_inner()
 }
@@ -43,7 +46,10 @@ fn only_the_given_type() {
 
     let mut nif = load("Cone");
     assert_eq!(nif.delete_unreferenced_blocks::<NiNode>(), 1);
-    assert_eq!(types(&nif), ["NiNode", "BSLightingShaderProperty", "BSTriShape"]);
+    assert_eq!(
+        types(&nif),
+        ["NiNode", "BSLightingShaderProperty", "BSTriShape"]
+    );
 
     // The only shape is referenced.
     let mut nif = load("Cone");

@@ -15,8 +15,15 @@ fn internal() -> (NifFile, Index) {
     let mut nif = upstream("TestNifFile_SF");
     let shape = nif.blocks_of::<BsGeometry>().indices().next().unwrap();
     let mesh = fs::read(format!("{UPSTREAM}/TestNifFile_SF.mesh")).unwrap();
-    assert!(nif.edit::<NiShape>(shape).unwrap().load_mesh(0, mesh.as_slice()).unwrap());
-    nif.block_of_mut::<BsGeometry>(shape).unwrap().set_internal_geometry(true);
+    assert!(
+        nif.edit::<NiShape>(shape)
+            .unwrap()
+            .load_mesh(0, mesh.as_slice())
+            .unwrap()
+    );
+    nif.block_of_mut::<BsGeometry>(shape)
+        .unwrap()
+        .set_internal_geometry(true);
     (nif, shape)
 }
 
@@ -29,7 +36,11 @@ fn shape_fields() {
     let mut nif = upstream("TestNifFile_SF");
     let index = nif.blocks_of::<BsGeometry>().indices().next().unwrap();
     let sphere = BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0);
-    let info = MeshInfo { index_count: 30, vertex_count: 12, raw_flags: 64 };
+    let info = MeshInfo {
+        index_count: 30,
+        vertex_count: 12,
+        raw_flags: 64,
+    };
     let count = geometry(&nif, index).mesh_count();
     assert!(!geometry(&nif, index).has_internal_geometry());
 
@@ -45,8 +56,15 @@ fn shape_fields() {
 
     let saved = reload(&mut nif);
     let block = geometry(&saved, index);
-    assert_eq!((block.bounds(), block.bound_min_max()), (sphere, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]));
-    assert_eq!(block.mesh_info(0), Some(info), "kept: the mesh data isn't loaded");
+    assert_eq!(
+        (block.bounds(), block.bound_min_max()),
+        (sphere, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+    );
+    assert_eq!(
+        block.mesh_info(0),
+        Some(info),
+        "kept: the mesh data isn't loaded"
+    );
     assert_eq!(block.mesh_count(), 4);
     assert_eq!(block.mesh_info(4), None);
 }
@@ -67,9 +85,26 @@ fn internal_mesh_data_round_trips() {
     let (mut nif, index) = internal();
     let n = geometry(&nif, index).mesh(0).unwrap().vertex_count();
     let tangents = geometry(&nif, index).mesh(0).unwrap().tangents().len();
-    let weights = vec![vec![MeshWeight { bone: 1, weight: 65535 }, MeshWeight { bone: 0, weight: 0 }]; n];
-    let meshlets = [Meshlet { vertex_count: 3, vertex_offset: 0, primitive_count: 1, primitive_offset: 0 }];
-    let cull = [CullData { center: Vec3::new(1.0, 2.0, 3.0), expand: Vec3::new(0.5, 0.5, 0.5) }];
+    let weights = vec![
+        vec![
+            MeshWeight {
+                bone: 1,
+                weight: 65535
+            },
+            MeshWeight { bone: 0, weight: 0 }
+        ];
+        n
+    ];
+    let meshlets = [Meshlet {
+        vertex_count: 3,
+        vertex_offset: 0,
+        primitive_count: 1,
+        primitive_offset: 0,
+    }];
+    let cull = [CullData {
+        center: Vec3::new(1.0, 2.0, 3.0),
+        expand: Vec3::new(0.5, 0.5, 0.5),
+    }];
     let lods = [vec![[0, 1, 2]], vec![[2, 1, 0], [0, 1, 3]]];
 
     let block = nif.block_of_mut::<BsGeometry>(index).unwrap();
@@ -96,9 +131,16 @@ fn internal_mesh_data_round_trips() {
     assert_eq!(mesh.tangent_ws(), vec![2; tangents]);
     assert_eq!(mesh.skin_weights(), weights);
     assert_eq!(mesh.lods(), lods);
-    assert_eq!((mesh.meshlets(), mesh.cull_data()), (meshlets.to_vec(), cull.to_vec()));
+    assert_eq!(
+        (mesh.meshlets(), mesh.cull_data()),
+        (meshlets.to_vec(), cull.to_vec())
+    );
     assert_eq!(mesh.version(), 1);
-    assert_eq!(geometry(&saved, index).mesh_info(0).unwrap().vertex_count as usize, n, "set on save");
+    assert_eq!(
+        geometry(&saved, index).mesh_info(0).unwrap().vertex_count as usize,
+        n,
+        "set on save"
+    );
 }
 
 #[test]
@@ -106,26 +148,45 @@ fn replace_vertices_and_triangles() {
     let (mut nif, index) = internal();
     let block = nif.block_of_mut::<BsGeometry>(index).unwrap();
     let mesh = block.mesh_mut(0).unwrap();
-    let few = [Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0)];
-    assert!(!mesh.replace_vertices(&few), "the triangles use more vertices");
+    let few = [
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+    ];
+    assert!(
+        !mesh.replace_vertices(&few),
+        "the triangles use more vertices"
+    );
     assert!(!mesh.set_triangles(&[[0, 1, 6616]]));
     assert!(mesh.set_lods::<Vec<[u16; 3]>>(&[]));
     assert!(mesh.set_triangles(&[[0, 1, 2]]));
     assert!(mesh.replace_vertices(&few));
-    assert_eq!((mesh.vertex_count(), mesh.normals().len(), mesh.uvs().len()), (3, 3, 3));
+    assert_eq!(
+        (mesh.vertex_count(), mesh.normals().len(), mesh.uvs().len()),
+        (3, 3, 3)
+    );
 
     // More than 65535 vertices, far outside the stored scale.
-    let many: Vec<Vec3> = (0..70000).map(|i| Vec3::new(i as f32, 0.0, -1000.0)).collect();
+    let many: Vec<Vec3> = (0..70000)
+        .map(|i| Vec3::new(i as f32, 0.0, -1000.0))
+        .collect();
     assert!(mesh.replace_vertices(&many));
     let scale = mesh.scale();
     assert_eq!(mesh.vertex_count(), 70000);
 
     let saved = reload(&mut nif);
-    assert_eq!(geometry(&nif, index).mesh(0).unwrap().scale(), scale, "saving doesn't change it");
+    assert_eq!(
+        geometry(&nif, index).mesh(0).unwrap().scale(),
+        scale,
+        "saving doesn't change it"
+    );
     let mesh = geometry(&saved, index).mesh(0).unwrap();
     assert_eq!(mesh.vertex_count(), 70000);
     let last = mesh.vertices()[69999];
-    assert!((last.x - 69999.0).abs() < 2.0 && (last.z + 1000.0).abs() < 2.0, "{last:?}");
+    assert!(
+        (last.x - 69999.0).abs() < 2.0 && (last.z + 1000.0).abs() < 2.0,
+        "{last:?}"
+    );
     assert_eq!(mesh.triangles(), [[0, 1, 2]]);
 }
 
@@ -137,7 +198,10 @@ fn generate_meshlets() {
     assert!(mesh.generate_meshlets(64, 64));
     let meshlets = mesh.meshlets();
     assert!(!meshlets.is_empty());
-    assert_eq!(meshlets.iter().map(|m| m.primitive_count).sum::<u32>(), 12132);
+    assert_eq!(
+        meshlets.iter().map(|m| m.primitive_count).sum::<u32>(),
+        12132
+    );
     assert_eq!(mesh.cull_data().len(), meshlets.len());
 }
 
@@ -148,15 +212,29 @@ fn internal_save_matches_expected() {
     let mut nif = upstream("TestNifFile_ToInternalMesh_SF");
     let shapes: Vec<_> = nif.blocks_of::<BsGeometry>().indices().collect();
     for &shape in &shapes {
-        let paths: Vec<String> =
-            nif.view::<NiShape>(shape).unwrap().mesh_paths().iter().map(|p| p.to_string()).collect();
+        let paths: Vec<String> = nif
+            .view::<NiShape>(shape)
+            .unwrap()
+            .mesh_paths()
+            .iter()
+            .map(|p| p.to_string())
+            .collect();
         for (lod, path) in paths.iter().enumerate() {
             let mesh = fs::read(format!("{UPSTREAM}/{path}.mesh")).unwrap();
-            assert!(nif.edit::<NiShape>(shape).unwrap().load_mesh(lod, mesh.as_slice()).unwrap());
+            assert!(
+                nif.edit::<NiShape>(shape)
+                    .unwrap()
+                    .load_mesh(lod, mesh.as_slice())
+                    .unwrap()
+            );
         }
-        nif.block_of_mut::<BsGeometry>(shape).unwrap().set_internal_geometry(true);
+        nif.block_of_mut::<BsGeometry>(shape)
+            .unwrap()
+            .set_internal_geometry(true);
     }
     let mut saved = crate::common::reload(&mut nif);
-    let expected = fs::read("nifly-sys/vendor/nifly/tests/expected/TestNifFile_ToInternalMesh_SF.nif").unwrap();
+    let expected =
+        fs::read("nifly-sys/vendor/nifly/tests/expected/TestNifFile_ToInternalMesh_SF.nif")
+            .unwrap();
     assert!(crate::common::save(&mut saved) == expected);
 }

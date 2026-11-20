@@ -66,7 +66,7 @@ use nifly_sys::{
 };
 
 use crate::{
-    file::{block_index_to_ffi, index_from_ffi, Index},
+    file::{Index, block_index_to_ffi, index_from_ffi},
     handle::{Edit, View},
     object3d::{BoundingSphere, Matrix3, Transform, Vec3},
     objects::{NiObject, Sealed},
@@ -286,7 +286,8 @@ impl NiFloatsExtraData {
 impl NiStringsExtraData {
     /// The strings, as stored.
     pub fn values(&self) -> impl ExactSizeIterator<Item = &BStr> {
-        (0..ffi::strings_extra_data_len(&self.0)).map(|i| ffi::strings_extra_data_value(&self.0, i).as_bstr())
+        (0..ffi::strings_extra_data_len(&self.0))
+            .map(|i| ffi::strings_extra_data_value(&self.0, i).as_bstr())
     }
 
     pub fn set_values<S: AsRef<[u8]>>(&mut self, values: impl IntoIterator<Item = S>) {
@@ -296,7 +297,9 @@ impl NiStringsExtraData {
 }
 
 /// Objects as the bridge takes them: one struct each, and their instances' floats.
-fn packed_objects_ffi(objects: &[PackedGeomObject]) -> (Vec<types_ffi::PackedGeomObjectFfi>, Vec<f32>) {
+fn packed_objects_ffi(
+    objects: &[PackedGeomObject],
+) -> (Vec<types_ffi::PackedGeomObjectFfi>, Vec<f32>) {
     let mut floats = Vec::new();
     let objects = objects
         .iter()
@@ -308,7 +311,9 @@ fn packed_objects_ffi(objects: &[PackedGeomObject]) -> (Vec<types_ffi::PackedGeo
                 data_offset: o.data_offset,
                 vertex_count: o.vertex_count,
                 lod_levels: o.lod_levels,
-                lods: [l0.count, l0.offset, l1.count, l1.offset, l2.count, l2.offset],
+                lods: [
+                    l0.count, l0.offset, l1.count, l1.offset, l2.count, l2.offset,
+                ],
                 vertex_desc: o.vertex_desc,
                 instance_count: o.instances.len(),
             }
@@ -318,7 +323,9 @@ fn packed_objects_ffi(objects: &[PackedGeomObject]) -> (Vec<types_ffi::PackedGeo
 }
 
 /// Strings as one byte list and each one's length, as the bridge takes them.
-pub(crate) fn joined<S: AsRef<[u8]>>(strings: impl IntoIterator<Item = S>) -> (Vec<u8>, Vec<usize>) {
+pub(crate) fn joined<S: AsRef<[u8]>>(
+    strings: impl IntoIterator<Item = S>,
+) -> (Vec<u8>, Vec<usize>) {
     let (mut bytes, mut lengths) = (Vec::new(), Vec::new());
     for s in strings {
         bytes.extend_from_slice(s.as_ref());
@@ -364,12 +371,17 @@ fn bone_translations_ffi(
     translations: &[BoneTranslation],
 ) -> (Vec<u8>, Vec<usize>, Vec<nifly_sys::object_3d::ffi::Vec3>) {
     let (bytes, lengths) = joined(translations.iter().map(|t| &t.bone));
-    let vectors = translations.iter().map(|t| t.translation.to_ffi()).collect();
+    let vectors = translations
+        .iter()
+        .map(|t| t.translation.to_ffi())
+        .collect();
     (bytes, lengths, vectors)
 }
 
 /// Connect points as the bridge takes them: parent and name strings, then transforms.
-fn connect_points_ffi(points: &[ConnectPoint]) -> (Vec<u8>, Vec<usize>, Vec<types_ffi::ConnectPointTransform>) {
+fn connect_points_ffi(
+    points: &[ConnectPoint],
+) -> (Vec<u8>, Vec<usize>, Vec<types_ffi::ConnectPointTransform>) {
     let (bytes, lengths) = joined(points.iter().flat_map(|p| [&p.parent, &p.name]));
     let transforms = points
         .iter()
@@ -389,7 +401,11 @@ fn connect_points_ffi(points: &[ConnectPoint]) -> (Vec<u8>, Vec<usize>, Vec<type
 }
 
 /// Decal blocks as the bridge takes them: each block's length, then all points and normals.
-type DecalFfi = (Vec<usize>, Vec<nifly_sys::object_3d::ffi::Vec3>, Vec<nifly_sys::object_3d::ffi::Vec3>);
+type DecalFfi = (
+    Vec<usize>,
+    Vec<nifly_sys::object_3d::ffi::Vec3>,
+    Vec<nifly_sys::object_3d::ffi::Vec3>,
+);
 
 fn decal_ffi<B: AsRef<[DecalPoint]>>(blocks: impl IntoIterator<Item = B>) -> DecalFfi {
     let (mut lengths, mut points, mut normals) = (Vec::new(), Vec::new(), Vec::new());
@@ -410,10 +426,10 @@ fn furniture_ffi(positions: &[FurniturePosition]) -> Vec<types_ffi::FurniturePos
     positions.iter().map(|p| p.to_ffi()).collect()
 }
 
-mod packed_geom;
 mod markers;
+mod packed_geom;
 mod values;
 
-pub use self::packed_geom::*;
 pub use self::markers::*;
+pub use self::packed_geom::*;
 pub use self::values::*;

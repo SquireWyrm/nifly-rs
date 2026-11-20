@@ -44,7 +44,13 @@ pub struct Key<T> {
 impl<T: Default> Key<T> {
     /// A key with no tangents or TBC values.
     pub fn new(time: f32, value: T) -> Self {
-        Self { time, value, forward: T::default(), backward: T::default(), tbc: Tbc::default() }
+        Self {
+            time,
+            value,
+            forward: T::default(),
+            backward: T::default(),
+            tbc: Tbc::default(),
+        }
     }
 }
 
@@ -61,13 +67,19 @@ pub struct KeyGroup<T> {
 
 impl<T> Default for KeyGroup<T> {
     fn default() -> Self {
-        Self { interpolation: None, keys: Vec::new() }
+        Self {
+            interpolation: None,
+            keys: Vec::new(),
+        }
     }
 }
 
 impl<T> KeyGroup<T> {
     pub fn new(interpolation: Interpolation, keys: Vec<Key<T>>) -> Self {
-        Self { interpolation: Some(interpolation), keys }
+        Self {
+            interpolation: Some(interpolation),
+            keys,
+        }
     }
 }
 
@@ -131,7 +143,11 @@ pub(crate) fn key_from_ffi<T: KeyValue>(k: &ffi::KeyFfi) -> Key<T> {
         value: T::from_floats(k.value),
         forward: T::from_floats(k.forward),
         backward: T::from_floats(k.backward),
-        tbc: Tbc { tension, bias, continuity },
+        tbc: Tbc {
+            tension,
+            bias,
+            continuity,
+        },
     }
 }
 

@@ -1,6 +1,6 @@
 //! Tests for View::texture_set and BsShaderTextureSet.
 
-use crate::common::{load};
+use crate::common::load;
 
 use nifly::{
     bstr::BStr,
@@ -22,8 +22,14 @@ fn suzanne_paths() {
     assert_eq!(set.index(), 9);
     assert_eq!(set.len(), 9);
     assert!(!set.is_empty());
-    assert_eq!(set.path(0), Some(BStr::new(br"textures\clutter\ruins\RuinSconceWall.dds")));
-    assert_eq!(set.path(1), Some(BStr::new(br"textures\clutter\ruins\RuinSconceWall_n.dds")));
+    assert_eq!(
+        set.path(0),
+        Some(BStr::new(br"textures\clutter\ruins\RuinSconceWall.dds"))
+    );
+    assert_eq!(
+        set.path(1),
+        Some(BStr::new(br"textures\clutter\ruins\RuinSconceWall_n.dds"))
+    );
     assert_eq!(set.path(2), Some(BStr::new(b"")));
     assert_eq!(set.path(9), None);
     assert_eq!(set.paths().len(), 9);
@@ -42,6 +48,11 @@ fn shader_without_texture_set() {
 fn follows_set_texture_slot() {
     let mut nif = load("Suzanne");
     let shape = nif.block_index(nif.shapes().next().unwrap()).unwrap();
-    nif.edit::<nifly::geometry::NiShape>(shape).unwrap().set_texture_slot(2, br"textures\glow.dds");
-    assert_eq!(set_of(&nif).unwrap().path(2), Some(BStr::new(br"textures\glow.dds")));
+    nif.edit::<nifly::geometry::NiShape>(shape)
+        .unwrap()
+        .set_texture_slot(2, br"textures\glow.dds");
+    assert_eq!(
+        set_of(&nif).unwrap().path(2),
+        Some(BStr::new(br"textures\glow.dds"))
+    );
 }

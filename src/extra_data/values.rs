@@ -155,7 +155,11 @@ pub struct ExtraStrings<N: AsRef<[u8]>, V: IntoIterator<Item: AsRef<[u8]>>>(pub 
 
 /// A [`BsPackedCombinedSharedGeomDataExtra`] named `.0` with the totals `.1` and objects `.2`.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ExtraPackedSharedGeom<N: AsRef<[u8]>, O: AsRef<[PackedGeomObject]>>(pub N, pub PackedGeomTotals, pub O);
+pub struct ExtraPackedSharedGeom<N: AsRef<[u8]>, O: AsRef<[PackedGeomObject]>>(
+    pub N,
+    pub PackedGeomTotals,
+    pub O,
+);
 
 /// A [`SkinAttach`] named `.0` (usually "SkinBMP") with the bone names `.1`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -177,7 +181,11 @@ pub struct ExtraConnectPointParents<N: AsRef<[u8]>, P: AsRef<[ConnectPoint]>>(pu
 /// A [`BsConnectPointChildren`] named `.0` (usually "CPT"), [skinned](BsConnectPointChildren::skinned)
 /// if `.1`, attaching to the connect points named in `.2`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct ExtraConnectPointChildren<N: AsRef<[u8]>, T: IntoIterator<Item: AsRef<[u8]>>>(pub N, pub bool, pub T);
+pub struct ExtraConnectPointChildren<N: AsRef<[u8]>, T: IntoIterator<Item: AsRef<[u8]>>>(
+    pub N,
+    pub bool,
+    pub T,
+);
 
 /// A [`BsInvMarker`] named `.0` (usually "INV") with the [rotation](BsInvMarker::rotation) `.1`
 /// and zoom `.2`.
@@ -219,7 +227,14 @@ impl<N: AsRef<[u8]>, O: AsRef<[PackedGeomObject]>> Sealed for ExtraPackedSharedG
 impl<N: AsRef<[u8]>, O: AsRef<[PackedGeomObject]>> IntoExtraData for ExtraPackedSharedGeom<N, O> {
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
         let (objects, instances) = packed_objects_ffi(self.2.as_ref());
-        assign_ffi::assign_packed_shared_geom(file, target, self.0.as_ref(), self.1.to_ffi(), &objects, &instances)
+        assign_ffi::assign_packed_shared_geom(
+            file,
+            target,
+            self.0.as_ref(),
+            self.1.to_ffi(),
+            &objects,
+            &instances,
+        )
     }
 }
 
@@ -234,14 +249,28 @@ impl<N: AsRef<[u8]>, B: IntoIterator<Item: AsRef<[u8]>>> IntoExtraData for Extra
 impl<N: AsRef<[u8]>, P: AsRef<[FurniturePosition]>> Sealed for ExtraFurnitureMarker<N, P> {}
 impl<N: AsRef<[u8]>, P: AsRef<[FurniturePosition]>> IntoExtraData for ExtraFurnitureMarker<N, P> {
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
-        assign_ffi::assign_furniture_marker(file, target, self.0.as_ref(), &furniture_ffi(self.1.as_ref()), false)
+        assign_ffi::assign_furniture_marker(
+            file,
+            target,
+            self.0.as_ref(),
+            &furniture_ffi(self.1.as_ref()),
+            false,
+        )
     }
 }
 
 impl<N: AsRef<[u8]>, P: AsRef<[FurniturePosition]>> Sealed for ExtraFurnitureMarkerNode<N, P> {}
-impl<N: AsRef<[u8]>, P: AsRef<[FurniturePosition]>> IntoExtraData for ExtraFurnitureMarkerNode<N, P> {
+impl<N: AsRef<[u8]>, P: AsRef<[FurniturePosition]>> IntoExtraData
+    for ExtraFurnitureMarkerNode<N, P>
+{
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
-        assign_ffi::assign_furniture_marker(file, target, self.0.as_ref(), &furniture_ffi(self.1.as_ref()), true)
+        assign_ffi::assign_furniture_marker(
+            file,
+            target,
+            self.0.as_ref(),
+            &furniture_ffi(self.1.as_ref()),
+            true,
+        )
     }
 }
 
@@ -249,15 +278,34 @@ impl<N: AsRef<[u8]>, P: AsRef<[ConnectPoint]>> Sealed for ExtraConnectPointParen
 impl<N: AsRef<[u8]>, P: AsRef<[ConnectPoint]>> IntoExtraData for ExtraConnectPointParents<N, P> {
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
         let (bytes, lengths, transforms) = connect_points_ffi(self.1.as_ref());
-        assign_ffi::assign_connect_point_parents(file, target, self.0.as_ref(), &bytes, &lengths, &transforms)
+        assign_ffi::assign_connect_point_parents(
+            file,
+            target,
+            self.0.as_ref(),
+            &bytes,
+            &lengths,
+            &transforms,
+        )
     }
 }
 
-impl<N: AsRef<[u8]>, T: IntoIterator<Item: AsRef<[u8]>>> Sealed for ExtraConnectPointChildren<N, T> {}
-impl<N: AsRef<[u8]>, T: IntoIterator<Item: AsRef<[u8]>>> IntoExtraData for ExtraConnectPointChildren<N, T> {
+impl<N: AsRef<[u8]>, T: IntoIterator<Item: AsRef<[u8]>>> Sealed
+    for ExtraConnectPointChildren<N, T>
+{
+}
+impl<N: AsRef<[u8]>, T: IntoIterator<Item: AsRef<[u8]>>> IntoExtraData
+    for ExtraConnectPointChildren<N, T>
+{
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
         let (bytes, lengths) = joined(self.2);
-        assign_ffi::assign_connect_point_children(file, target, self.0.as_ref(), self.1, &bytes, &lengths)
+        assign_ffi::assign_connect_point_children(
+            file,
+            target,
+            self.0.as_ref(),
+            self.1,
+            &bytes,
+            &lengths,
+        )
     }
 }
 
@@ -265,7 +313,12 @@ impl<N: AsRef<[u8]>> Sealed for ExtraInvMarker<N> {}
 impl<N: AsRef<[u8]>> IntoExtraData for ExtraInvMarker<N> {
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
         let [rotation_x, rotation_y, rotation_z] = self.1;
-        let marker = types_ffi::InvMarkerFfi { rotation_x, rotation_y, rotation_z, zoom: self.2 };
+        let marker = types_ffi::InvMarkerFfi {
+            rotation_x,
+            rotation_y,
+            rotation_z,
+            zoom: self.2,
+        };
         assign_ffi::assign_inv_marker(file, target, self.0.as_ref(), marker)
     }
 }
@@ -273,14 +326,26 @@ impl<N: AsRef<[u8]>> IntoExtraData for ExtraInvMarker<N> {
 impl<N: AsRef<[u8]>> Sealed for ExtraBsBound<N> {}
 impl<N: AsRef<[u8]>> IntoExtraData for ExtraBsBound<N> {
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
-        assign_ffi::assign_bs_bound(file, target, self.0.as_ref(), self.1.to_ffi(), self.2.to_ffi())
+        assign_ffi::assign_bs_bound(
+            file,
+            target,
+            self.0.as_ref(),
+            self.1.to_ffi(),
+            self.2.to_ffi(),
+        )
     }
 }
 
 impl<N: AsRef<[u8]>, F: AsRef<[u8]>> Sealed for ExtraBehaviorGraph<N, F> {}
 impl<N: AsRef<[u8]>, F: AsRef<[u8]>> IntoExtraData for ExtraBehaviorGraph<N, F> {
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
-        assign_ffi::assign_behavior_graph_extra_data(file, target, self.0.as_ref(), self.1.as_ref(), self.2)
+        assign_ffi::assign_behavior_graph_extra_data(
+            file,
+            target,
+            self.0.as_ref(),
+            self.1.as_ref(),
+            self.2,
+        )
     }
 }
 
@@ -313,7 +378,11 @@ pub struct ExtraWArray<N: AsRef<[u8]>, V: AsRef<[u32]>>(pub N, pub V);
 /// `.2`. At most 65535 blocks of at most 65535 points, as the counts are stored in 16 bits;
 /// `assign_extra_data` returns `None` for more.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ExtraDecalPlacement<N: AsRef<[u8]>, B: IntoIterator<Item: AsRef<[DecalPoint]>>>(pub N, pub f32, pub B);
+pub struct ExtraDecalPlacement<N: AsRef<[u8]>, B: IntoIterator<Item: AsRef<[DecalPoint]>>>(
+    pub N,
+    pub f32,
+    pub B,
+);
 
 /// An [`NiTextKeyExtraData`] named `.0` with the text keys `.1`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -377,8 +446,13 @@ impl<N: AsRef<[u8]>, V: AsRef<[u32]>> IntoExtraData for ExtraWArray<N, V> {
     }
 }
 
-impl<N: AsRef<[u8]>, B: IntoIterator<Item: AsRef<[DecalPoint]>>> Sealed for ExtraDecalPlacement<N, B> {}
-impl<N: AsRef<[u8]>, B: IntoIterator<Item: AsRef<[DecalPoint]>>> IntoExtraData for ExtraDecalPlacement<N, B> {
+impl<N: AsRef<[u8]>, B: IntoIterator<Item: AsRef<[DecalPoint]>>> Sealed
+    for ExtraDecalPlacement<N, B>
+{
+}
+impl<N: AsRef<[u8]>, B: IntoIterator<Item: AsRef<[DecalPoint]>>> IntoExtraData
+    for ExtraDecalPlacement<N, B>
+{
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
         let (lengths, points, normals) = decal_ffi(self.2);
         assign_ffi::assign_decal_placement_vector_extra_data(
@@ -399,7 +473,14 @@ impl<N: AsRef<[u8]>, K: AsRef<[TextKey]>> IntoExtraData for ExtraTextKeys<N, K> 
         let keys = self.1.as_ref();
         let (bytes, lengths) = joined(keys.iter().map(|k| &k.text));
         let times: Vec<f32> = keys.iter().map(|k| k.time).collect();
-        assign_ffi::assign_text_key_extra_data(file, target, self.0.as_ref(), &bytes, &lengths, &times)
+        assign_ffi::assign_text_key_extra_data(
+            file,
+            target,
+            self.0.as_ref(),
+            &bytes,
+            &lengths,
+            &times,
+        )
     }
 }
 
@@ -409,7 +490,14 @@ impl<N: AsRef<[u8]>, L: AsRef<[BoneLod]>> IntoExtraData for ExtraBoneLods<N, L> 
         let lods = self.1.as_ref();
         let (bytes, lengths) = joined(lods.iter().map(|l| &l.bone));
         let distances: Vec<u32> = lods.iter().map(|l| l.distance).collect();
-        assign_ffi::assign_bone_lod_extra_data(file, target, self.0.as_ref(), &bytes, &lengths, &distances)
+        assign_ffi::assign_bone_lod_extra_data(
+            file,
+            target,
+            self.0.as_ref(),
+            &bytes,
+            &lengths,
+            &distances,
+        )
     }
 }
 
@@ -423,7 +511,12 @@ impl<N: AsRef<[u8]>> IntoExtraData for ExtraDistantObject<N> {
 impl<N: AsRef<[u8]>> Sealed for ExtraDistantObjectLargeRef<N> {}
 impl<N: AsRef<[u8]>> IntoExtraData for ExtraDistantObjectLargeRef<N> {
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
-        assign_ffi::assign_distant_object_large_ref_extra_data(file, target, self.0.as_ref(), self.1)
+        assign_ffi::assign_distant_object_large_ref_extra_data(
+            file,
+            target,
+            self.0.as_ref(),
+            self.1,
+        )
     }
 }
 
@@ -431,6 +524,13 @@ impl<N: AsRef<[u8]>, T: AsRef<[BoneTranslation]>> Sealed for ExtraBoneTranslatio
 impl<N: AsRef<[u8]>, T: AsRef<[BoneTranslation]>> IntoExtraData for ExtraBoneTranslations<N, T> {
     fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
         let (bytes, lengths, vectors) = bone_translations_ffi(self.1.as_ref());
-        assign_ffi::assign_bone_translations(file, target, self.0.as_ref(), &bytes, &lengths, &vectors)
+        assign_ffi::assign_bone_translations(
+            file,
+            target,
+            self.0.as_ref(),
+            &bytes,
+            &lengths,
+            &vectors,
+        )
     }
 }

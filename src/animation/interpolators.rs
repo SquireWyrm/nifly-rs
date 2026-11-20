@@ -14,17 +14,29 @@ pub struct QuatTransform {
 impl Default for QuatTransform {
     /// No translation or rotation, and a scale of 1.
     fn default() -> Self {
-        Self { translation: Vec3::ZERO, rotation: [0.0, 0.0, 0.0, 1.0], scale: 1.0 }
+        Self {
+            translation: Vec3::ZERO,
+            rotation: [0.0, 0.0, 0.0, 1.0],
+            scale: 1.0,
+        }
     }
 }
 
 impl QuatTransform {
     fn from_ffi(t: ffi::QuatTransformFfi) -> Self {
-        Self { translation: Vec3::from_ffi(t.translation), rotation: t.rotation, scale: t.scale }
+        Self {
+            translation: Vec3::from_ffi(t.translation),
+            rotation: t.rotation,
+            scale: t.scale,
+        }
     }
 
     fn to_ffi(self) -> ffi::QuatTransformFfi {
-        ffi::QuatTransformFfi { translation: self.translation.to_ffi(), rotation: self.rotation, scale: self.scale }
+        ffi::QuatTransformFfi {
+            translation: self.translation.to_ffi(),
+            rotation: self.rotation,
+            scale: self.scale,
+        }
     }
 }
 
@@ -73,7 +85,8 @@ fn optional_vec3(v: ffi::Vec3) -> Option<Vec3> {
 }
 
 fn optional_vec3_to_ffi(v: Option<Vec3>) -> ffi::Vec3 {
-    v.unwrap_or(Vec3::new(f32::MIN, f32::MIN, f32::MIN)).to_ffi()
+    v.unwrap_or(Vec3::new(f32::MIN, f32::MIN, f32::MIN))
+        .to_ffi()
 }
 
 impl NiBoolInterpolator {

@@ -1,6 +1,6 @@
 //! Tests for NifFile::find_block_by_name.
 
-use crate::common::{load};
+use crate::common::load;
 
 use nifly::{
     extra_data::{BsxFlags, NiExtraData},

@@ -270,14 +270,24 @@ pub mod ffi {
         fn downcast_bhk_shape_collection(obj: &NiObject) -> *const bhkShapeCollection;
         fn upcast_bhk_list_shape(obj: &bhkListShape) -> &bhkShapeCollection;
         fn downcast_bhk_list_shape(obj: &NiObject) -> *const bhkListShape;
-        fn upcast_hk_packed_ni_tri_strips_data(obj: &hkPackedNiTriStripsData) -> &bhkShapeCollection;
+        fn upcast_hk_packed_ni_tri_strips_data(
+            obj: &hkPackedNiTriStripsData,
+        ) -> &bhkShapeCollection;
         fn downcast_hk_packed_ni_tri_strips_data(obj: &NiObject) -> *const hkPackedNiTriStripsData;
-        fn upcast_bhk_packed_ni_tri_strips_shape(obj: &bhkPackedNiTriStripsShape) -> &bhkShapeCollection;
-        fn downcast_bhk_packed_ni_tri_strips_shape(obj: &NiObject) -> *const bhkPackedNiTriStripsShape;
+        fn upcast_bhk_packed_ni_tri_strips_shape(
+            obj: &bhkPackedNiTriStripsShape,
+        ) -> &bhkShapeCollection;
+        fn downcast_bhk_packed_ni_tri_strips_shape(
+            obj: &NiObject,
+        ) -> *const bhkPackedNiTriStripsShape;
         fn upcast_bhk_liquid_action(obj: &bhkLiquidAction) -> &bhkSerializable;
         fn downcast_bhk_liquid_action(obj: &NiObject) -> *const bhkLiquidAction;
-        fn upcast_bhk_orient_hinged_body_action(obj: &bhkOrientHingedBodyAction) -> &bhkSerializable;
-        fn downcast_bhk_orient_hinged_body_action(obj: &NiObject) -> *const bhkOrientHingedBodyAction;
+        fn upcast_bhk_orient_hinged_body_action(
+            obj: &bhkOrientHingedBodyAction,
+        ) -> &bhkSerializable;
+        fn downcast_bhk_orient_hinged_body_action(
+            obj: &NiObject,
+        ) -> *const bhkOrientHingedBodyAction;
         fn upcast_bhk_world_object(obj: &bhkWorldObject) -> &bhkSerializable;
         fn downcast_bhk_world_object(obj: &NiObject) -> *const bhkWorldObject;
         fn upcast_bhk_phantom(obj: &bhkPhantom) -> &bhkWorldObject;
@@ -299,7 +309,9 @@ pub mod ffi {
         fn upcast_bhk_hinge_constraint(obj: &bhkHingeConstraint) -> &bhkConstraint;
         fn downcast_bhk_hinge_constraint(obj: &NiObject) -> *const bhkHingeConstraint;
         fn upcast_bhk_limited_hinge_constraint(obj: &bhkLimitedHingeConstraint) -> &bhkConstraint;
-        fn downcast_bhk_limited_hinge_constraint(obj: &NiObject) -> *const bhkLimitedHingeConstraint;
+        fn downcast_bhk_limited_hinge_constraint(
+            obj: &NiObject,
+        ) -> *const bhkLimitedHingeConstraint;
         fn upcast_bhk_breakable_constraint(obj: &bhkBreakableConstraint) -> &bhkConstraint;
         fn downcast_bhk_breakable_constraint(obj: &NiObject) -> *const bhkBreakableConstraint;
         fn upcast_bhk_ragdoll_constraint(obj: &bhkRagdollConstraint) -> &bhkConstraint;
@@ -310,12 +322,23 @@ pub mod ffi {
         fn downcast_bhk_prismatic_constraint(obj: &NiObject) -> *const bhkPrismaticConstraint;
         fn upcast_bhk_malleable_constraint(obj: &bhkMalleableConstraint) -> &bhkConstraint;
         fn downcast_bhk_malleable_constraint(obj: &NiObject) -> *const bhkMalleableConstraint;
-        fn upcast_bhk_ball_and_socket_constraint(obj: &bhkBallAndSocketConstraint) -> &bhkConstraint;
-        fn downcast_bhk_ball_and_socket_constraint(obj: &NiObject) -> *const bhkBallAndSocketConstraint;
-        fn upcast_bhk_ball_socket_constraint_chain(obj: &bhkBallSocketConstraintChain) -> &bhkSerializable;
-        fn downcast_bhk_ball_socket_constraint_chain(obj: &NiObject) -> *const bhkBallSocketConstraintChain;
-        fn upcast_bhk_compressed_mesh_shape_data(obj: &bhkCompressedMeshShapeData) -> &bhkRefObject;
-        fn downcast_bhk_compressed_mesh_shape_data(obj: &NiObject) -> *const bhkCompressedMeshShapeData;
+        fn upcast_bhk_ball_and_socket_constraint(
+            obj: &bhkBallAndSocketConstraint,
+        ) -> &bhkConstraint;
+        fn downcast_bhk_ball_and_socket_constraint(
+            obj: &NiObject,
+        ) -> *const bhkBallAndSocketConstraint;
+        fn upcast_bhk_ball_socket_constraint_chain(
+            obj: &bhkBallSocketConstraintChain,
+        ) -> &bhkSerializable;
+        fn downcast_bhk_ball_socket_constraint_chain(
+            obj: &NiObject,
+        ) -> *const bhkBallSocketConstraintChain;
+        fn upcast_bhk_compressed_mesh_shape_data(obj: &bhkCompressedMeshShapeData)
+        -> &bhkRefObject;
+        fn downcast_bhk_compressed_mesh_shape_data(
+            obj: &NiObject,
+        ) -> *const bhkCompressedMeshShapeData;
         fn upcast_bhk_compressed_mesh_shape(obj: &bhkCompressedMeshShape) -> &bhkShape;
         fn downcast_bhk_compressed_mesh_shape(obj: &NiObject) -> *const bhkCompressedMeshShape;
         fn upcast_bhk_pose_array(obj: &bhkPoseArray) -> &NiObject;
@@ -333,7 +356,10 @@ pub mod ffi {
         fn collision_data_collision_mode(d: &NiCollisionData) -> u32;
         fn set_collision_data_collision_mode(d: Pin<&mut NiCollisionData>, v: u32);
         fn collision_data_bounding_volume(d: &NiCollisionData) -> Vec<BoundingVolumeFfi>;
-        fn set_collision_data_bounding_volume(d: Pin<&mut NiCollisionData>, records: &[BoundingVolumeFfi]) -> bool;
+        fn set_collision_data_bounding_volume(
+            d: Pin<&mut NiCollisionData>,
+            records: &[BoundingVolumeFfi],
+        ) -> bool;
 
         /// `bhkNiCollisionObject::flags`, `bhkNPCollisionObject::bodyID` and the
         /// `bhkBlendCollisionObject` gains.
@@ -601,15 +627,24 @@ pub mod ffi {
         fn multi_sphere_property(o: &bhkMultiSphereShape) -> CInfoPropertyFfi;
         fn set_multi_sphere_property(o: Pin<&mut bhkMultiSphereShape>, v: CInfoPropertyFfi);
         fn convex_vertices_vertices_property(o: &bhkConvexVerticesShape) -> CInfoPropertyFfi;
-        fn set_convex_vertices_vertices_property(o: Pin<&mut bhkConvexVerticesShape>, v: CInfoPropertyFfi);
+        fn set_convex_vertices_vertices_property(
+            o: Pin<&mut bhkConvexVerticesShape>,
+            v: CInfoPropertyFfi,
+        );
         fn convex_vertices_normals_property(o: &bhkConvexVerticesShape) -> CInfoPropertyFfi;
-        fn set_convex_vertices_normals_property(o: Pin<&mut bhkConvexVerticesShape>, v: CInfoPropertyFfi);
+        fn set_convex_vertices_normals_property(
+            o: Pin<&mut bhkConvexVerticesShape>,
+            v: CInfoPropertyFfi,
+        );
         fn list_shape_child_shape_property(o: &bhkListShape) -> CInfoPropertyFfi;
         fn set_list_shape_child_shape_property(o: Pin<&mut bhkListShape>, v: CInfoPropertyFfi);
         fn list_shape_child_filter_property(o: &bhkListShape) -> CInfoPropertyFfi;
         fn set_list_shape_child_filter_property(o: Pin<&mut bhkListShape>, v: CInfoPropertyFfi);
         fn convex_list_child_shape_property(o: &bhkConvexListShape) -> CInfoPropertyFfi;
-        fn set_convex_list_child_shape_property(o: Pin<&mut bhkConvexListShape>, v: CInfoPropertyFfi);
+        fn set_convex_list_child_shape_property(
+            o: Pin<&mut bhkConvexListShape>,
+            v: CInfoPropertyFfi,
+        );
         fn transform_shape_transform(o: &bhkTransformShape) -> [f32; 16];
         fn set_transform_shape_transform(o: Pin<&mut bhkTransformShape>, v: [f32; 16]);
 
@@ -619,7 +654,11 @@ pub mod ffi {
         /// The convex vertices shape's vertices, or with `normals` its normals, as 4 floats
         /// each. The setter returns false, changing nothing, unless there are 4 per entry.
         fn convex_vertices_list(s: &bhkConvexVerticesShape, normals: bool) -> &[f32];
-        fn set_convex_vertices_list(s: Pin<&mut bhkConvexVerticesShape>, normals: bool, values: &[f32]) -> bool;
+        fn set_convex_vertices_list(
+            s: Pin<&mut bhkConvexVerticesShape>,
+            normals: bool,
+            values: &[f32],
+        ) -> bool;
         /// The list shape's filters. The setter returns false, changing nothing, unless there's
         /// one per sub-shape.
         fn list_shape_filters(s: &bhkListShape) -> Vec<HavokFilterFfi>;
@@ -634,14 +673,23 @@ pub mod ffi {
         /// Sub-parts of the packed shape and data. The setters return false, changing nothing,
         /// for more than 65535.
         fn packed_shape_sub_parts(s: &bhkPackedNiTriStripsShape) -> Vec<SubPartFfi>;
-        fn set_packed_shape_sub_parts(s: Pin<&mut bhkPackedNiTriStripsShape>, parts: &[SubPartFfi]) -> bool;
+        fn set_packed_shape_sub_parts(
+            s: Pin<&mut bhkPackedNiTriStripsShape>,
+            parts: &[SubPartFfi],
+        ) -> bool;
         fn packed_data_sub_parts(d: &hkPackedNiTriStripsData) -> Vec<SubPartFfi>;
-        fn set_packed_data_sub_parts(d: Pin<&mut hkPackedNiTriStripsData>, parts: &[SubPartFfi]) -> bool;
+        fn set_packed_data_sub_parts(
+            d: Pin<&mut hkPackedNiTriStripsData>,
+            parts: &[SubPartFfi],
+        ) -> bool;
         /// The packed data's triangles, from `triNormData` if it has `keyCount` entries and
         /// `triData` otherwise. The setter fills both and `keyCount`, and returns false,
         /// changing nothing, if an index isn't below the vertex count.
         fn packed_data_triangles(d: &hkPackedNiTriStripsData) -> Vec<PackedTriangleFfi>;
-        fn set_packed_data_triangles(d: Pin<&mut hkPackedNiTriStripsData>, tris: &[PackedTriangleFfi]) -> bool;
+        fn set_packed_data_triangles(
+            d: Pin<&mut hkPackedNiTriStripsData>,
+            tris: &[PackedTriangleFfi],
+        ) -> bool;
         /// The packed data's vertices. The setter also sets `numVerts`, and returns false,
         /// changing nothing, if a triangle uses a vertex past the new count.
         fn packed_data_vertices(d: &hkPackedNiTriStripsData) -> Vec<Vec3>;
@@ -661,7 +709,10 @@ pub mod ffi {
         fn cms_big_vertices(d: &bhkCompressedMeshShapeData) -> &[f32];
         fn set_cms_big_vertices(d: Pin<&mut bhkCompressedMeshShapeData>, values: &[f32]) -> bool;
         fn cms_big_triangles(d: &bhkCompressedMeshShapeData) -> Vec<CmsBigTriangleFfi>;
-        fn set_cms_big_triangles(d: Pin<&mut bhkCompressedMeshShapeData>, values: &[CmsBigTriangleFfi]) -> bool;
+        fn set_cms_big_triangles(
+            d: Pin<&mut bhkCompressedMeshShapeData>,
+            values: &[CmsBigTriangleFfi],
+        ) -> bool;
         /// The chunks. `cms_chunk_list` returns a chunk's vertices (0), indices (1), strips (2)
         /// or welding info (3). `set_cms_chunks` takes each chunk's four lists in turn in
         /// `lists`, with their lengths in `lengths`, and returns false, changing nothing, unless
@@ -733,7 +784,10 @@ pub mod ffi {
         fn prismatic_descriptor(c: &bhkPrismaticConstraint) -> DescriptorFfi;
         fn set_prismatic_descriptor(c: Pin<&mut bhkPrismaticConstraint>, d: &DescriptorFfi);
         fn ball_and_socket_descriptor(c: &bhkBallAndSocketConstraint) -> DescriptorFfi;
-        fn set_ball_and_socket_descriptor(c: Pin<&mut bhkBallAndSocketConstraint>, d: &DescriptorFfi);
+        fn set_ball_and_socket_descriptor(
+            c: Pin<&mut bhkBallAndSocketConstraint>,
+            d: &DescriptorFfi,
+        );
         fn breakable_wrapped(c: &bhkBreakableConstraint) -> DescriptorFfi;
         fn set_breakable_wrapped(c: Pin<&mut bhkBreakableConstraint>, d: &DescriptorFfi) -> bool;
         fn breakable_wrapped_type(c: &bhkBreakableConstraint) -> u32;
@@ -794,7 +848,11 @@ pub mod ffi {
         fn set_pose_array_bones(p: Pin<&mut bhkPoseArray>, bytes: &[u8], lengths: &[usize]);
         fn pose_array_pose_count(p: &bhkPoseArray) -> usize;
         fn pose_array_pose(p: &bhkPoseArray, index: usize) -> Vec<BoneTransformFfi>;
-        fn set_pose_array_poses(p: Pin<&mut bhkPoseArray>, transforms: &[BoneTransformFfi], lengths: &[usize]) -> bool;
+        fn set_pose_array_poses(
+            p: Pin<&mut bhkPoseArray>,
+            transforms: &[BoneTransformFfi],
+            lengths: &[usize],
+        ) -> bool;
 
         /// `bhkRagdollTemplateData` fields. The constraint setter keeps each position's entities
         /// and returns false, changing nothing, if a type is unknown.
@@ -811,7 +869,10 @@ pub mod ffi {
         fn template_data_material(d: &bhkRagdollTemplateData) -> u32;
         fn set_template_data_material(d: Pin<&mut bhkRagdollTemplateData>, v: u32);
         fn template_data_constraints(d: &bhkRagdollTemplateData) -> Vec<JointConstraintFfi>;
-        fn set_template_data_constraints(d: Pin<&mut bhkRagdollTemplateData>, values: &[JointConstraintFfi]) -> bool;
+        fn set_template_data_constraints(
+            d: Pin<&mut bhkRagdollTemplateData>,
+            values: &[JointConstraintFfi],
+        ) -> bool;
 
         /// Adds a new, unattached block of the named type and returns its index.
         fn add_bhk_pose_array(file: Pin<&mut NifFile>) -> u32;

@@ -33,7 +33,10 @@ impl NiCollisionData {
         if let Some(volume) = volume {
             volume.to_ffi(&mut records);
         }
-        assert!(ffi::set_collision_data_bounding_volume(self.ffi_mut(), &records), "records of one volume");
+        assert!(
+            ffi::set_collision_data_bounding_volume(self.ffi_mut(), &records),
+            "records of one volume"
+        );
     }
 }
 
@@ -202,7 +205,8 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiAvObject, I>,
     {
         let object = self.index() as u32;
-        index_from_ffi(C::assign(self.file_mut().inner.pin_mut(), object)).expect("the block is an NiAvObject")
+        index_from_ffi(C::assign(self.file_mut().inner.pin_mut(), object))
+            .expect("the block is an NiAvObject")
     }
 
     /// Adds a new body of type `B` with default settings as the collision object's

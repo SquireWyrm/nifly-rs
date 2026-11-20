@@ -1,16 +1,15 @@
 //! Tests for the Fallout 3 and New Vegas shader fields, and BSWaterShaderProperty and
 //! BSSkyShaderProperty.
 
-use crate::common::{reload};
+use crate::common::reload;
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
     objects::NiType,
     shaders::{
-        WaterShaderFlags,
-        BsShaderNoLightingProperty, BsShaderPpLightingProperty, BsSkyShaderProperty, BsWaterShaderProperty,
-        ClampMode, LegacyShaderType, NewProperty, NiShader, SkyObjectType, SkyShaderProperty,
-        TallGrassShaderProperty, TileShaderProperty,
+        BsShaderNoLightingProperty, BsShaderPpLightingProperty, BsSkyShaderProperty,
+        BsWaterShaderProperty, ClampMode, LegacyShaderType, NewProperty, NiShader, SkyObjectType,
+        SkyShaderProperty, TallGrassShaderProperty, TileShaderProperty, WaterShaderFlags,
     },
 };
 
@@ -23,7 +22,10 @@ fn first<T: NiType>(nif: &NifFile) -> &T {
 }
 
 fn add<T: NewProperty>(nif: &mut NifFile) -> &mut T {
-    let i = nif.edit::<nifly::objects::NiAvObject>(root_index(nif)).map(|mut e| e.add_property::<T, _>()).unwrap();
+    let i = nif
+        .edit::<nifly::objects::NiAvObject>(root_index(nif))
+        .map(|mut e| e.add_property::<T, _>())
+        .unwrap();
     nif.block_of_mut::<T>(i).unwrap()
 }
 
@@ -84,18 +86,27 @@ fn fallout_3_round_trip() {
     assert_eq!(sky.file_name(), "textures\\sky\\clouds.dds");
     assert_eq!(sky.sky_object_type(), Some(SkyObjectType::Clouds));
     assert_eq!(first::<TileShaderProperty>(&saved).file_name(), "tile.dds");
-    assert_eq!(first::<TallGrassShaderProperty>(&saved).file_name(), "grass.dds");
+    assert_eq!(
+        first::<TallGrassShaderProperty>(&saved).file_name(),
+        "grass.dds"
+    );
 
     // They're attached to the root's property list, and found as shaders.
     let root = saved.root_node().unwrap();
-    assert_eq!(saved.child_blocks_of::<nifly::shaders::NiProperty>(&root).count(), 5);
+    assert_eq!(
+        saved
+            .child_blocks_of::<nifly::shaders::NiProperty>(&root)
+            .count(),
+        5
+    );
     assert_eq!(saved.child_blocks_of::<NiShader>(&root).count(), 5);
 }
 
 #[test]
 fn skyrim_fields() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    add::<BsWaterShaderProperty>(&mut nif).set_flags(WaterShaderFlags::DISPLACEMENT | WaterShaderFlags::DEPTH);
+    add::<BsWaterShaderProperty>(&mut nif)
+        .set_flags(WaterShaderFlags::DISPLACEMENT | WaterShaderFlags::DEPTH);
     let sky = add::<BsSkyShaderProperty>(&mut nif);
     sky.set_base_texture("textures\\sky\\moon.dds");
     sky.set_sky_object_type(SkyObjectType::Stars);
@@ -106,7 +117,10 @@ fn skyrim_fields() {
 
     // Skyrim doesn't save property lists, so the blocks are saved unattached.
     let saved = reload(&mut nif);
-    assert_eq!(first::<BsWaterShaderProperty>(&saved).flags(), WaterShaderFlags::DISPLACEMENT | WaterShaderFlags::DEPTH);
+    assert_eq!(
+        first::<BsWaterShaderProperty>(&saved).flags(),
+        WaterShaderFlags::DISPLACEMENT | WaterShaderFlags::DEPTH
+    );
     let sky = first::<BsSkyShaderProperty>(&saved);
     assert_eq!(sky.base_texture(), "textures\\sky\\moon.dds");
     assert_eq!(sky.sky_object_type(), Some(SkyObjectType::Stars));

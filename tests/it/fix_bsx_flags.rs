@@ -1,6 +1,6 @@
 //! Tests for NifFile::fix_bsx_flags.
 
-use crate::common::{load};
+use crate::common::load;
 use std::io::Cursor;
 
 use nifly::{
@@ -13,7 +13,10 @@ const EMITTANCE: u32 = 1 << 9;
 /// The file as it is in memory: no optimizing or sorting on save.
 fn raw(nif: &mut NifFile) -> Vec<u8> {
     let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions { optimize: false, sort_blocks: false };
+    let options = SaveOptions {
+        optimize: false,
+        sort_blocks: false,
+    };
     nif.save(&mut cur, Some(options)).unwrap();
     cur.into_inner()
 }
@@ -27,7 +30,9 @@ fn bsx_values(nif: &NifFile) -> Vec<u32> {
 fn with_bsx(version: NifVersion, flags: u32) -> NifFile {
     let mut nif = NifFile::create(version);
     let root = nif.root_node().unwrap().index();
-    nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(BsxBitflags::from_bits_retain(flags)))).unwrap();
+    nif.edit::<nifly::objects::NiAvObject>(root)
+        .and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(BsxBitflags::from_bits_retain(flags))))
+        .unwrap();
     nif
 }
 
@@ -63,7 +68,13 @@ fn no_bsx_block_does_nothing() {
 fn only_the_first_bsx_block_is_fixed() {
     let mut nif = with_bsx(NifVersion::SKYRIM_SE, EMITTANCE | 2);
     let root = nif.root_node().unwrap().index();
-    nif.edit::<nifly::objects::NiAvObject>(root).and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(BsxBitflags::EXTERNAL_EMITTANCE | BsxBitflags::RAGDOLL))).unwrap();
+    nif.edit::<nifly::objects::NiAvObject>(root)
+        .and_then(|mut e| {
+            e.assign_extra_data(ExtraBsxFlags(
+                BsxBitflags::EXTERNAL_EMITTANCE | BsxBitflags::RAGDOLL,
+            ))
+        })
+        .unwrap();
 
     nif.fix_bsx_flags();
     assert_eq!(bsx_values(&nif), [2, EMITTANCE | 4]);
@@ -76,7 +87,11 @@ fn optimize_for_runs_it_by_default() {
     assert_eq!(bsx_values(&nif), [2]);
 
     let mut nif = with_bsx(NifVersion::SKYRIM, EMITTANCE | 2);
-    let options = OptimizeOptions { fix_bsx_flags: false, ..Default::default() };
-    nif.optimize_for(NifVersion::SKYRIM_SE, Some(options)).unwrap();
+    let options = OptimizeOptions {
+        fix_bsx_flags: false,
+        ..Default::default()
+    };
+    nif.optimize_for(NifVersion::SKYRIM_SE, Some(options))
+        .unwrap();
     assert_eq!(bsx_values(&nif), [EMITTANCE | 2]);
 }

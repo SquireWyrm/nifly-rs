@@ -120,8 +120,12 @@ pub mod ffi {
 
         fn upcast_ni_particles_data(obj: &NiParticlesData) -> &NiGeometryData;
         fn downcast_ni_particles_data(obj: &NiObject) -> *const NiParticlesData;
-        fn upcast_ni_auto_normal_particles_data(obj: &NiAutoNormalParticlesData) -> &NiParticlesData;
-        fn downcast_ni_auto_normal_particles_data(obj: &NiObject) -> *const NiAutoNormalParticlesData;
+        fn upcast_ni_auto_normal_particles_data(
+            obj: &NiAutoNormalParticlesData,
+        ) -> &NiParticlesData;
+        fn downcast_ni_auto_normal_particles_data(
+            obj: &NiObject,
+        ) -> *const NiAutoNormalParticlesData;
         fn upcast_ni_rotating_particles_data(obj: &NiRotatingParticlesData) -> &NiParticlesData;
         fn downcast_ni_rotating_particles_data(obj: &NiObject) -> *const NiRotatingParticlesData;
         fn upcast_ni_particle_meshes_data(obj: &NiParticleMeshesData) -> &NiRotatingParticlesData;
@@ -142,16 +146,22 @@ pub mod ffi {
         fn downcast_bs_strip_particle_system(obj: &NiObject) -> *const BSStripParticleSystem;
         fn upcast_ni_psys_modifier(obj: &NiPSysModifier) -> &NiObject;
         fn downcast_ni_psys_modifier(obj: &NiObject) -> *const NiPSysModifier;
-        fn upcast_bs_psys_strip_update_modifier(obj: &BSPSysStripUpdateModifier) -> &NiPSysModifier;
-        fn downcast_bs_psys_strip_update_modifier(obj: &NiObject) -> *const BSPSysStripUpdateModifier;
+        fn upcast_bs_psys_strip_update_modifier(obj: &BSPSysStripUpdateModifier)
+        -> &NiPSysModifier;
+        fn downcast_bs_psys_strip_update_modifier(
+            obj: &NiObject,
+        ) -> *const BSPSysStripUpdateModifier;
         fn upcast_ni_psys_spawn_modifier(obj: &NiPSysSpawnModifier) -> &NiPSysModifier;
         fn downcast_ni_psys_spawn_modifier(obj: &NiObject) -> *const NiPSysSpawnModifier;
         fn upcast_ni_psys_age_death_modifier(obj: &NiPSysAgeDeathModifier) -> &NiPSysModifier;
         fn downcast_ni_psys_age_death_modifier(obj: &NiObject) -> *const NiPSysAgeDeathModifier;
         fn upcast_bs_psys_lod_modifier(obj: &BSPSysLODModifier) -> &NiPSysModifier;
         fn downcast_bs_psys_lod_modifier(obj: &NiObject) -> *const BSPSysLODModifier;
-        fn upcast_bs_psys_simple_color_modifier(obj: &BSPSysSimpleColorModifier) -> &NiPSysModifier;
-        fn downcast_bs_psys_simple_color_modifier(obj: &NiObject) -> *const BSPSysSimpleColorModifier;
+        fn upcast_bs_psys_simple_color_modifier(obj: &BSPSysSimpleColorModifier)
+        -> &NiPSysModifier;
+        fn downcast_bs_psys_simple_color_modifier(
+            obj: &NiObject,
+        ) -> *const BSPSysSimpleColorModifier;
         fn upcast_ni_psys_rotation_modifier(obj: &NiPSysRotationModifier) -> &NiPSysModifier;
         fn downcast_ni_psys_rotation_modifier(obj: &NiObject) -> *const NiPSysRotationModifier;
         fn upcast_bs_psys_scale_modifier(obj: &BSPSysScaleModifier) -> &NiPSysModifier;
@@ -160,12 +170,19 @@ pub mod ffi {
         fn downcast_ni_psys_gravity_modifier(obj: &NiObject) -> *const NiPSysGravityModifier;
         fn upcast_ni_psys_position_modifier(obj: &NiPSysPositionModifier) -> &NiPSysModifier;
         fn downcast_ni_psys_position_modifier(obj: &NiObject) -> *const NiPSysPositionModifier;
-        fn upcast_ni_psys_bound_update_modifier(obj: &NiPSysBoundUpdateModifier) -> &NiPSysModifier;
-        fn downcast_ni_psys_bound_update_modifier(obj: &NiObject) -> *const NiPSysBoundUpdateModifier;
+        fn upcast_ni_psys_bound_update_modifier(obj: &NiPSysBoundUpdateModifier)
+        -> &NiPSysModifier;
+        fn downcast_ni_psys_bound_update_modifier(
+            obj: &NiObject,
+        ) -> *const NiPSysBoundUpdateModifier;
         fn upcast_ni_psys_drag_modifier(obj: &NiPSysDragModifier) -> &NiPSysModifier;
         fn downcast_ni_psys_drag_modifier(obj: &NiObject) -> *const NiPSysDragModifier;
-        fn upcast_bs_psys_inherit_velocity_modifier(obj: &BSPSysInheritVelocityModifier) -> &NiPSysModifier;
-        fn downcast_bs_psys_inherit_velocity_modifier(obj: &NiObject) -> *const BSPSysInheritVelocityModifier;
+        fn upcast_bs_psys_inherit_velocity_modifier(
+            obj: &BSPSysInheritVelocityModifier,
+        ) -> &NiPSysModifier;
+        fn downcast_bs_psys_inherit_velocity_modifier(
+            obj: &NiObject,
+        ) -> *const BSPSysInheritVelocityModifier;
         fn upcast_bs_psys_sub_tex_modifier(obj: &BSPSysSubTexModifier) -> &NiPSysModifier;
         fn downcast_bs_psys_sub_tex_modifier(obj: &NiObject) -> *const BSPSysSubTexModifier;
         fn upcast_ni_psys_bomb_modifier(obj: &NiPSysBombModifier) -> &NiPSysModifier;
@@ -175,27 +192,53 @@ pub mod ffi {
         fn upcast_ni_psys_grow_fade_modifier(obj: &NiPSysGrowFadeModifier) -> &NiPSysModifier;
         fn downcast_ni_psys_grow_fade_modifier(obj: &NiObject) -> *const NiPSysGrowFadeModifier;
         fn upcast_ni_psys_mesh_update_modifier(obj: &NiPSysMeshUpdateModifier) -> &NiPSysModifier;
-        fn downcast_ni_psys_mesh_update_modifier(obj: &NiObject) -> *const NiPSysMeshUpdateModifier;
+        fn downcast_ni_psys_mesh_update_modifier(obj: &NiObject)
+        -> *const NiPSysMeshUpdateModifier;
         fn upcast_ni_psys_field_modifier(obj: &NiPSysFieldModifier) -> &NiPSysModifier;
         fn downcast_ni_psys_field_modifier(obj: &NiObject) -> *const NiPSysFieldModifier;
-        fn upcast_ni_psys_vortex_field_modifier(obj: &NiPSysVortexFieldModifier) -> &NiPSysFieldModifier;
-        fn downcast_ni_psys_vortex_field_modifier(obj: &NiObject) -> *const NiPSysVortexFieldModifier;
-        fn upcast_ni_psys_gravity_field_modifier(obj: &NiPSysGravityFieldModifier) -> &NiPSysFieldModifier;
-        fn downcast_ni_psys_gravity_field_modifier(obj: &NiObject) -> *const NiPSysGravityFieldModifier;
-        fn upcast_ni_psys_drag_field_modifier(obj: &NiPSysDragFieldModifier) -> &NiPSysFieldModifier;
+        fn upcast_ni_psys_vortex_field_modifier(
+            obj: &NiPSysVortexFieldModifier,
+        ) -> &NiPSysFieldModifier;
+        fn downcast_ni_psys_vortex_field_modifier(
+            obj: &NiObject,
+        ) -> *const NiPSysVortexFieldModifier;
+        fn upcast_ni_psys_gravity_field_modifier(
+            obj: &NiPSysGravityFieldModifier,
+        ) -> &NiPSysFieldModifier;
+        fn downcast_ni_psys_gravity_field_modifier(
+            obj: &NiObject,
+        ) -> *const NiPSysGravityFieldModifier;
+        fn upcast_ni_psys_drag_field_modifier(
+            obj: &NiPSysDragFieldModifier,
+        ) -> &NiPSysFieldModifier;
         fn downcast_ni_psys_drag_field_modifier(obj: &NiObject) -> *const NiPSysDragFieldModifier;
-        fn upcast_ni_psys_turbulence_field_modifier(obj: &NiPSysTurbulenceFieldModifier) -> &NiPSysFieldModifier;
-        fn downcast_ni_psys_turbulence_field_modifier(obj: &NiObject) -> *const NiPSysTurbulenceFieldModifier;
+        fn upcast_ni_psys_turbulence_field_modifier(
+            obj: &NiPSysTurbulenceFieldModifier,
+        ) -> &NiPSysFieldModifier;
+        fn downcast_ni_psys_turbulence_field_modifier(
+            obj: &NiObject,
+        ) -> *const NiPSysTurbulenceFieldModifier;
         fn upcast_ni_psys_air_field_modifier(obj: &NiPSysAirFieldModifier) -> &NiPSysFieldModifier;
         fn downcast_ni_psys_air_field_modifier(obj: &NiObject) -> *const NiPSysAirFieldModifier;
-        fn upcast_ni_psys_radial_field_modifier(obj: &NiPSysRadialFieldModifier) -> &NiPSysFieldModifier;
-        fn downcast_ni_psys_radial_field_modifier(obj: &NiObject) -> *const NiPSysRadialFieldModifier;
+        fn upcast_ni_psys_radial_field_modifier(
+            obj: &NiPSysRadialFieldModifier,
+        ) -> &NiPSysFieldModifier;
+        fn downcast_ni_psys_radial_field_modifier(
+            obj: &NiObject,
+        ) -> *const NiPSysRadialFieldModifier;
         fn upcast_bs_wind_modifier(obj: &BSWindModifier) -> &NiPSysModifier;
         fn downcast_bs_wind_modifier(obj: &NiObject) -> *const BSWindModifier;
-        fn upcast_bs_psys_recycle_bound_modifier(obj: &BSPSysRecycleBoundModifier) -> &NiPSysModifier;
-        fn downcast_bs_psys_recycle_bound_modifier(obj: &NiObject) -> *const BSPSysRecycleBoundModifier;
-        fn upcast_bs_psys_havok_update_modifier(obj: &BSPSysHavokUpdateModifier) -> &NiPSysModifier;
-        fn downcast_bs_psys_havok_update_modifier(obj: &NiObject) -> *const BSPSysHavokUpdateModifier;
+        fn upcast_bs_psys_recycle_bound_modifier(
+            obj: &BSPSysRecycleBoundModifier,
+        ) -> &NiPSysModifier;
+        fn downcast_bs_psys_recycle_bound_modifier(
+            obj: &NiObject,
+        ) -> *const BSPSysRecycleBoundModifier;
+        fn upcast_bs_psys_havok_update_modifier(obj: &BSPSysHavokUpdateModifier)
+        -> &NiPSysModifier;
+        fn downcast_bs_psys_havok_update_modifier(
+            obj: &NiObject,
+        ) -> *const BSPSysHavokUpdateModifier;
         fn upcast_bs_parent_velocity_modifier(obj: &BSParentVelocityModifier) -> &NiPSysModifier;
         fn downcast_bs_parent_velocity_modifier(obj: &NiObject) -> *const BSParentVelocityModifier;
         fn upcast_ni_psys_collider_manager(obj: &NiPSysColliderManager) -> &NiPSysModifier;
@@ -222,8 +265,12 @@ pub mod ffi {
         fn downcast_ni_psys_planar_collider(obj: &NiObject) -> *const NiPSysPlanarCollider;
         fn upcast_ni_psys_emitter_ctlr(obj: &NiPSysEmitterCtlr) -> &NiPSysModifierCtlr;
         fn downcast_ni_psys_emitter_ctlr(obj: &NiObject) -> *const NiPSysEmitterCtlr;
-        fn upcast_bs_psys_multi_target_emitter_ctlr(obj: &BSPSysMultiTargetEmitterCtlr) -> &NiPSysEmitterCtlr;
-        fn downcast_bs_psys_multi_target_emitter_ctlr(obj: &NiObject) -> *const BSPSysMultiTargetEmitterCtlr;
+        fn upcast_bs_psys_multi_target_emitter_ctlr(
+            obj: &BSPSysMultiTargetEmitterCtlr,
+        ) -> &NiPSysEmitterCtlr;
+        fn downcast_bs_psys_multi_target_emitter_ctlr(
+            obj: &NiObject,
+        ) -> *const BSPSysMultiTargetEmitterCtlr;
         fn upcast_ni_particle_modifier(obj: &NiParticleModifier) -> &NiObject;
         fn downcast_ni_particle_modifier(obj: &NiObject) -> *const NiParticleModifier;
         fn upcast_ni_gravity(obj: &NiGravity) -> &NiParticleModifier;
@@ -246,9 +293,15 @@ pub mod ffi {
         fn downcast_ni_spherical_collider(obj: &NiObject) -> *const NiSphericalCollider;
         fn upcast_ni_emitter_modifier(obj: &NiEmitterModifier) -> &NiObject;
         fn downcast_ni_emitter_modifier(obj: &NiObject) -> *const NiEmitterModifier;
-        fn upcast_ni_particle_system_controller(obj: &NiParticleSystemController) -> &NiTimeController;
-        fn downcast_ni_particle_system_controller(obj: &NiObject) -> *const NiParticleSystemController;
-        fn upcast_ni_bsp_array_controller(obj: &NiBSPArrayController) -> &NiParticleSystemController;
+        fn upcast_ni_particle_system_controller(
+            obj: &NiParticleSystemController,
+        ) -> &NiTimeController;
+        fn downcast_ni_particle_system_controller(
+            obj: &NiObject,
+        ) -> *const NiParticleSystemController;
+        fn upcast_ni_bsp_array_controller(
+            obj: &NiBSPArrayController,
+        ) -> &NiParticleSystemController;
         fn downcast_ni_bsp_array_controller(obj: &NiObject) -> *const NiBSPArrayController;
         // Plain fields.
         fn particles_data_particle_radius(obj: &NiParticlesData) -> f32;
@@ -310,7 +363,10 @@ pub mod ffi {
         fn particle_system_active_material(obj: &NiParticleSystem) -> i32;
         fn set_particle_system_active_material(obj: Pin<&mut NiParticleSystem>, value: i32);
         fn particle_system_default_material_update_flag(obj: &NiParticleSystem) -> u8;
-        fn set_particle_system_default_material_update_flag(obj: Pin<&mut NiParticleSystem>, value: u8);
+        fn set_particle_system_default_material_update_flag(
+            obj: Pin<&mut NiParticleSystem>,
+            value: u8,
+        );
         fn particle_system_shader_implementation(obj: &NiParticleSystem) -> u32;
         fn set_particle_system_shader_implementation(obj: Pin<&mut NiParticleSystem>, value: u32);
         fn psys_modifier_order(obj: &NiPSysModifier) -> u32;
@@ -318,7 +374,10 @@ pub mod ffi {
         fn psys_modifier_active(obj: &NiPSysModifier) -> bool;
         fn set_psys_modifier_active(obj: Pin<&mut NiPSysModifier>, value: bool);
         fn strip_update_modifier_update_delta_time(obj: &BSPSysStripUpdateModifier) -> f32;
-        fn set_strip_update_modifier_update_delta_time(obj: Pin<&mut BSPSysStripUpdateModifier>, value: f32);
+        fn set_strip_update_modifier_update_delta_time(
+            obj: Pin<&mut BSPSysStripUpdateModifier>,
+            value: f32,
+        );
         fn spawn_modifier_spawn_generations(obj: &NiPSysSpawnModifier) -> u16;
         fn set_spawn_modifier_spawn_generations(obj: Pin<&mut NiPSysSpawnModifier>, value: u16);
         fn spawn_modifier_percent_spawned(obj: &NiPSysSpawnModifier) -> f32;
@@ -336,7 +395,10 @@ pub mod ffi {
         fn spawn_modifier_life_span_variation(obj: &NiPSysSpawnModifier) -> f32;
         fn set_spawn_modifier_life_span_variation(obj: Pin<&mut NiPSysSpawnModifier>, value: f32);
         fn age_death_modifier_spawn_on_death(obj: &NiPSysAgeDeathModifier) -> bool;
-        fn set_age_death_modifier_spawn_on_death(obj: Pin<&mut NiPSysAgeDeathModifier>, value: bool);
+        fn set_age_death_modifier_spawn_on_death(
+            obj: Pin<&mut NiPSysAgeDeathModifier>,
+            value: bool,
+        );
         fn lod_modifier_lod_begin_distance(obj: &BSPSysLODModifier) -> f32;
         fn set_lod_modifier_lod_begin_distance(obj: Pin<&mut BSPSysLODModifier>, value: f32);
         fn lod_modifier_lod_end_distance(obj: &BSPSysLODModifier) -> f32;
@@ -346,39 +408,81 @@ pub mod ffi {
         fn lod_modifier_end_size(obj: &BSPSysLODModifier) -> f32;
         fn set_lod_modifier_end_size(obj: Pin<&mut BSPSysLODModifier>, value: f32);
         fn simple_color_modifier_fade_in_percent(obj: &BSPSysSimpleColorModifier) -> f32;
-        fn set_simple_color_modifier_fade_in_percent(obj: Pin<&mut BSPSysSimpleColorModifier>, value: f32);
+        fn set_simple_color_modifier_fade_in_percent(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            value: f32,
+        );
         fn simple_color_modifier_fade_out_percent(obj: &BSPSysSimpleColorModifier) -> f32;
-        fn set_simple_color_modifier_fade_out_percent(obj: Pin<&mut BSPSysSimpleColorModifier>, value: f32);
+        fn set_simple_color_modifier_fade_out_percent(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            value: f32,
+        );
         fn simple_color_modifier_color_1_end_percent(obj: &BSPSysSimpleColorModifier) -> f32;
-        fn set_simple_color_modifier_color_1_end_percent(obj: Pin<&mut BSPSysSimpleColorModifier>, value: f32);
+        fn set_simple_color_modifier_color_1_end_percent(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            value: f32,
+        );
         fn simple_color_modifier_color_2_start_percent(obj: &BSPSysSimpleColorModifier) -> f32;
-        fn set_simple_color_modifier_color_2_start_percent(obj: Pin<&mut BSPSysSimpleColorModifier>, value: f32);
+        fn set_simple_color_modifier_color_2_start_percent(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            value: f32,
+        );
         fn simple_color_modifier_color_2_end_percent(obj: &BSPSysSimpleColorModifier) -> f32;
-        fn set_simple_color_modifier_color_2_end_percent(obj: Pin<&mut BSPSysSimpleColorModifier>, value: f32);
+        fn set_simple_color_modifier_color_2_end_percent(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            value: f32,
+        );
         fn simple_color_modifier_color_3_start_percent(obj: &BSPSysSimpleColorModifier) -> f32;
-        fn set_simple_color_modifier_color_3_start_percent(obj: Pin<&mut BSPSysSimpleColorModifier>, value: f32);
+        fn set_simple_color_modifier_color_3_start_percent(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            value: f32,
+        );
         fn simple_color_modifier_color_1(obj: &BSPSysSimpleColorModifier) -> [f32; 4];
-        fn set_simple_color_modifier_color_1(obj: Pin<&mut BSPSysSimpleColorModifier>, value: [f32; 4]);
+        fn set_simple_color_modifier_color_1(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            value: [f32; 4],
+        );
         fn simple_color_modifier_color_2(obj: &BSPSysSimpleColorModifier) -> [f32; 4];
-        fn set_simple_color_modifier_color_2(obj: Pin<&mut BSPSysSimpleColorModifier>, value: [f32; 4]);
+        fn set_simple_color_modifier_color_2(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            value: [f32; 4],
+        );
         fn simple_color_modifier_color_3(obj: &BSPSysSimpleColorModifier) -> [f32; 4];
-        fn set_simple_color_modifier_color_3(obj: Pin<&mut BSPSysSimpleColorModifier>, value: [f32; 4]);
+        fn set_simple_color_modifier_color_3(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            value: [f32; 4],
+        );
         fn rotation_modifier_initial_speed(obj: &NiPSysRotationModifier) -> f32;
         fn set_rotation_modifier_initial_speed(obj: Pin<&mut NiPSysRotationModifier>, value: f32);
         fn rotation_modifier_initial_speed_variation(obj: &NiPSysRotationModifier) -> f32;
-        fn set_rotation_modifier_initial_speed_variation(obj: Pin<&mut NiPSysRotationModifier>, value: f32);
+        fn set_rotation_modifier_initial_speed_variation(
+            obj: Pin<&mut NiPSysRotationModifier>,
+            value: f32,
+        );
         fn rotation_modifier_unknown_vector(obj: &NiPSysRotationModifier) -> [f32; 4];
-        fn set_rotation_modifier_unknown_vector(obj: Pin<&mut NiPSysRotationModifier>, value: [f32; 4]);
+        fn set_rotation_modifier_unknown_vector(
+            obj: Pin<&mut NiPSysRotationModifier>,
+            value: [f32; 4],
+        );
         fn rotation_modifier_unknown_byte(obj: &NiPSysRotationModifier) -> u8;
         fn set_rotation_modifier_unknown_byte(obj: Pin<&mut NiPSysRotationModifier>, value: u8);
         fn rotation_modifier_initial_angle(obj: &NiPSysRotationModifier) -> f32;
         fn set_rotation_modifier_initial_angle(obj: Pin<&mut NiPSysRotationModifier>, value: f32);
         fn rotation_modifier_initial_angle_variation(obj: &NiPSysRotationModifier) -> f32;
-        fn set_rotation_modifier_initial_angle_variation(obj: Pin<&mut NiPSysRotationModifier>, value: f32);
+        fn set_rotation_modifier_initial_angle_variation(
+            obj: Pin<&mut NiPSysRotationModifier>,
+            value: f32,
+        );
         fn rotation_modifier_random_speed_sign(obj: &NiPSysRotationModifier) -> bool;
-        fn set_rotation_modifier_random_speed_sign(obj: Pin<&mut NiPSysRotationModifier>, value: bool);
+        fn set_rotation_modifier_random_speed_sign(
+            obj: Pin<&mut NiPSysRotationModifier>,
+            value: bool,
+        );
         fn rotation_modifier_random_initial_axis(obj: &NiPSysRotationModifier) -> bool;
-        fn set_rotation_modifier_random_initial_axis(obj: Pin<&mut NiPSysRotationModifier>, value: bool);
+        fn set_rotation_modifier_random_initial_axis(
+            obj: Pin<&mut NiPSysRotationModifier>,
+            value: bool,
+        );
         fn rotation_modifier_initial_axis(obj: &NiPSysRotationModifier) -> Vec3;
         fn set_rotation_modifier_initial_axis(obj: Pin<&mut NiPSysRotationModifier>, value: Vec3);
         fn gravity_modifier_gravity_axis(obj: &NiPSysGravityModifier) -> Vec3;
@@ -396,7 +500,10 @@ pub mod ffi {
         fn gravity_modifier_world_aligned(obj: &NiPSysGravityModifier) -> bool;
         fn set_gravity_modifier_world_aligned(obj: Pin<&mut NiPSysGravityModifier>, value: bool);
         fn bound_update_modifier_update_skip(obj: &NiPSysBoundUpdateModifier) -> u16;
-        fn set_bound_update_modifier_update_skip(obj: Pin<&mut NiPSysBoundUpdateModifier>, value: u16);
+        fn set_bound_update_modifier_update_skip(
+            obj: Pin<&mut NiPSysBoundUpdateModifier>,
+            value: u16,
+        );
         fn drag_modifier_drag_axis(obj: &NiPSysDragModifier) -> Vec3;
         fn set_drag_modifier_drag_axis(obj: Pin<&mut NiPSysDragModifier>, value: Vec3);
         fn drag_modifier_percentage(obj: &NiPSysDragModifier) -> f32;
@@ -406,25 +513,46 @@ pub mod ffi {
         fn drag_modifier_range_falloff(obj: &NiPSysDragModifier) -> f32;
         fn set_drag_modifier_range_falloff(obj: Pin<&mut NiPSysDragModifier>, value: f32);
         fn inherit_velocity_modifier_change_to_inherit(obj: &BSPSysInheritVelocityModifier) -> f32;
-        fn set_inherit_velocity_modifier_change_to_inherit(obj: Pin<&mut BSPSysInheritVelocityModifier>, value: f32);
-        fn inherit_velocity_modifier_velocity_multiplier(obj: &BSPSysInheritVelocityModifier) -> f32;
-        fn set_inherit_velocity_modifier_velocity_multiplier(obj: Pin<&mut BSPSysInheritVelocityModifier>, value: f32);
-        fn inherit_velocity_modifier_velocity_variation(obj: &BSPSysInheritVelocityModifier) -> f32;
-        fn set_inherit_velocity_modifier_velocity_variation(obj: Pin<&mut BSPSysInheritVelocityModifier>, value: f32);
+        fn set_inherit_velocity_modifier_change_to_inherit(
+            obj: Pin<&mut BSPSysInheritVelocityModifier>,
+            value: f32,
+        );
+        fn inherit_velocity_modifier_velocity_multiplier(
+            obj: &BSPSysInheritVelocityModifier,
+        ) -> f32;
+        fn set_inherit_velocity_modifier_velocity_multiplier(
+            obj: Pin<&mut BSPSysInheritVelocityModifier>,
+            value: f32,
+        );
+        fn inherit_velocity_modifier_velocity_variation(obj: &BSPSysInheritVelocityModifier)
+        -> f32;
+        fn set_inherit_velocity_modifier_velocity_variation(
+            obj: Pin<&mut BSPSysInheritVelocityModifier>,
+            value: f32,
+        );
         fn sub_tex_modifier_start_frame(obj: &BSPSysSubTexModifier) -> f32;
         fn set_sub_tex_modifier_start_frame(obj: Pin<&mut BSPSysSubTexModifier>, value: f32);
         fn sub_tex_modifier_start_frame_variation(obj: &BSPSysSubTexModifier) -> f32;
-        fn set_sub_tex_modifier_start_frame_variation(obj: Pin<&mut BSPSysSubTexModifier>, value: f32);
+        fn set_sub_tex_modifier_start_frame_variation(
+            obj: Pin<&mut BSPSysSubTexModifier>,
+            value: f32,
+        );
         fn sub_tex_modifier_end_frame(obj: &BSPSysSubTexModifier) -> f32;
         fn set_sub_tex_modifier_end_frame(obj: Pin<&mut BSPSysSubTexModifier>, value: f32);
         fn sub_tex_modifier_loop_start_frame(obj: &BSPSysSubTexModifier) -> f32;
         fn set_sub_tex_modifier_loop_start_frame(obj: Pin<&mut BSPSysSubTexModifier>, value: f32);
         fn sub_tex_modifier_loop_start_frame_variation(obj: &BSPSysSubTexModifier) -> f32;
-        fn set_sub_tex_modifier_loop_start_frame_variation(obj: Pin<&mut BSPSysSubTexModifier>, value: f32);
+        fn set_sub_tex_modifier_loop_start_frame_variation(
+            obj: Pin<&mut BSPSysSubTexModifier>,
+            value: f32,
+        );
         fn sub_tex_modifier_frame_count(obj: &BSPSysSubTexModifier) -> f32;
         fn set_sub_tex_modifier_frame_count(obj: Pin<&mut BSPSysSubTexModifier>, value: f32);
         fn sub_tex_modifier_frame_count_variation(obj: &BSPSysSubTexModifier) -> f32;
-        fn set_sub_tex_modifier_frame_count_variation(obj: Pin<&mut BSPSysSubTexModifier>, value: f32);
+        fn set_sub_tex_modifier_frame_count_variation(
+            obj: Pin<&mut BSPSysSubTexModifier>,
+            value: f32,
+        );
         fn bomb_modifier_bomb_axis(obj: &NiPSysBombModifier) -> Vec3;
         fn set_bomb_modifier_bomb_axis(obj: Pin<&mut NiPSysBombModifier>, value: Vec3);
         fn bomb_modifier_decay(obj: &NiPSysBombModifier) -> f32;
@@ -438,11 +566,17 @@ pub mod ffi {
         fn grow_fade_modifier_grow_time(obj: &NiPSysGrowFadeModifier) -> f32;
         fn set_grow_fade_modifier_grow_time(obj: Pin<&mut NiPSysGrowFadeModifier>, value: f32);
         fn grow_fade_modifier_grow_generation(obj: &NiPSysGrowFadeModifier) -> u16;
-        fn set_grow_fade_modifier_grow_generation(obj: Pin<&mut NiPSysGrowFadeModifier>, value: u16);
+        fn set_grow_fade_modifier_grow_generation(
+            obj: Pin<&mut NiPSysGrowFadeModifier>,
+            value: u16,
+        );
         fn grow_fade_modifier_fade_time(obj: &NiPSysGrowFadeModifier) -> f32;
         fn set_grow_fade_modifier_fade_time(obj: Pin<&mut NiPSysGrowFadeModifier>, value: f32);
         fn grow_fade_modifier_fade_generation(obj: &NiPSysGrowFadeModifier) -> u16;
-        fn set_grow_fade_modifier_fade_generation(obj: Pin<&mut NiPSysGrowFadeModifier>, value: u16);
+        fn set_grow_fade_modifier_fade_generation(
+            obj: Pin<&mut NiPSysGrowFadeModifier>,
+            value: u16,
+        );
         fn grow_fade_modifier_base_scale(obj: &NiPSysGrowFadeModifier) -> f32;
         fn set_grow_fade_modifier_base_scale(obj: Pin<&mut NiPSysGrowFadeModifier>, value: f32);
         fn field_modifier_magnitude(obj: &NiPSysFieldModifier) -> f32;
@@ -454,39 +588,72 @@ pub mod ffi {
         fn field_modifier_max_distance(obj: &NiPSysFieldModifier) -> f32;
         fn set_field_modifier_max_distance(obj: Pin<&mut NiPSysFieldModifier>, value: f32);
         fn vortex_field_modifier_direction(obj: &NiPSysVortexFieldModifier) -> Vec3;
-        fn set_vortex_field_modifier_direction(obj: Pin<&mut NiPSysVortexFieldModifier>, value: Vec3);
+        fn set_vortex_field_modifier_direction(
+            obj: Pin<&mut NiPSysVortexFieldModifier>,
+            value: Vec3,
+        );
         fn gravity_field_modifier_direction(obj: &NiPSysGravityFieldModifier) -> Vec3;
-        fn set_gravity_field_modifier_direction(obj: Pin<&mut NiPSysGravityFieldModifier>, value: Vec3);
+        fn set_gravity_field_modifier_direction(
+            obj: Pin<&mut NiPSysGravityFieldModifier>,
+            value: Vec3,
+        );
         fn drag_field_modifier_use_direction(obj: &NiPSysDragFieldModifier) -> bool;
-        fn set_drag_field_modifier_use_direction(obj: Pin<&mut NiPSysDragFieldModifier>, value: bool);
+        fn set_drag_field_modifier_use_direction(
+            obj: Pin<&mut NiPSysDragFieldModifier>,
+            value: bool,
+        );
         fn drag_field_modifier_direction(obj: &NiPSysDragFieldModifier) -> Vec3;
         fn set_drag_field_modifier_direction(obj: Pin<&mut NiPSysDragFieldModifier>, value: Vec3);
         fn turbulence_field_modifier_frequency(obj: &NiPSysTurbulenceFieldModifier) -> f32;
-        fn set_turbulence_field_modifier_frequency(obj: Pin<&mut NiPSysTurbulenceFieldModifier>, value: f32);
+        fn set_turbulence_field_modifier_frequency(
+            obj: Pin<&mut NiPSysTurbulenceFieldModifier>,
+            value: f32,
+        );
         fn air_field_modifier_direction(obj: &NiPSysAirFieldModifier) -> Vec3;
         fn set_air_field_modifier_direction(obj: Pin<&mut NiPSysAirFieldModifier>, value: Vec3);
         fn air_field_modifier_air_friction(obj: &NiPSysAirFieldModifier) -> f32;
         fn set_air_field_modifier_air_friction(obj: Pin<&mut NiPSysAirFieldModifier>, value: f32);
         fn air_field_modifier_inherit_velocity(obj: &NiPSysAirFieldModifier) -> f32;
-        fn set_air_field_modifier_inherit_velocity(obj: Pin<&mut NiPSysAirFieldModifier>, value: f32);
+        fn set_air_field_modifier_inherit_velocity(
+            obj: Pin<&mut NiPSysAirFieldModifier>,
+            value: f32,
+        );
         fn air_field_modifier_inherit_rotation(obj: &NiPSysAirFieldModifier) -> bool;
-        fn set_air_field_modifier_inherit_rotation(obj: Pin<&mut NiPSysAirFieldModifier>, value: bool);
+        fn set_air_field_modifier_inherit_rotation(
+            obj: Pin<&mut NiPSysAirFieldModifier>,
+            value: bool,
+        );
         fn air_field_modifier_component_only(obj: &NiPSysAirFieldModifier) -> bool;
-        fn set_air_field_modifier_component_only(obj: Pin<&mut NiPSysAirFieldModifier>, value: bool);
+        fn set_air_field_modifier_component_only(
+            obj: Pin<&mut NiPSysAirFieldModifier>,
+            value: bool,
+        );
         fn air_field_modifier_enable_spread(obj: &NiPSysAirFieldModifier) -> bool;
         fn set_air_field_modifier_enable_spread(obj: Pin<&mut NiPSysAirFieldModifier>, value: bool);
         fn air_field_modifier_spread(obj: &NiPSysAirFieldModifier) -> f32;
         fn set_air_field_modifier_spread(obj: Pin<&mut NiPSysAirFieldModifier>, value: f32);
         fn radial_field_modifier_radial_type(obj: &NiPSysRadialFieldModifier) -> u32;
-        fn set_radial_field_modifier_radial_type(obj: Pin<&mut NiPSysRadialFieldModifier>, value: u32);
+        fn set_radial_field_modifier_radial_type(
+            obj: Pin<&mut NiPSysRadialFieldModifier>,
+            value: u32,
+        );
         fn wind_modifier_strength(obj: &BSWindModifier) -> f32;
         fn set_wind_modifier_strength(obj: Pin<&mut BSWindModifier>, value: f32);
         fn recycle_bound_modifier_bound_offset(obj: &BSPSysRecycleBoundModifier) -> Vec3;
-        fn set_recycle_bound_modifier_bound_offset(obj: Pin<&mut BSPSysRecycleBoundModifier>, value: Vec3);
+        fn set_recycle_bound_modifier_bound_offset(
+            obj: Pin<&mut BSPSysRecycleBoundModifier>,
+            value: Vec3,
+        );
         fn recycle_bound_modifier_bound_extent(obj: &BSPSysRecycleBoundModifier) -> Vec3;
-        fn set_recycle_bound_modifier_bound_extent(obj: Pin<&mut BSPSysRecycleBoundModifier>, value: Vec3);
+        fn set_recycle_bound_modifier_bound_extent(
+            obj: Pin<&mut BSPSysRecycleBoundModifier>,
+            value: Vec3,
+        );
         fn parent_velocity_modifier_damping(obj: &BSParentVelocityModifier) -> f32;
-        fn set_parent_velocity_modifier_damping(obj: Pin<&mut BSParentVelocityModifier>, value: f32);
+        fn set_parent_velocity_modifier_damping(
+            obj: Pin<&mut BSParentVelocityModifier>,
+            value: f32,
+        );
         fn psys_emitter_speed(obj: &NiPSysEmitter) -> f32;
         fn set_psys_emitter_speed(obj: Pin<&mut NiPSysEmitter>, value: f32);
         fn psys_emitter_speed_variation(obj: &NiPSysEmitter) -> f32;
@@ -544,7 +711,10 @@ pub mod ffi {
         fn planar_collider_y_axis(obj: &NiPSysPlanarCollider) -> Vec3;
         fn set_planar_collider_y_axis(obj: Pin<&mut NiPSysPlanarCollider>, value: Vec3);
         fn multi_target_emitter_ctlr_max_emitters(obj: &BSPSysMultiTargetEmitterCtlr) -> u16;
-        fn set_multi_target_emitter_ctlr_max_emitters(obj: Pin<&mut BSPSysMultiTargetEmitterCtlr>, value: u16);
+        fn set_multi_target_emitter_ctlr_max_emitters(
+            obj: Pin<&mut BSPSysMultiTargetEmitterCtlr>,
+            value: u16,
+        );
         // Per-particle lists.
         fn set_particles_data_vertex_count(obj: Pin<&mut NiParticlesData>, count: u16);
         fn particles_data_radii(obj: &NiParticlesData) -> &[f32];
@@ -552,7 +722,10 @@ pub mod ffi {
         fn particles_data_sizes(obj: &NiParticlesData) -> &[f32];
         fn set_particles_data_sizes(obj: Pin<&mut NiParticlesData>, values: &[f32]) -> bool;
         fn particles_data_rotation_angles(obj: &NiParticlesData) -> &[f32];
-        fn set_particles_data_rotation_angles(obj: Pin<&mut NiParticlesData>, values: &[f32]) -> bool;
+        fn set_particles_data_rotation_angles(
+            obj: Pin<&mut NiParticlesData>,
+            values: &[f32],
+        ) -> bool;
         fn particles_data_rotations(obj: &NiParticlesData) -> Vec<f32>;
         fn set_particles_data_rotations(obj: Pin<&mut NiParticlesData>, xyzw: &[f32]) -> bool;
         fn particles_data_rotation_axes(obj: &NiParticlesData) -> Vec<Vec3>;
@@ -562,15 +735,22 @@ pub mod ffi {
         fn psys_data_rotation_speeds(obj: &NiPSysData) -> &[f32];
         fn set_psys_data_rotation_speeds(obj: Pin<&mut NiPSysData>, values: &[f32]) -> bool;
         fn psys_data_particle_info(obj: &NiPSysData) -> Vec<ParticleInfoFfi>;
-        fn set_psys_data_particle_info(obj: Pin<&mut NiPSysData>, info: &[ParticleInfoFfi]) -> bool;
+        fn set_psys_data_particle_info(obj: Pin<&mut NiPSysData>, info: &[ParticleInfoFfi])
+        -> bool;
         fn mesh_psys_data_generation_pool_sizes(obj: &NiMeshPSysData) -> Vec<u32>;
         fn set_mesh_psys_data_generation_pool_sizes(obj: Pin<&mut NiMeshPSysData>, sizes: &[u32]);
 
         // NiPSysEmitterCtlrData.
         fn emitter_ctlr_data_keys(obj: &NiPSysEmitterCtlrData) -> KeyGroupFfi;
-        fn set_emitter_ctlr_data_keys(obj: Pin<&mut NiPSysEmitterCtlrData>, group: &KeyGroupFfi) -> bool;
+        fn set_emitter_ctlr_data_keys(
+            obj: Pin<&mut NiPSysEmitterCtlrData>,
+            group: &KeyGroupFfi,
+        ) -> bool;
         fn emitter_ctlr_data_visibility_keys(obj: &NiPSysEmitterCtlrData) -> Vec<KeyFfi>;
-        fn set_emitter_ctlr_data_visibility_keys(obj: Pin<&mut NiPSysEmitterCtlrData>, keys: &[KeyFfi]);
+        fn set_emitter_ctlr_data_visibility_keys(
+            obj: Pin<&mut NiPSysEmitterCtlrData>,
+            keys: &[KeyFfi],
+        );
 
         // NiParticleSystem.
         fn particle_system_vertex_raw_flags(obj: &NiParticleSystem) -> [u8; 8];
@@ -582,7 +762,12 @@ pub mod ffi {
         fn particle_system_material_count(obj: &NiParticleSystem) -> usize;
         fn particle_system_material_name(obj: &NiParticleSystem, i: usize) -> &[u8];
         fn particle_system_material_extra_data(obj: &NiParticleSystem) -> &[u32];
-        fn set_particle_system_materials(obj: Pin<&mut NiParticleSystem>, bytes: &[u8], lengths: &[usize], extra_data: &[u32]);
+        fn set_particle_system_materials(
+            obj: Pin<&mut NiParticleSystem>,
+            bytes: &[u8],
+            lengths: &[usize],
+            extra_data: &[u32],
+        );
         fn particle_system_has_shader(obj: &NiParticleSystem) -> bool;
         fn particle_system_shader_name(obj: &NiParticleSystem) -> &[u8];
         fn set_particle_system_shader(obj: Pin<&mut NiParticleSystem>, has: bool, name: &[u8]);
@@ -609,7 +794,10 @@ pub mod ffi {
         fn grow_fade_fade(obj: &NiParticleGrowFade) -> f32;
         fn set_grow_fade_fade(obj: Pin<&mut NiParticleGrowFade>, value: f32);
         fn particle_rotation_random_initial_axis(obj: &NiParticleRotation) -> bool;
-        fn set_particle_rotation_random_initial_axis(obj: Pin<&mut NiParticleRotation>, value: bool);
+        fn set_particle_rotation_random_initial_axis(
+            obj: Pin<&mut NiParticleRotation>,
+            value: bool,
+        );
         fn particle_rotation_initial_axis(obj: &NiParticleRotation) -> Vec3;
         fn set_particle_rotation_initial_axis(obj: Pin<&mut NiParticleRotation>, value: Vec3);
         fn particle_rotation_rotation_speed(obj: &NiParticleRotation) -> f32;
@@ -653,62 +841,138 @@ pub mod ffi {
         fn particle_system_ctlr_speed(obj: &NiParticleSystemController) -> f32;
         fn set_particle_system_ctlr_speed(obj: Pin<&mut NiParticleSystemController>, value: f32);
         fn particle_system_ctlr_speed_variation(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_speed_variation(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_speed_variation(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_declination(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_declination(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_declination(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_declination_variation(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_declination_variation(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_declination_variation(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_planar_angle(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_planar_angle(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_planar_angle(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_planar_angle_variation(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_planar_angle_variation(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_planar_angle_variation(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_initial_normal(obj: &NiParticleSystemController) -> Vec3;
-        fn set_particle_system_ctlr_initial_normal(obj: Pin<&mut NiParticleSystemController>, value: Vec3);
+        fn set_particle_system_ctlr_initial_normal(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: Vec3,
+        );
         fn particle_system_ctlr_initial_color(obj: &NiParticleSystemController) -> [f32; 4];
-        fn set_particle_system_ctlr_initial_color(obj: Pin<&mut NiParticleSystemController>, value: [f32; 4]);
+        fn set_particle_system_ctlr_initial_color(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: [f32; 4],
+        );
         fn particle_system_ctlr_initial_size(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_initial_size(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_initial_size(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_emit_start_time(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_emit_start_time(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_emit_start_time(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_emit_stop_time(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_emit_stop_time(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_emit_stop_time(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_reset_particle_system(obj: &NiParticleSystemController) -> bool;
-        fn set_particle_system_ctlr_reset_particle_system(obj: Pin<&mut NiParticleSystemController>, value: bool);
+        fn set_particle_system_ctlr_reset_particle_system(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: bool,
+        );
         fn particle_system_ctlr_birth_rate(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_birth_rate(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_birth_rate(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_lifetime(obj: &NiParticleSystemController) -> f32;
         fn set_particle_system_ctlr_lifetime(obj: Pin<&mut NiParticleSystemController>, value: f32);
         fn particle_system_ctlr_lifetime_variation(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_lifetime_variation(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_lifetime_variation(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_use_birth_rate(obj: &NiParticleSystemController) -> bool;
-        fn set_particle_system_ctlr_use_birth_rate(obj: Pin<&mut NiParticleSystemController>, value: bool);
+        fn set_particle_system_ctlr_use_birth_rate(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: bool,
+        );
         fn particle_system_ctlr_spawn_on_death(obj: &NiParticleSystemController) -> bool;
-        fn set_particle_system_ctlr_spawn_on_death(obj: Pin<&mut NiParticleSystemController>, value: bool);
+        fn set_particle_system_ctlr_spawn_on_death(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: bool,
+        );
         fn particle_system_ctlr_emitter_dimensions(obj: &NiParticleSystemController) -> Vec3;
-        fn set_particle_system_ctlr_emitter_dimensions(obj: Pin<&mut NiParticleSystemController>, value: Vec3);
+        fn set_particle_system_ctlr_emitter_dimensions(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: Vec3,
+        );
         fn particle_system_ctlr_spawn_generations(obj: &NiParticleSystemController) -> u16;
-        fn set_particle_system_ctlr_spawn_generations(obj: Pin<&mut NiParticleSystemController>, value: u16);
+        fn set_particle_system_ctlr_spawn_generations(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: u16,
+        );
         fn particle_system_ctlr_percent_spawned(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_percent_spawned(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_percent_spawned(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_spawn_multiplier(obj: &NiParticleSystemController) -> u16;
-        fn set_particle_system_ctlr_spawn_multiplier(obj: Pin<&mut NiParticleSystemController>, value: u16);
+        fn set_particle_system_ctlr_spawn_multiplier(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: u16,
+        );
         fn particle_system_ctlr_spawn_speed_chaos(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_spawn_speed_chaos(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_spawn_speed_chaos(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_spawn_direction_chaos(obj: &NiParticleSystemController) -> f32;
-        fn set_particle_system_ctlr_spawn_direction_chaos(obj: Pin<&mut NiParticleSystemController>, value: f32);
+        fn set_particle_system_ctlr_spawn_direction_chaos(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: f32,
+        );
         fn particle_system_ctlr_active_count(obj: &NiParticleSystemController) -> u16;
-        fn set_particle_system_ctlr_active_count(obj: Pin<&mut NiParticleSystemController>, value: u16);
+        fn set_particle_system_ctlr_active_count(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: u16,
+        );
         fn particle_system_ctlr_static_target_bound(obj: &NiParticleSystemController) -> bool;
-        fn set_particle_system_ctlr_static_target_bound(obj: Pin<&mut NiParticleSystemController>, value: bool);
+        fn set_particle_system_ctlr_static_target_bound(
+            obj: Pin<&mut NiParticleSystemController>,
+            value: bool,
+        );
         fn old_planar_collider_plane_normal(obj: &NiPlanarCollider) -> Vec3;
         fn set_old_planar_collider_plane_normal(obj: Pin<&mut NiPlanarCollider>, value: Vec3);
         fn old_planar_collider_plane_constant(obj: &NiPlanarCollider) -> f32;
         fn set_old_planar_collider_plane_constant(obj: Pin<&mut NiPlanarCollider>, value: f32);
         fn rotating_particles_data_has_rotations_2(obj: &NiRotatingParticlesData) -> bool;
-        fn set_rotating_particles_data_has_rotations_2(obj: Pin<&mut NiRotatingParticlesData>, value: bool);
+        fn set_rotating_particles_data_has_rotations_2(
+            obj: Pin<&mut NiRotatingParticlesData>,
+            value: bool,
+        );
         fn rotating_particles_data_rotations_2(obj: &NiRotatingParticlesData) -> Vec<f32>;
-        fn set_rotating_particles_data_rotations_2(obj: Pin<&mut NiRotatingParticlesData>, xyzw: &[f32]) -> bool;
-        fn particle_system_ctlr_particles(obj: &NiParticleSystemController) -> Vec<ParticleInfoFfi>;
+        fn set_rotating_particles_data_rotations_2(
+            obj: Pin<&mut NiRotatingParticlesData>,
+            xyzw: &[f32],
+        ) -> bool;
+        fn particle_system_ctlr_particles(obj: &NiParticleSystemController)
+        -> Vec<ParticleInfoFfi>;
         fn set_particle_system_ctlr_particles(
             obj: Pin<&mut NiParticleSystemController>,
             info: &[ParticleInfoFfi],
@@ -716,44 +980,117 @@ pub mod ffi {
 
         // Modifier lists.
         fn simple_color_modifier_unknown_shorts(obj: &BSPSysSimpleColorModifier) -> [u16; 26];
-        fn set_simple_color_modifier_unknown_shorts(obj: Pin<&mut BSPSysSimpleColorModifier>, values: [u16; 26]);
+        fn set_simple_color_modifier_unknown_shorts(
+            obj: Pin<&mut BSPSysSimpleColorModifier>,
+            values: [u16; 26],
+        );
         fn scale_modifier_scales(obj: &BSPSysScaleModifier) -> Vec<f32>;
         fn set_scale_modifier_scales(obj: Pin<&mut BSPSysScaleModifier>, scales: &[f32]);
 
         // Creation.
-        fn add_ni_particle_system(file: Pin<&mut NifFile>, parent: u32, name: &[u8], transform: Transform) -> u32;
-        fn add_ni_mesh_particle_system(file: Pin<&mut NifFile>, parent: u32, name: &[u8], transform: Transform) -> u32;
-        fn add_bs_strip_particle_system(file: Pin<&mut NifFile>, parent: u32, name: &[u8], transform: Transform) -> u32;
+        fn add_ni_particle_system(
+            file: Pin<&mut NifFile>,
+            parent: u32,
+            name: &[u8],
+            transform: Transform,
+        ) -> u32;
+        fn add_ni_mesh_particle_system(
+            file: Pin<&mut NifFile>,
+            parent: u32,
+            name: &[u8],
+            transform: Transform,
+        ) -> u32;
+        fn add_bs_strip_particle_system(
+            file: Pin<&mut NifFile>,
+            parent: u32,
+            name: &[u8],
+            transform: Transform,
+        ) -> u32;
         fn add_ni_psys_spherical_collider(file: Pin<&mut NifFile>, manager: u32) -> u32;
         fn add_ni_psys_planar_collider(file: Pin<&mut NifFile>, manager: u32) -> u32;
         fn add_ni_psys_emitter_ctlr_data(file: Pin<&mut NifFile>) -> u32;
-        fn add_bs_psys_strip_update_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
+        fn add_bs_psys_strip_update_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
         fn add_ni_psys_spawn_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_age_death_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
+        fn add_ni_psys_age_death_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8])
+        -> u32;
         fn add_bs_psys_lod_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_bs_psys_simple_color_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
+        fn add_bs_psys_simple_color_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
         fn add_ni_psys_rotation_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
         fn add_bs_psys_scale_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
         fn add_ni_psys_gravity_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
         fn add_ni_psys_position_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_bound_update_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
+        fn add_ni_psys_bound_update_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
         fn add_ni_psys_drag_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_bs_psys_inherit_velocity_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
+        fn add_bs_psys_inherit_velocity_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
         fn add_bs_psys_sub_tex_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
         fn add_ni_psys_bomb_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
         fn add_ni_psys_color_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_grow_fade_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_mesh_update_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_vortex_field_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_gravity_field_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_drag_field_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_turbulence_field_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_air_field_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_ni_psys_radial_field_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
+        fn add_ni_psys_grow_fade_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8])
+        -> u32;
+        fn add_ni_psys_mesh_update_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
+        fn add_ni_psys_vortex_field_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
+        fn add_ni_psys_gravity_field_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
+        fn add_ni_psys_drag_field_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
+        fn add_ni_psys_turbulence_field_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
+        fn add_ni_psys_air_field_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8])
+        -> u32;
+        fn add_ni_psys_radial_field_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
         fn add_bs_wind_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_bs_psys_recycle_bound_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_bs_psys_havok_update_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
-        fn add_bs_parent_velocity_modifier(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
+        fn add_bs_psys_recycle_bound_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
+        fn add_bs_psys_havok_update_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
+        fn add_bs_parent_velocity_modifier(
+            file: Pin<&mut NifFile>,
+            system: u32,
+            name: &[u8],
+        ) -> u32;
         fn add_ni_psys_collider_manager(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
         fn add_ni_psys_sphere_emitter(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
         fn add_ni_psys_cylinder_emitter(file: Pin<&mut NifFile>, system: u32, name: &[u8]) -> u32;
@@ -784,10 +1121,30 @@ pub mod ffi {
         fn add_ni_psys_emitter_planar_angle_ctlr(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_ni_psys_emitter_planar_angle_var_ctlr(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_ni_psys_rot_dampening_ctlr(file: Pin<&mut NifFile>, owner: u32) -> u32;
-        fn add_ni_particles(file: Pin<&mut NifFile>, parent: u32, name: &[u8], transform: Transform) -> u32;
-        fn add_ni_auto_normal_particles(file: Pin<&mut NifFile>, parent: u32, name: &[u8], transform: Transform) -> u32;
-        fn add_ni_rotating_particles(file: Pin<&mut NifFile>, parent: u32, name: &[u8], transform: Transform) -> u32;
-        fn add_ni_particle_meshes(file: Pin<&mut NifFile>, parent: u32, name: &[u8], transform: Transform) -> u32;
+        fn add_ni_particles(
+            file: Pin<&mut NifFile>,
+            parent: u32,
+            name: &[u8],
+            transform: Transform,
+        ) -> u32;
+        fn add_ni_auto_normal_particles(
+            file: Pin<&mut NifFile>,
+            parent: u32,
+            name: &[u8],
+            transform: Transform,
+        ) -> u32;
+        fn add_ni_rotating_particles(
+            file: Pin<&mut NifFile>,
+            parent: u32,
+            name: &[u8],
+            transform: Transform,
+        ) -> u32;
+        fn add_ni_particle_meshes(
+            file: Pin<&mut NifFile>,
+            parent: u32,
+            name: &[u8],
+            transform: Transform,
+        ) -> u32;
         fn add_ni_gravity(file: Pin<&mut NifFile>, controller: u32) -> u32;
         fn add_ni_particle_grow_fade(file: Pin<&mut NifFile>, controller: u32) -> u32;
         fn add_ni_particle_color_modifier(file: Pin<&mut NifFile>, controller: u32) -> u32;

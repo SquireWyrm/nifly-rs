@@ -26,18 +26,18 @@ use nifly_sys::{
 };
 
 use crate::{
-    file::{block_index_to_ffi, index_from_ffi, Index},
+    file::{Index, block_index_to_ffi, index_from_ffi},
     geometry::{BsGeometry, NiShape, VertexWeight},
     object3d::BoundingSphere,
 };
 
+use crate::object3d::{Transform, Vec3};
 use crate::{
     handle::{Edit, View},
     iter::{BlockIter, RefIndices},
     nodes::NiNode,
     objects::{NiAvObject, NiObject},
 };
-use crate::object3d::{Transform, Vec3};
 
 ni_types! { ffi;
     /// Skinning data for an [`NiSkinInstance`]: the global-to-skin transform and per-bone
@@ -87,7 +87,8 @@ impl NiSkinData {
     /// `index` is out of range. Bones are in the skin instance's order.
     pub fn transform_skin_to_bone(&self, index: usize) -> Option<Transform> {
         let mut out = Transform::IDENTITY.to_ffi();
-        ffi::skin_data_transform_skin_to_bone(&self.0, index, &mut out).then(|| Transform::from_ffi(out))
+        ffi::skin_data_transform_skin_to_bone(&self.0, index, &mut out)
+            .then(|| Transform::from_ffi(out))
     }
 
     /// Whether the block stores per-bone vertex weights.
@@ -124,7 +125,13 @@ impl NiSkinData {
     pub fn vertex_weights(&self, index: usize) -> Option<Vec<VertexWeight>> {
         let (mut vertices, mut weights) = (Vec::new(), Vec::new());
         ffi::skin_data_vertex_weights(&self.0, index, &mut vertices, &mut weights).then_some(())?;
-        Some(vertices.into_iter().zip(weights).map(|(vertex, weight)| VertexWeight { vertex, weight }).collect())
+        Some(
+            vertices
+                .into_iter()
+                .zip(weights)
+                .map(|(vertex, weight)| VertexWeight { vertex, weight })
+                .collect(),
+        )
     }
 
     /// Replaces the [vertex weights](Self::vertex_weights) of bone `index` as given, without
@@ -137,7 +144,10 @@ impl NiSkinData {
     }
 }
 
-const ZERO_BOUNDS: BoundingSphere = BoundingSphere { center: Vec3::ZERO, radius: 0.0 };
+const ZERO_BOUNDS: BoundingSphere = BoundingSphere {
+    center: Vec3::ZERO,
+    radius: 0.0,
+};
 
 impl BsSkinBoneData {
     pub fn bone_count(&self) -> usize {
@@ -148,7 +158,8 @@ impl BsSkinBoneData {
     /// `index` is out of range. Bones are in the skin instance's order.
     pub fn transform_skin_to_bone(&self, index: usize) -> Option<Transform> {
         let mut out = Transform::IDENTITY.to_ffi();
-        ffi::skin_bone_data_transform_skin_to_bone(&self.0, index, &mut out).then(|| Transform::from_ffi(out))
+        ffi::skin_bone_data_transform_skin_to_bone(&self.0, index, &mut out)
+            .then(|| Transform::from_ffi(out))
     }
 
     /// The bounds of the vertices bone `index` affects, in its coordinates, or `None` if `index`
@@ -174,7 +185,10 @@ impl BsSkinBoneData {
 impl BsSkinInstance {
     /// Per-bone scales, usually one per bone, in the skin instance's order.
     pub fn scales(&self) -> Vec<Vec3> {
-        ffi::skin_instance_scales(&self.0).into_iter().map(Vec3::from_ffi).collect()
+        ffi::skin_instance_scales(&self.0)
+            .into_iter()
+            .map(Vec3::from_ffi)
+            .collect()
     }
 
     /// Sets the [scales](Self::scales). Not checked against the bone count.
@@ -196,7 +210,9 @@ impl BsDismemberSkinInstance {
 
     /// The flags of partition `index`, or `None` if `index` is out of range.
     pub fn flags(&self, index: usize) -> Option<PartitionFlags> {
-        (index < self.len()).then(|| PartitionFlags::from_bits_retain(ffi::dismember_partition_flags(&self.0, index)))
+        (index < self.len()).then(|| {
+            PartitionFlags::from_bits_retain(ffi::dismember_partition_flags(&self.0, index))
+        })
     }
 
     /// The body part of partition `index`, or `None` if `index` is out of range.
@@ -282,14 +298,22 @@ impl NiSkinPartition {
     /// The weights of each vertex in partition `index`, in [vertex map](Self::vertex_map) order,
     /// or `None` if `index` is out of range. Empty if the partition stores none.
     pub fn vertex_weights(&self, index: usize) -> Option<&[[f32; 4]]> {
-        (index < self.len()).then(|| ffi::skin_partition_vertex_weights(&self.0, index).as_chunks().0)
+        (index < self.len()).then(|| {
+            ffi::skin_partition_vertex_weights(&self.0, index)
+                .as_chunks()
+                .0
+        })
     }
 
     /// The bones of each weight in [`vertex_weights`](Self::vertex_weights), as positions in
     /// [`bones`](Self::bones), or `None` if `index` is out of range. Empty if the partition
     /// stores none.
     pub fn bone_indices(&self, index: usize) -> Option<&[[u8; 4]]> {
-        (index < self.len()).then(|| ffi::skin_partition_bone_indices(&self.0, index).as_chunks().0)
+        (index < self.len()).then(|| {
+            ffi::skin_partition_bone_indices(&self.0, index)
+                .as_chunks()
+                .0
+        })
     }
 
     /// The triangles of partition `index`, or `None` if `index` is out of range. Empty if the
@@ -415,7 +439,11 @@ impl NiSkinPartition {
     /// [triangle](Self::triangles), or `None` if `index` is out of range. Saved in Skyrim SE
     /// files only.
     pub fn true_triangles(&self, index: usize) -> Option<&[[u16; 3]]> {
-        (index < self.len()).then(|| ffi::skin_partition_true_triangles(&self.0, index).as_chunks().0)
+        (index < self.len()).then(|| {
+            ffi::skin_partition_true_triangles(&self.0, index)
+                .as_chunks()
+                .0
+        })
     }
 
     /// Sets the [true triangles](Self::true_triangles) of partition `index`. Returns `false`,
@@ -460,7 +488,8 @@ impl Edit<'_, NiBoneContainer> {
     /// [`NiAvObject`].
     pub fn set_root(&mut self, root: Index) -> bool {
         let skin = self.index() as u32;
-        block_index_to_ffi(root).is_some_and(|root| nif_ffi::set_skin_root(self.file_mut().inner.pin_mut(), skin, root))
+        block_index_to_ffi(root)
+            .is_some_and(|root| nif_ffi::set_skin_root(self.file_mut().inner.pin_mut(), skin, root))
     }
 }
 
@@ -606,9 +635,15 @@ impl<'a> View<'a, NiShape> {
         Some(ShapePartitions {
             partitions: info
                 .into_iter()
-                .map(|p| PartitionInfo { flags: PartitionFlags::from_bits_retain(p.flags), body_part: p.body_part })
+                .map(|p| PartitionInfo {
+                    flags: PartitionFlags::from_bits_retain(p.flags),
+                    body_part: p.body_part,
+                })
                 .collect(),
-            triangles: tri_parts.into_iter().map(|p| usize::try_from(p).ok()).collect(),
+            triangles: tri_parts
+                .into_iter()
+                .map(|p| usize::try_from(p).ok())
+                .collect(),
         })
     }
 
@@ -687,17 +722,28 @@ impl Edit<'_, NiShape> {
     ///
     /// [`BsTriShape`]: crate::geometry::BsTriShape
     /// [`BsGeometry`]: crate::geometry::BsGeometry
-    pub fn set_bone_weights(&mut self, bone_index: usize, weights: impl IntoIterator<Item = VertexWeight>) -> bool {
+    pub fn set_bone_weights(
+        &mut self,
+        bone_index: usize,
+        weights: impl IntoIterator<Item = VertexWeight>,
+    ) -> bool {
         let shape = self.index() as u32;
         let Ok(bone_index) = u32::try_from(bone_index) else {
             return false;
         };
-        let by_vertex: BTreeMap<u16, f32> = weights.into_iter().map(|w| (w.vertex, w.weight)).collect();
-        let weights: Vec<VertexWeight> =
-            by_vertex.into_iter().map(|(vertex, weight)| VertexWeight { vertex, weight }).collect();
-        nif_ffi::set_shape_bone_weights(self.file_mut().inner.pin_mut(), shape, bone_index, &weights)
+        let by_vertex: BTreeMap<u16, f32> =
+            weights.into_iter().map(|w| (w.vertex, w.weight)).collect();
+        let weights: Vec<VertexWeight> = by_vertex
+            .into_iter()
+            .map(|(vertex, weight)| VertexWeight { vertex, weight })
+            .collect();
+        nif_ffi::set_shape_bone_weights(
+            self.file_mut().inner.pin_mut(),
+            shape,
+            bone_index,
+            &weights,
+        )
     }
-
 
     /// Replaces the bones of the skinned shape with the nodes at these
     /// block indices, in order.
@@ -718,7 +764,11 @@ impl Edit<'_, NiShape> {
         let Some(shape) = block_index_to_ffi(shape) else {
             return false;
         };
-        let Some(ids) = bones.iter().map(|&b| block_index_to_ffi(b)).collect::<Option<Vec<u32>>>() else {
+        let Some(ids) = bones
+            .iter()
+            .map(|&b| block_index_to_ffi(b))
+            .collect::<Option<Vec<u32>>>()
+        else {
             return false;
         };
         nif_ffi::set_shape_bone_ids(file.inner.pin_mut(), shape, &ids)
@@ -740,13 +790,21 @@ impl Edit<'_, NiShape> {
             let Some(index) = block_index_to_ffi(shape) else {
                 return false;
             };
-            let bytes: Vec<u8> = names.iter().flat_map(|n| n.as_ref().iter().copied()).collect();
+            let bytes: Vec<u8> = names
+                .iter()
+                .flat_map(|n| n.as_ref().iter().copied())
+                .collect();
             let lengths: Vec<usize> = names.iter().map(|n| n.as_ref().len()).collect();
             return nif_ffi::set_shape_bone_names(file.inner.pin_mut(), index, &bytes, &lengths);
         }
         let ids: Option<Vec<Index>> = names
             .iter()
-            .map(|name| file.nodes().indexed().find(|(_, n)| n.name() == name.as_ref()).map(|(i, _)| i))
+            .map(|name| {
+                file.nodes()
+                    .indexed()
+                    .find(|(_, n)| n.name() == name.as_ref())
+                    .map(|(i, _)| i)
+            })
             .collect();
         ids.is_some_and(|ids| self.set_bone_ids(&ids))
     }
@@ -759,8 +817,11 @@ impl Edit<'_, NiShape> {
     /// or no bone is `old`. A [`BsGeometry`] binds bones by name, so it has no bones to replace.
     pub fn replace_bone(&mut self, old: Index, new: Index) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        let (Some(shape), Some(old), Some(new)) = (block_index_to_ffi(shape), block_index_to_ffi(old), block_index_to_ffi(new))
-        else {
+        let (Some(shape), Some(old), Some(new)) = (
+            block_index_to_ffi(shape),
+            block_index_to_ffi(old),
+            block_index_to_ffi(new),
+        ) else {
             return false;
         };
         nif_ffi::replace_shape_bone(file.inner.pin_mut(), shape, old, new)
@@ -827,7 +888,11 @@ impl Edit<'_, NiShape> {
         let (Some(shape), Ok(vertex)) = (block_index_to_ffi(shape), u32::try_from(vertex)) else {
             return false;
         };
-        let Ok(bones) = weights.iter().map(|&(bone, _)| u32::try_from(bone)).collect::<Result<Vec<_>, _>>() else {
+        let Ok(bones) = weights
+            .iter()
+            .map(|&(bone, _)| u32::try_from(bone))
+            .collect::<Result<Vec<_>, _>>()
+        else {
             return false;
         };
         let weights: Vec<f32> = weights.iter().map(|&(_, w)| w).collect();
@@ -845,7 +910,8 @@ impl Edit<'_, NiShape> {
     /// [`BsGeometry`]: crate::geometry::BsGeometry
     pub fn clear_vertex_weights(&mut self) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::clear_shape_vertex_weights(file.inner.pin_mut(), shape))
+        block_index_to_ffi(shape)
+            .is_some_and(|shape| nif_ffi::clear_shape_vertex_weights(file.inner.pin_mut(), shape))
     }
 
     /// Adds the blocks the shape needs to be skinned, and turns on the
@@ -869,7 +935,8 @@ impl Edit<'_, NiShape> {
     /// [`BsGeometry`]: crate::geometry::BsGeometry
     pub fn create_skinning(&mut self) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::create_skinning(file.inner.pin_mut(), shape))
+        block_index_to_ffi(shape)
+            .is_some_and(|shape| nif_ffi::create_skinning(file.inner.pin_mut(), shape))
     }
 
     /// Removes the skinning of the shape: unlinks its skin instance, and
@@ -883,7 +950,8 @@ impl Edit<'_, NiShape> {
     /// [`BsGeometry`]: crate::geometry::BsGeometry
     pub fn delete_skinning(&mut self) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::delete_skinning(file.inner.pin_mut(), shape))
+        block_index_to_ffi(shape)
+            .is_some_and(|shape| nif_ffi::delete_skinning(file.inner.pin_mut(), shape))
     }
 
     /// Splits the triangles of the shape into partitions with these body
@@ -916,7 +984,13 @@ impl Edit<'_, NiShape> {
         else {
             return false;
         };
-        let info: Vec<_> = body_parts.iter().map(|&body_part| nif_ffi::PartitionInfo { flags: 0, body_part }).collect();
+        let info: Vec<_> = body_parts
+            .iter()
+            .map(|&body_part| nif_ffi::PartitionInfo {
+                flags: 0,
+                body_part,
+            })
+            .collect();
         nif_ffi::set_shape_partitions(file.inner.pin_mut(), shape, &info, &tri_parts)
     }
 
@@ -927,7 +1001,11 @@ impl Edit<'_, NiShape> {
         let Some(count) = self.view().triangles().map(|t| t.len()) else {
             return false;
         };
-        let body_part = if self.view().file().version().user >= 12 { 32 } else { 0 };
+        let body_part = if self.view().file().version().user >= 12 {
+            32
+        } else {
+            0
+        };
         self.set_partitions(&[body_part], &vec![Some(0); count])
     }
 
@@ -949,7 +1027,11 @@ impl Edit<'_, NiShape> {
         let Some(shape) = block_index_to_ffi(shape) else {
             return false;
         };
-        let Ok(indices) = partitions.iter().map(|&p| u32::try_from(p)).collect::<Result<Vec<u32>, _>>() else {
+        let Ok(indices) = partitions
+            .iter()
+            .map(|&p| u32::try_from(p))
+            .collect::<Result<Vec<u32>, _>>()
+        else {
             return false;
         };
         nif_ffi::delete_partitions(file.inner.pin_mut(), shape, &indices)
@@ -964,7 +1046,11 @@ impl Edit<'_, NiShape> {
     pub fn remove_empty_partitions(&mut self) -> Option<usize> {
         let (shape, file) = (self.index(), self.file_mut());
         let shape = block_index_to_ffi(shape)?;
-        usize::try_from(nif_ffi::remove_empty_partitions(file.inner.pin_mut(), shape)).ok()
+        usize::try_from(nif_ffi::remove_empty_partitions(
+            file.inner.pin_mut(),
+            shape,
+        ))
+        .ok()
     }
 
     /// Sets the transform from the skin coordinates of the shape to the
@@ -974,10 +1060,16 @@ impl Edit<'_, NiShape> {
     /// [`BsSkinBoneData`] skins.
     pub fn set_transform_skin_to_bone(&mut self, bone_index: usize, transform: Transform) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        let (Some(shape), Ok(bone_index)) = (block_index_to_ffi(shape), u32::try_from(bone_index)) else {
+        let (Some(shape), Ok(bone_index)) = (block_index_to_ffi(shape), u32::try_from(bone_index))
+        else {
             return false;
         };
-        nif_ffi::set_shape_transform_skin_to_bone(file.inner.pin_mut(), shape, bone_index, transform.to_ffi())
+        nif_ffi::set_shape_transform_skin_to_bone(
+            file.inner.pin_mut(),
+            shape,
+            bone_index,
+            transform.to_ffi(),
+        )
     }
 
     /// Sets the bounding sphere of bone `bone_index` of the shape.
@@ -986,7 +1078,8 @@ impl Edit<'_, NiShape> {
     /// [`BsSkinBoneData`] skins.
     pub fn set_bone_bounds(&mut self, bone_index: usize, bounds: BoundingSphere) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        let (Some(shape), Ok(bone_index)) = (block_index_to_ffi(shape), u32::try_from(bone_index)) else {
+        let (Some(shape), Ok(bone_index)) = (block_index_to_ffi(shape), u32::try_from(bone_index))
+        else {
             return false;
         };
         nif_ffi::set_shape_bone_bounds(file.inner.pin_mut(), shape, bone_index, bounds.to_ffi())

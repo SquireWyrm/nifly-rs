@@ -103,12 +103,20 @@ pub mod ffi {
         fn downcast_hair_shader_property(obj: &NiObject) -> *const HairShaderProperty;
         fn upcast_distant_lod_shader_property(obj: &DistantLODShaderProperty) -> &BSShaderProperty;
         fn downcast_distant_lod_shader_property(obj: &NiObject) -> *const DistantLODShaderProperty;
-        fn upcast_bs_distant_tree_shader_property(obj: &BSDistantTreeShaderProperty) -> &BSShaderProperty;
-        fn downcast_bs_distant_tree_shader_property(obj: &NiObject) -> *const BSDistantTreeShaderProperty;
+        fn upcast_bs_distant_tree_shader_property(
+            obj: &BSDistantTreeShaderProperty,
+        ) -> &BSShaderProperty;
+        fn downcast_bs_distant_tree_shader_property(
+            obj: &NiObject,
+        ) -> *const BSDistantTreeShaderProperty;
         fn upcast_tall_grass_shader_property(obj: &TallGrassShaderProperty) -> &BSShaderProperty;
         fn downcast_tall_grass_shader_property(obj: &NiObject) -> *const TallGrassShaderProperty;
-        fn upcast_volumetric_fog_shader_property(obj: &VolumetricFogShaderProperty) -> &BSShaderProperty;
-        fn downcast_volumetric_fog_shader_property(obj: &NiObject) -> *const VolumetricFogShaderProperty;
+        fn upcast_volumetric_fog_shader_property(
+            obj: &VolumetricFogShaderProperty,
+        ) -> &BSShaderProperty;
+        fn downcast_volumetric_fog_shader_property(
+            obj: &NiObject,
+        ) -> *const VolumetricFogShaderProperty;
         fn upcast_bs_lighting_shader_property(obj: &BSLightingShaderProperty) -> &BSShaderProperty;
         fn downcast_bs_lighting_shader_property(obj: &NiObject) -> *const BSLightingShaderProperty;
         fn upcast_bs_effect_shader_property(obj: &BSEffectShaderProperty) -> &BSShaderProperty;
@@ -123,11 +131,21 @@ pub mod ffi {
         fn downcast_sky_shader_property(obj: &NiObject) -> *const SkyShaderProperty;
         fn upcast_tile_shader_property(obj: &TileShaderProperty) -> &BSShaderLightingProperty;
         fn downcast_tile_shader_property(obj: &NiObject) -> *const TileShaderProperty;
-        fn upcast_bs_shader_no_lighting_property(obj: &BSShaderNoLightingProperty) -> &BSShaderLightingProperty;
-        fn downcast_bs_shader_no_lighting_property(obj: &NiObject) -> *const BSShaderNoLightingProperty;
-        fn upcast_bs_shader_pp_lighting_property(obj: &BSShaderPPLightingProperty) -> &BSShaderLightingProperty;
-        fn downcast_bs_shader_pp_lighting_property(obj: &NiObject) -> *const BSShaderPPLightingProperty;
-        fn upcast_lighting30_shader_property(obj: &Lighting30ShaderProperty) -> &BSShaderPPLightingProperty;
+        fn upcast_bs_shader_no_lighting_property(
+            obj: &BSShaderNoLightingProperty,
+        ) -> &BSShaderLightingProperty;
+        fn downcast_bs_shader_no_lighting_property(
+            obj: &NiObject,
+        ) -> *const BSShaderNoLightingProperty;
+        fn upcast_bs_shader_pp_lighting_property(
+            obj: &BSShaderPPLightingProperty,
+        ) -> &BSShaderLightingProperty;
+        fn downcast_bs_shader_pp_lighting_property(
+            obj: &NiObject,
+        ) -> *const BSShaderPPLightingProperty;
+        fn upcast_lighting30_shader_property(
+            obj: &Lighting30ShaderProperty,
+        ) -> &BSShaderPPLightingProperty;
         fn downcast_lighting30_shader_property(obj: &NiObject) -> *const Lighting30ShaderProperty;
         fn upcast_ni_material_property(obj: &NiMaterialProperty) -> &NiShader;
         fn downcast_ni_material_property(obj: &NiObject) -> *const NiMaterialProperty;
@@ -200,7 +218,10 @@ pub mod ffi {
         fn lighting_backlight_power(s: &BSLightingShaderProperty) -> f32;
         fn set_lighting_backlight_power(s: Pin<&mut BSLightingShaderProperty>, value: f32);
         fn lighting_grayscale_to_palette_scale(s: &BSLightingShaderProperty) -> f32;
-        fn set_lighting_grayscale_to_palette_scale(s: Pin<&mut BSLightingShaderProperty>, value: f32);
+        fn set_lighting_grayscale_to_palette_scale(
+            s: Pin<&mut BSLightingShaderProperty>,
+            value: f32,
+        );
         fn lighting_fresnel_power(s: &BSLightingShaderProperty) -> f32;
         fn set_lighting_fresnel_power(s: Pin<&mut BSLightingShaderProperty>, value: f32);
         fn lighting_wetness_specular_scale(s: &BSLightingShaderProperty) -> f32;
@@ -234,9 +255,15 @@ pub mod ffi {
         fn lighting_scale(s: &BSLightingShaderProperty) -> f32;
         fn set_lighting_scale(s: Pin<&mut BSLightingShaderProperty>, value: f32);
         fn lighting_parallax_inner_layer_thickness(s: &BSLightingShaderProperty) -> f32;
-        fn set_lighting_parallax_inner_layer_thickness(s: Pin<&mut BSLightingShaderProperty>, value: f32);
+        fn set_lighting_parallax_inner_layer_thickness(
+            s: Pin<&mut BSLightingShaderProperty>,
+            value: f32,
+        );
         fn lighting_parallax_refraction_scale(s: &BSLightingShaderProperty) -> f32;
-        fn set_lighting_parallax_refraction_scale(s: Pin<&mut BSLightingShaderProperty>, value: f32);
+        fn set_lighting_parallax_refraction_scale(
+            s: Pin<&mut BSLightingShaderProperty>,
+            value: f32,
+        );
         fn lighting_parallax_envmap_strength(s: &BSLightingShaderProperty) -> f32;
         fn set_lighting_parallax_envmap_strength(s: Pin<&mut BSLightingShaderProperty>, value: f32);
         fn lighting_eye_cubemap_scale(s: &BSLightingShaderProperty) -> f32;
@@ -262,11 +289,20 @@ pub mod ffi {
         fn lighting_hair_tint_color(s: &BSLightingShaderProperty) -> Vec3;
         fn set_lighting_hair_tint_color(s: Pin<&mut BSLightingShaderProperty>, value: Vec3);
         fn lighting_eye_left_reflection_center(s: &BSLightingShaderProperty) -> Vec3;
-        fn set_lighting_eye_left_reflection_center(s: Pin<&mut BSLightingShaderProperty>, value: Vec3);
+        fn set_lighting_eye_left_reflection_center(
+            s: Pin<&mut BSLightingShaderProperty>,
+            value: Vec3,
+        );
         fn lighting_eye_right_reflection_center(s: &BSLightingShaderProperty) -> Vec3;
-        fn set_lighting_eye_right_reflection_center(s: Pin<&mut BSLightingShaderProperty>, value: Vec3);
+        fn set_lighting_eye_right_reflection_center(
+            s: Pin<&mut BSLightingShaderProperty>,
+            value: Vec3,
+        );
         fn lighting_parallax_inner_layer_texture_scale(s: &BSLightingShaderProperty) -> Vec2;
-        fn set_lighting_parallax_inner_layer_texture_scale(s: Pin<&mut BSLightingShaderProperty>, value: Vec2);
+        fn set_lighting_parallax_inner_layer_texture_scale(
+            s: Pin<&mut BSLightingShaderProperty>,
+            value: Vec2,
+        );
         fn lighting_sparkle_parameters(s: &BSLightingShaderProperty) -> Rgba;
         fn set_lighting_sparkle_parameters(s: Pin<&mut BSLightingShaderProperty>, value: Rgba);
         /// `rootMaterialName`, the wet material.
@@ -275,7 +311,11 @@ pub mod ffi {
         /// `textureArrays`, keeping `hasTextureArrays` and `numTextureArrays` in step.
         fn lighting_texture_array_count(s: &BSLightingShaderProperty) -> usize;
         fn lighting_texture_array_len(s: &BSLightingShaderProperty, array: usize) -> usize;
-        fn lighting_texture_array_path(s: &BSLightingShaderProperty, array: usize, index: usize) -> &[u8];
+        fn lighting_texture_array_path(
+            s: &BSLightingShaderProperty,
+            array: usize,
+            index: usize,
+        ) -> &[u8];
         fn clear_lighting_texture_arrays(s: Pin<&mut BSLightingShaderProperty>);
         fn add_lighting_texture_array(s: Pin<&mut BSLightingShaderProperty>);
         fn push_lighting_texture_array_path(s: Pin<&mut BSLightingShaderProperty>, path: &[u8]);
@@ -391,24 +431,45 @@ pub mod ffi {
         /// `TexDesc` fields of map `map`. The getters return false if the map is absent,
         /// leaving `out` unchanged; the setters return false, changing nothing.
         fn texturing_map_clamp_mode(t: &NiTexturingProperty, map: u32, out: &mut u32) -> bool;
-        fn set_texturing_map_clamp_mode(t: Pin<&mut NiTexturingProperty>, map: u32, value: u32) -> bool;
+        fn set_texturing_map_clamp_mode(
+            t: Pin<&mut NiTexturingProperty>,
+            map: u32,
+            value: u32,
+        ) -> bool;
         fn texturing_map_filter_mode(t: &NiTexturingProperty, map: u32, out: &mut u32) -> bool;
-        fn set_texturing_map_filter_mode(t: Pin<&mut NiTexturingProperty>, map: u32, value: u32) -> bool;
+        fn set_texturing_map_filter_mode(
+            t: Pin<&mut NiTexturingProperty>,
+            map: u32,
+            value: u32,
+        ) -> bool;
         fn texturing_map_uv_set(t: &NiTexturingProperty, map: u32, out: &mut u32) -> bool;
-        fn set_texturing_map_uv_set(t: Pin<&mut NiTexturingProperty>, map: u32, value: u32) -> bool;
+        fn set_texturing_map_uv_set(t: Pin<&mut NiTexturingProperty>, map: u32, value: u32)
+        -> bool;
         fn texturing_map_flags(t: &NiTexturingProperty, map: u32, out: &mut u32) -> bool;
         fn set_texturing_map_flags(t: Pin<&mut NiTexturingProperty>, map: u32, value: u32) -> bool;
         fn texturing_map_max_anisotropy(t: &NiTexturingProperty, map: u32, out: &mut u32) -> bool;
-        fn set_texturing_map_max_anisotropy(t: Pin<&mut NiTexturingProperty>, map: u32, value: u32) -> bool;
+        fn set_texturing_map_max_anisotropy(
+            t: Pin<&mut NiTexturingProperty>,
+            map: u32,
+            value: u32,
+        ) -> bool;
         fn texturing_map_unknown(t: &NiTexturingProperty, map: u32, out: &mut u32) -> bool;
-        fn set_texturing_map_unknown(t: Pin<&mut NiTexturingProperty>, map: u32, value: u32) -> bool;
+        fn set_texturing_map_unknown(
+            t: Pin<&mut NiTexturingProperty>,
+            map: u32,
+            value: u32,
+        ) -> bool;
         /// `ps2_l` and `ps2_k`, `int16_t`s passed sign-extended.
         fn texturing_map_ps2_l(t: &NiTexturingProperty, map: u32, out: &mut u32) -> bool;
         fn set_texturing_map_ps2_l(t: Pin<&mut NiTexturingProperty>, map: u32, value: u32) -> bool;
         fn texturing_map_ps2_k(t: &NiTexturingProperty, map: u32, out: &mut u32) -> bool;
         fn set_texturing_map_ps2_k(t: Pin<&mut NiTexturingProperty>, map: u32, value: u32) -> bool;
         /// True if the map exists and has a transform.
-        fn texturing_map_transform(t: &NiTexturingProperty, map: u32, out: &mut TextureTransform) -> bool;
+        fn texturing_map_transform(
+            t: &NiTexturingProperty,
+            map: u32,
+            out: &mut TextureTransform,
+        ) -> bool;
         /// False if the map is absent.
         fn set_texturing_map_transform(
             t: Pin<&mut NiTexturingProperty>,
@@ -432,7 +493,8 @@ pub mod ffi {
         fn set_texturing_shader_map_count(t: Pin<&mut NiTexturingProperty>, count: usize);
         /// A used shader map's `mapIndex`. False if it's unused or out of range.
         fn texturing_shader_map_id(t: &NiTexturingProperty, i: usize, out: &mut u32) -> bool;
-        fn set_texturing_shader_map_id(t: Pin<&mut NiTexturingProperty>, i: usize, id: u32) -> bool;
+        fn set_texturing_shader_map_id(t: Pin<&mut NiTexturingProperty>, i: usize, id: u32)
+        -> bool;
 
         /// `NiStencilProperty` fields: `flags`, `stencilEnabled`, `stencilFunction`,
         /// `stencilRef`, `stencilMask`, `failAction`, `zFailAction`, `passAction`, `drawMode`.
@@ -487,8 +549,12 @@ pub mod ffi {
         fn downcast_texture_render_data(obj: &NiObject) -> *const TextureRenderData;
         fn upcast_ni_pixel_data(obj: &NiPixelData) -> &TextureRenderData;
         fn downcast_ni_pixel_data(obj: &NiObject) -> *const NiPixelData;
-        fn upcast_ni_persistent_src_texture_renderer_data(obj: &NiPersistentSrcTextureRendererData) -> &TextureRenderData;
-        fn downcast_ni_persistent_src_texture_renderer_data(obj: &NiObject) -> *const NiPersistentSrcTextureRendererData;
+        fn upcast_ni_persistent_src_texture_renderer_data(
+            obj: &NiPersistentSrcTextureRendererData,
+        ) -> &TextureRenderData;
+        fn downcast_ni_persistent_src_texture_renderer_data(
+            obj: &NiObject,
+        ) -> *const NiPersistentSrcTextureRendererData;
 
         /// `TextureRenderData` fields; enums are passed as `u32`.
         fn render_data_pixel_format(d: &TextureRenderData) -> u32;
@@ -513,7 +579,8 @@ pub mod ffi {
         /// Channel `index` as component, representation, bits and signedness. Returns false if
         /// `index` isn't below 4.
         fn render_data_channel(d: &TextureRenderData, index: usize, out: &mut [u32]) -> bool;
-        fn set_render_data_channel(d: Pin<&mut TextureRenderData>, index: usize, v: &[u32]) -> bool;
+        fn set_render_data_channel(d: Pin<&mut TextureRenderData>, index: usize, v: &[u32])
+        -> bool;
         /// Mipmaps flattened as width, height, offset.
         fn render_data_mipmaps(d: &TextureRenderData) -> Vec<u32>;
         fn set_render_data_mipmaps(d: Pin<&mut TextureRenderData>, v: &[u32]);
@@ -533,7 +600,10 @@ pub mod ffi {
         fn persistent_data_platform(d: &NiPersistentSrcTextureRendererData) -> u32;
         fn set_persistent_data_platform(d: Pin<&mut NiPersistentSrcTextureRendererData>, v: u32);
         fn persistent_data_padded_pixel_count(d: &NiPersistentSrcTextureRendererData) -> u32;
-        fn set_persistent_data_padded_pixel_count(d: Pin<&mut NiPersistentSrcTextureRendererData>, v: u32);
+        fn set_persistent_data_padded_pixel_count(
+            d: Pin<&mut NiPersistentSrcTextureRendererData>,
+            v: u32,
+        );
 
         /// `NiPalette` fields. Colors are flattened r, g, b, a; the setter returns false, changing
         /// nothing, unless there are 16 or 256.
@@ -554,7 +624,10 @@ pub mod ffi {
         fn pp_lighting_refraction_strength(s: &BSShaderPPLightingProperty) -> f32;
         fn set_pp_lighting_refraction_strength(s: Pin<&mut BSShaderPPLightingProperty>, value: f32);
         fn pp_lighting_refraction_fire_period(s: &BSShaderPPLightingProperty) -> i32;
-        fn set_pp_lighting_refraction_fire_period(s: Pin<&mut BSShaderPPLightingProperty>, value: i32);
+        fn set_pp_lighting_refraction_fire_period(
+            s: Pin<&mut BSShaderPPLightingProperty>,
+            value: i32,
+        );
         fn pp_lighting_parallax_max_passes(s: &BSShaderPPLightingProperty) -> f32;
         fn set_pp_lighting_parallax_max_passes(s: Pin<&mut BSShaderPPLightingProperty>, value: f32);
         fn pp_lighting_parallax_scale(s: &BSShaderPPLightingProperty) -> f32;
@@ -568,9 +641,15 @@ pub mod ffi {
         fn no_lighting_falloff_stop_angle(s: &BSShaderNoLightingProperty) -> f32;
         fn set_no_lighting_falloff_stop_angle(s: Pin<&mut BSShaderNoLightingProperty>, value: f32);
         fn no_lighting_falloff_start_opacity(s: &BSShaderNoLightingProperty) -> f32;
-        fn set_no_lighting_falloff_start_opacity(s: Pin<&mut BSShaderNoLightingProperty>, value: f32);
+        fn set_no_lighting_falloff_start_opacity(
+            s: Pin<&mut BSShaderNoLightingProperty>,
+            value: f32,
+        );
         fn no_lighting_falloff_stop_opacity(s: &BSShaderNoLightingProperty) -> f32;
-        fn set_no_lighting_falloff_stop_opacity(s: Pin<&mut BSShaderNoLightingProperty>, value: f32);
+        fn set_no_lighting_falloff_stop_opacity(
+            s: Pin<&mut BSShaderNoLightingProperty>,
+            value: f32,
+        );
         fn sky_file_name(s: &SkyShaderProperty) -> &[u8];
         fn set_sky_file_name(s: Pin<&mut SkyShaderProperty>, value: &[u8]);
         fn sky_object_type(s: &SkyShaderProperty) -> u32;
@@ -592,7 +671,11 @@ pub mod ffi {
         fn texture_set_path(set: &BSShaderTextureSet, index: usize) -> &[u8];
         fn set_texture_set_len(set: Pin<&mut BSShaderTextureSet>, len: usize);
         /// False if `index` is out of range.
-        fn set_texture_set_path(set: Pin<&mut BSShaderTextureSet>, index: usize, path: &[u8]) -> bool;
+        fn set_texture_set_path(
+            set: Pin<&mut BSShaderTextureSet>,
+            index: usize,
+            path: &[u8],
+        ) -> bool;
 
         /// `NiShadeProperty::shadingFlags`.
         fn shade_flags(s: &NiShadeProperty) -> u16;

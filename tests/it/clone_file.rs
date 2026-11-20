@@ -1,6 +1,6 @@
 //! Tests for `impl Clone for NifFile`.
 
-use crate::common::{UPSTREAM};
+use crate::common::UPSTREAM;
 use std::{fs, io::Cursor, ptr};
 
 use nifly::{
@@ -14,7 +14,14 @@ fn load(path: &str) -> NifFile {
 
 fn bytes(nif: &mut NifFile) -> Vec<u8> {
     let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, Some(SaveOptions { optimize: false, sort_blocks: false })).unwrap();
+    nif.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize: false,
+            sort_blocks: false,
+        }),
+    )
+    .unwrap();
     cur.into_inner()
 }
 
@@ -24,7 +31,9 @@ fn all_files() -> Vec<String> {
     for dir in ["assets", UPSTREAM] {
         for entry in fs::read_dir(dir).unwrap() {
             let path = entry.unwrap().path();
-            if path.extension().is_some_and(|e| e == "nif") && !path.ends_with("TestNifFile_Corrupted.nif") {
+            if path.extension().is_some_and(|e| e == "nif")
+                && !path.ends_with("TestNifFile_Corrupted.nif")
+            {
                 paths.push(path.to_string_lossy().into_owned());
             }
         }
@@ -50,8 +59,13 @@ fn copies_are_independent() {
     let original = bytes(&mut nif.clone());
     let mut copy = nif.clone();
     let cube = copy.shapes().indices().next().unwrap();
-    copy.block_of_mut::<nifly::objects::NiObjectNet>(cube).unwrap().set_name("Copy");
-    assert!(copy.edit::<nifly::geometry::NiShape>(cube).is_some_and(|mut e| e.offset(Vec3::X, None)));
+    copy.block_of_mut::<nifly::objects::NiObjectNet>(cube)
+        .unwrap()
+        .set_name("Copy");
+    assert!(
+        copy.edit::<nifly::geometry::NiShape>(cube)
+            .is_some_and(|mut e| e.offset(Vec3::X, None))
+    );
 
     assert_eq!(nif.shapes().next().unwrap().name(), "Cube");
     assert_eq!(bytes(&mut nif), original);
@@ -80,11 +94,19 @@ fn keeps_terrain_and_loaded_meshes() {
     let mut nif = load(&format!("{UPSTREAM}/TestNifFile_SF.nif"));
     let shape = nif.shapes().indices().next().unwrap();
     let mesh = fs::read(format!("{UPSTREAM}/TestNifFile_SF.mesh")).unwrap();
-    assert!(nif.edit::<nifly::geometry::NiShape>(shape).unwrap().load_mesh(0, mesh.as_slice()).unwrap());
+    assert!(
+        nif.edit::<nifly::geometry::NiShape>(shape)
+            .unwrap()
+            .load_mesh(0, mesh.as_slice())
+            .unwrap()
+    );
     let copy = nif.clone();
     let (a, b) = (nif.shapes().next().unwrap(), copy.shapes().next().unwrap());
     let vertices = nif.view_of(a).unwrap().vertices().unwrap();
     assert!(!vertices.is_empty());
     assert_eq!(copy.view_of(b).unwrap().vertices().unwrap(), vertices);
-    assert_eq!(copy.view_of(b).unwrap().triangles(), nif.view_of(a).unwrap().triangles());
+    assert_eq!(
+        copy.view_of(b).unwrap().triangles(),
+        nif.view_of(a).unwrap().triangles()
+    );
 }

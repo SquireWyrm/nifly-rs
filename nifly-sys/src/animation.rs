@@ -249,40 +249,85 @@ pub mod ffi {
         fn downcast_ni_interpolator(obj: &NiObject) -> *const NiInterpolator;
         fn upcast_ni_bspline_interpolator(obj: &NiBSplineInterpolator) -> &NiInterpolator;
         fn downcast_ni_bspline_interpolator(obj: &NiObject) -> *const NiBSplineInterpolator;
-        fn upcast_ni_bspline_float_interpolator(obj: &NiBSplineFloatInterpolator) -> &NiBSplineInterpolator;
-        fn downcast_ni_bspline_float_interpolator(obj: &NiObject) -> *const NiBSplineFloatInterpolator;
-        fn upcast_ni_bspline_comp_float_interpolator(obj: &NiBSplineCompFloatInterpolator) -> &NiBSplineFloatInterpolator;
-        fn downcast_ni_bspline_comp_float_interpolator(obj: &NiObject) -> *const NiBSplineCompFloatInterpolator;
-        fn upcast_ni_bspline_point3_interpolator(obj: &NiBSplinePoint3Interpolator) -> &NiBSplineInterpolator;
-        fn downcast_ni_bspline_point3_interpolator(obj: &NiObject) -> *const NiBSplinePoint3Interpolator;
-        fn upcast_ni_bspline_comp_point3_interpolator(obj: &NiBSplineCompPoint3Interpolator) -> &NiBSplinePoint3Interpolator;
-        fn downcast_ni_bspline_comp_point3_interpolator(obj: &NiObject) -> *const NiBSplineCompPoint3Interpolator;
-        fn upcast_ni_bspline_transform_interpolator(obj: &NiBSplineTransformInterpolator) -> &NiBSplineInterpolator;
-        fn downcast_ni_bspline_transform_interpolator(obj: &NiObject) -> *const NiBSplineTransformInterpolator;
-        fn upcast_ni_bspline_comp_transform_interpolator(obj: &NiBSplineCompTransformInterpolator) -> &NiBSplineTransformInterpolator;
-        fn downcast_ni_bspline_comp_transform_interpolator(obj: &NiObject) -> *const NiBSplineCompTransformInterpolator;
+        fn upcast_ni_bspline_float_interpolator(
+            obj: &NiBSplineFloatInterpolator,
+        ) -> &NiBSplineInterpolator;
+        fn downcast_ni_bspline_float_interpolator(
+            obj: &NiObject,
+        ) -> *const NiBSplineFloatInterpolator;
+        fn upcast_ni_bspline_comp_float_interpolator(
+            obj: &NiBSplineCompFloatInterpolator,
+        ) -> &NiBSplineFloatInterpolator;
+        fn downcast_ni_bspline_comp_float_interpolator(
+            obj: &NiObject,
+        ) -> *const NiBSplineCompFloatInterpolator;
+        fn upcast_ni_bspline_point3_interpolator(
+            obj: &NiBSplinePoint3Interpolator,
+        ) -> &NiBSplineInterpolator;
+        fn downcast_ni_bspline_point3_interpolator(
+            obj: &NiObject,
+        ) -> *const NiBSplinePoint3Interpolator;
+        fn upcast_ni_bspline_comp_point3_interpolator(
+            obj: &NiBSplineCompPoint3Interpolator,
+        ) -> &NiBSplinePoint3Interpolator;
+        fn downcast_ni_bspline_comp_point3_interpolator(
+            obj: &NiObject,
+        ) -> *const NiBSplineCompPoint3Interpolator;
+        fn upcast_ni_bspline_transform_interpolator(
+            obj: &NiBSplineTransformInterpolator,
+        ) -> &NiBSplineInterpolator;
+        fn downcast_ni_bspline_transform_interpolator(
+            obj: &NiObject,
+        ) -> *const NiBSplineTransformInterpolator;
+        fn upcast_ni_bspline_comp_transform_interpolator(
+            obj: &NiBSplineCompTransformInterpolator,
+        ) -> &NiBSplineTransformInterpolator;
+        fn downcast_ni_bspline_comp_transform_interpolator(
+            obj: &NiObject,
+        ) -> *const NiBSplineCompTransformInterpolator;
         fn upcast_ni_blend_interpolator(obj: &NiBlendInterpolator) -> &NiInterpolator;
         fn downcast_ni_blend_interpolator(obj: &NiObject) -> *const NiBlendInterpolator;
-        fn upcast_ni_blend_bool_interpolator(obj: &NiBlendBoolInterpolator) -> &NiBlendInterpolator;
+        fn upcast_ni_blend_bool_interpolator(obj: &NiBlendBoolInterpolator)
+        -> &NiBlendInterpolator;
         fn downcast_ni_blend_bool_interpolator(obj: &NiObject) -> *const NiBlendBoolInterpolator;
-        fn upcast_ni_blend_float_interpolator(obj: &NiBlendFloatInterpolator) -> &NiBlendInterpolator;
+        fn upcast_ni_blend_float_interpolator(
+            obj: &NiBlendFloatInterpolator,
+        ) -> &NiBlendInterpolator;
         fn downcast_ni_blend_float_interpolator(obj: &NiObject) -> *const NiBlendFloatInterpolator;
-        fn upcast_ni_blend_point3_interpolator(obj: &NiBlendPoint3Interpolator) -> &NiBlendInterpolator;
-        fn downcast_ni_blend_point3_interpolator(obj: &NiObject) -> *const NiBlendPoint3Interpolator;
-        fn upcast_ni_blend_transform_interpolator(obj: &NiBlendTransformInterpolator) -> &NiBlendInterpolator;
-        fn downcast_ni_blend_transform_interpolator(obj: &NiObject) -> *const NiBlendTransformInterpolator;
+        fn upcast_ni_blend_point3_interpolator(
+            obj: &NiBlendPoint3Interpolator,
+        ) -> &NiBlendInterpolator;
+        fn downcast_ni_blend_point3_interpolator(
+            obj: &NiObject,
+        ) -> *const NiBlendPoint3Interpolator;
+        fn upcast_ni_blend_transform_interpolator(
+            obj: &NiBlendTransformInterpolator,
+        ) -> &NiBlendInterpolator;
+        fn downcast_ni_blend_transform_interpolator(
+            obj: &NiObject,
+        ) -> *const NiBlendTransformInterpolator;
         fn upcast_ni_key_based_interpolator(obj: &NiKeyBasedInterpolator) -> &NiInterpolator;
         fn downcast_ni_key_based_interpolator(obj: &NiObject) -> *const NiKeyBasedInterpolator;
         fn upcast_ni_bool_interpolator(obj: &NiBoolInterpolator) -> &NiKeyBasedInterpolator;
         fn downcast_ni_bool_interpolator(obj: &NiObject) -> *const NiBoolInterpolator;
-        fn upcast_ni_bool_timeline_interpolator(obj: &NiBoolTimelineInterpolator) -> &NiBoolInterpolator;
-        fn downcast_ni_bool_timeline_interpolator(obj: &NiObject) -> *const NiBoolTimelineInterpolator;
+        fn upcast_ni_bool_timeline_interpolator(
+            obj: &NiBoolTimelineInterpolator,
+        ) -> &NiBoolInterpolator;
+        fn downcast_ni_bool_timeline_interpolator(
+            obj: &NiObject,
+        ) -> *const NiBoolTimelineInterpolator;
         fn upcast_ni_float_interpolator(obj: &NiFloatInterpolator) -> &NiKeyBasedInterpolator;
         fn downcast_ni_float_interpolator(obj: &NiObject) -> *const NiFloatInterpolator;
-        fn upcast_ni_transform_interpolator(obj: &NiTransformInterpolator) -> &NiKeyBasedInterpolator;
+        fn upcast_ni_transform_interpolator(
+            obj: &NiTransformInterpolator,
+        ) -> &NiKeyBasedInterpolator;
         fn downcast_ni_transform_interpolator(obj: &NiObject) -> *const NiTransformInterpolator;
-        fn upcast_bs_rot_accum_transf_interpolator(obj: &BSRotAccumTransfInterpolator) -> &NiTransformInterpolator;
-        fn downcast_bs_rot_accum_transf_interpolator(obj: &NiObject) -> *const BSRotAccumTransfInterpolator;
+        fn upcast_bs_rot_accum_transf_interpolator(
+            obj: &BSRotAccumTransfInterpolator,
+        ) -> &NiTransformInterpolator;
+        fn downcast_bs_rot_accum_transf_interpolator(
+            obj: &NiObject,
+        ) -> *const BSRotAccumTransfInterpolator;
         fn upcast_ni_point3_interpolator(obj: &NiPoint3Interpolator) -> &NiKeyBasedInterpolator;
         fn downcast_ni_point3_interpolator(obj: &NiObject) -> *const NiPoint3Interpolator;
         fn upcast_ni_path_interpolator(obj: &NiPathInterpolator) -> &NiKeyBasedInterpolator;
@@ -290,7 +335,9 @@ pub mod ffi {
         fn upcast_ni_look_at_interpolator(obj: &NiLookAtInterpolator) -> &NiInterpolator;
         fn downcast_ni_look_at_interpolator(obj: &NiObject) -> *const NiLookAtInterpolator;
         fn upcast_bs_tread_transf_interpolator(obj: &BSTreadTransfInterpolator) -> &NiInterpolator;
-        fn downcast_bs_tread_transf_interpolator(obj: &NiObject) -> *const BSTreadTransfInterpolator;
+        fn downcast_bs_tread_transf_interpolator(
+            obj: &NiObject,
+        ) -> *const BSTreadTransfInterpolator;
         fn upcast_ni_time_controller(obj: &NiTimeController) -> &NiObject;
         fn downcast_ni_time_controller(obj: &NiObject) -> *const NiTimeController;
         fn upcast_ni_look_at_controller(obj: &NiLookAtController) -> &NiTimeController;
@@ -305,8 +352,12 @@ pub mod ffi {
         fn downcast_bs_frustum_fov_controller(obj: &NiObject) -> *const BSFrustumFOVController;
         fn upcast_bs_lag_bone_controller(obj: &BSLagBoneController) -> &NiTimeController;
         fn downcast_bs_lag_bone_controller(obj: &NiObject) -> *const BSLagBoneController;
-        fn upcast_bs_procedural_lightning_controller(obj: &BSProceduralLightningController) -> &NiTimeController;
-        fn downcast_bs_procedural_lightning_controller(obj: &NiObject) -> *const BSProceduralLightningController;
+        fn upcast_bs_procedural_lightning_controller(
+            obj: &BSProceduralLightningController,
+        ) -> &NiTimeController;
+        fn downcast_bs_procedural_lightning_controller(
+            obj: &NiObject,
+        ) -> *const BSProceduralLightningController;
         fn upcast_ni_bone_lod_controller(obj: &NiBoneLODController) -> &NiTimeController;
         fn downcast_ni_bone_lod_controller(obj: &NiObject) -> *const NiBoneLODController;
         fn upcast_ni_bs_bone_lod_controller(obj: &NiBSBoneLODController) -> &NiBoneLODController;
@@ -315,107 +366,250 @@ pub mod ffi {
         fn downcast_ni_interp_controller(obj: &NiObject) -> *const NiInterpController;
         fn upcast_ni_geom_morpher_controller(obj: &NiGeomMorpherController) -> &NiInterpController;
         fn downcast_ni_geom_morpher_controller(obj: &NiObject) -> *const NiGeomMorpherController;
-        fn upcast_ni_single_interp_controller(obj: &NiSingleInterpController) -> &NiInterpController;
+        fn upcast_ni_single_interp_controller(
+            obj: &NiSingleInterpController,
+        ) -> &NiInterpController;
         fn downcast_ni_single_interp_controller(obj: &NiObject) -> *const NiSingleInterpController;
         fn upcast_ni_roll_controller(obj: &NiRollController) -> &NiSingleInterpController;
         fn downcast_ni_roll_controller(obj: &NiObject) -> *const NiRollController;
-        fn upcast_ni_point3_interp_controller(obj: &NiPoint3InterpController) -> &NiSingleInterpController;
+        fn upcast_ni_point3_interp_controller(
+            obj: &NiPoint3InterpController,
+        ) -> &NiSingleInterpController;
         fn downcast_ni_point3_interp_controller(obj: &NiObject) -> *const NiPoint3InterpController;
-        fn upcast_ni_material_color_controller(obj: &NiMaterialColorController) -> &NiPoint3InterpController;
-        fn downcast_ni_material_color_controller(obj: &NiObject) -> *const NiMaterialColorController;
-        fn upcast_ni_light_color_controller(obj: &NiLightColorController) -> &NiPoint3InterpController;
+        fn upcast_ni_material_color_controller(
+            obj: &NiMaterialColorController,
+        ) -> &NiPoint3InterpController;
+        fn downcast_ni_material_color_controller(
+            obj: &NiObject,
+        ) -> *const NiMaterialColorController;
+        fn upcast_ni_light_color_controller(
+            obj: &NiLightColorController,
+        ) -> &NiPoint3InterpController;
         fn downcast_ni_light_color_controller(obj: &NiObject) -> *const NiLightColorController;
-        fn upcast_ni_extra_data_controller(obj: &NiExtraDataController) -> &NiSingleInterpController;
+        fn upcast_ni_extra_data_controller(
+            obj: &NiExtraDataController,
+        ) -> &NiSingleInterpController;
         fn downcast_ni_extra_data_controller(obj: &NiObject) -> *const NiExtraDataController;
-        fn upcast_ni_float_extra_data_controller(obj: &NiFloatExtraDataController) -> &NiExtraDataController;
-        fn downcast_ni_float_extra_data_controller(obj: &NiObject) -> *const NiFloatExtraDataController;
-        fn upcast_ni_bool_interp_controller(obj: &NiBoolInterpController) -> &NiSingleInterpController;
+        fn upcast_ni_float_extra_data_controller(
+            obj: &NiFloatExtraDataController,
+        ) -> &NiExtraDataController;
+        fn downcast_ni_float_extra_data_controller(
+            obj: &NiObject,
+        ) -> *const NiFloatExtraDataController;
+        fn upcast_ni_bool_interp_controller(
+            obj: &NiBoolInterpController,
+        ) -> &NiSingleInterpController;
         fn downcast_ni_bool_interp_controller(obj: &NiObject) -> *const NiBoolInterpController;
         fn upcast_ni_vis_controller(obj: &NiVisController) -> &NiBoolInterpController;
         fn downcast_ni_vis_controller(obj: &NiObject) -> *const NiVisController;
-        fn upcast_ni_float_interp_controller(obj: &NiFloatInterpController) -> &NiSingleInterpController;
+        fn upcast_ni_float_interp_controller(
+            obj: &NiFloatInterpController,
+        ) -> &NiSingleInterpController;
         fn downcast_ni_float_interp_controller(obj: &NiObject) -> *const NiFloatInterpController;
-        fn upcast_bs_refraction_fire_period_controller(obj: &BSRefractionFirePeriodController) -> &NiSingleInterpController;
-        fn downcast_bs_refraction_fire_period_controller(obj: &NiObject) -> *const BSRefractionFirePeriodController;
+        fn upcast_bs_refraction_fire_period_controller(
+            obj: &BSRefractionFirePeriodController,
+        ) -> &NiSingleInterpController;
+        fn downcast_bs_refraction_fire_period_controller(
+            obj: &NiObject,
+        ) -> *const BSRefractionFirePeriodController;
         fn upcast_ni_flip_controller(obj: &NiFlipController) -> &NiFloatInterpController;
         fn downcast_ni_flip_controller(obj: &NiObject) -> *const NiFlipController;
-        fn upcast_ni_texture_transform_controller(obj: &NiTextureTransformController) -> &NiFloatInterpController;
-        fn downcast_ni_texture_transform_controller(obj: &NiObject) -> *const NiTextureTransformController;
-        fn upcast_ni_light_dimmer_controller(obj: &NiLightDimmerController) -> &NiFloatInterpController;
+        fn upcast_ni_texture_transform_controller(
+            obj: &NiTextureTransformController,
+        ) -> &NiFloatInterpController;
+        fn downcast_ni_texture_transform_controller(
+            obj: &NiObject,
+        ) -> *const NiTextureTransformController;
+        fn upcast_ni_light_dimmer_controller(
+            obj: &NiLightDimmerController,
+        ) -> &NiFloatInterpController;
         fn downcast_ni_light_dimmer_controller(obj: &NiObject) -> *const NiLightDimmerController;
-        fn upcast_ni_light_radius_controller(obj: &NiLightRadiusController) -> &NiFloatInterpController;
+        fn upcast_ni_light_radius_controller(
+            obj: &NiLightRadiusController,
+        ) -> &NiFloatInterpController;
         fn downcast_ni_light_radius_controller(obj: &NiObject) -> *const NiLightRadiusController;
         fn upcast_ni_alpha_controller(obj: &NiAlphaController) -> &NiFloatInterpController;
         fn downcast_ni_alpha_controller(obj: &NiObject) -> *const NiAlphaController;
         fn upcast_ni_psys_update_ctlr(obj: &NiPSysUpdateCtlr) -> &NiTimeController;
         fn downcast_ni_psys_update_ctlr(obj: &NiObject) -> *const NiPSysUpdateCtlr;
-        fn upcast_bs_ni_alpha_property_test_ref_controller(obj: &BSNiAlphaPropertyTestRefController) -> &NiAlphaController;
-        fn downcast_bs_ni_alpha_property_test_ref_controller(obj: &NiObject) -> *const BSNiAlphaPropertyTestRefController;
+        fn upcast_bs_ni_alpha_property_test_ref_controller(
+            obj: &BSNiAlphaPropertyTestRefController,
+        ) -> &NiAlphaController;
+        fn downcast_bs_ni_alpha_property_test_ref_controller(
+            obj: &NiObject,
+        ) -> *const BSNiAlphaPropertyTestRefController;
         fn upcast_ni_keyframe_controller(obj: &NiKeyframeController) -> &NiSingleInterpController;
         fn downcast_ni_keyframe_controller(obj: &NiObject) -> *const NiKeyframeController;
         fn upcast_ni_transform_controller(obj: &NiTransformController) -> &NiKeyframeController;
         fn downcast_ni_transform_controller(obj: &NiObject) -> *const NiTransformController;
-        fn upcast_bs_material_emittance_mult_controller(obj: &BSMaterialEmittanceMultController) -> &NiFloatInterpController;
-        fn downcast_bs_material_emittance_mult_controller(obj: &NiObject) -> *const BSMaterialEmittanceMultController;
-        fn upcast_bs_refraction_strength_controller(obj: &BSRefractionStrengthController) -> &NiFloatInterpController;
-        fn downcast_bs_refraction_strength_controller(obj: &NiObject) -> *const BSRefractionStrengthController;
-        fn upcast_bs_lighting_shader_property_color_controller(obj: &BSLightingShaderPropertyColorController) -> &NiFloatInterpController;
-        fn downcast_bs_lighting_shader_property_color_controller(obj: &NiObject) -> *const BSLightingShaderPropertyColorController;
-        fn upcast_bs_lighting_shader_property_float_controller(obj: &BSLightingShaderPropertyFloatController) -> &NiFloatInterpController;
-        fn downcast_bs_lighting_shader_property_float_controller(obj: &NiObject) -> *const BSLightingShaderPropertyFloatController;
-        fn upcast_bs_lighting_shader_property_u_short_controller(obj: &BSLightingShaderPropertyUShortController) -> &NiFloatInterpController;
-        fn downcast_bs_lighting_shader_property_u_short_controller(obj: &NiObject) -> *const BSLightingShaderPropertyUShortController;
-        fn upcast_bs_effect_shader_property_color_controller(obj: &BSEffectShaderPropertyColorController) -> &NiFloatInterpController;
-        fn downcast_bs_effect_shader_property_color_controller(obj: &NiObject) -> *const BSEffectShaderPropertyColorController;
-        fn upcast_bs_effect_shader_property_float_controller(obj: &BSEffectShaderPropertyFloatController) -> &NiFloatInterpController;
-        fn downcast_bs_effect_shader_property_float_controller(obj: &NiObject) -> *const BSEffectShaderPropertyFloatController;
-        fn upcast_ni_multi_target_transform_controller(obj: &NiMultiTargetTransformController) -> &NiInterpController;
-        fn downcast_ni_multi_target_transform_controller(obj: &NiObject) -> *const NiMultiTargetTransformController;
+        fn upcast_bs_material_emittance_mult_controller(
+            obj: &BSMaterialEmittanceMultController,
+        ) -> &NiFloatInterpController;
+        fn downcast_bs_material_emittance_mult_controller(
+            obj: &NiObject,
+        ) -> *const BSMaterialEmittanceMultController;
+        fn upcast_bs_refraction_strength_controller(
+            obj: &BSRefractionStrengthController,
+        ) -> &NiFloatInterpController;
+        fn downcast_bs_refraction_strength_controller(
+            obj: &NiObject,
+        ) -> *const BSRefractionStrengthController;
+        fn upcast_bs_lighting_shader_property_color_controller(
+            obj: &BSLightingShaderPropertyColorController,
+        ) -> &NiFloatInterpController;
+        fn downcast_bs_lighting_shader_property_color_controller(
+            obj: &NiObject,
+        ) -> *const BSLightingShaderPropertyColorController;
+        fn upcast_bs_lighting_shader_property_float_controller(
+            obj: &BSLightingShaderPropertyFloatController,
+        ) -> &NiFloatInterpController;
+        fn downcast_bs_lighting_shader_property_float_controller(
+            obj: &NiObject,
+        ) -> *const BSLightingShaderPropertyFloatController;
+        fn upcast_bs_lighting_shader_property_u_short_controller(
+            obj: &BSLightingShaderPropertyUShortController,
+        ) -> &NiFloatInterpController;
+        fn downcast_bs_lighting_shader_property_u_short_controller(
+            obj: &NiObject,
+        ) -> *const BSLightingShaderPropertyUShortController;
+        fn upcast_bs_effect_shader_property_color_controller(
+            obj: &BSEffectShaderPropertyColorController,
+        ) -> &NiFloatInterpController;
+        fn downcast_bs_effect_shader_property_color_controller(
+            obj: &NiObject,
+        ) -> *const BSEffectShaderPropertyColorController;
+        fn upcast_bs_effect_shader_property_float_controller(
+            obj: &BSEffectShaderPropertyFloatController,
+        ) -> &NiFloatInterpController;
+        fn downcast_bs_effect_shader_property_float_controller(
+            obj: &NiObject,
+        ) -> *const BSEffectShaderPropertyFloatController;
+        fn upcast_ni_multi_target_transform_controller(
+            obj: &NiMultiTargetTransformController,
+        ) -> &NiInterpController;
+        fn downcast_ni_multi_target_transform_controller(
+            obj: &NiObject,
+        ) -> *const NiMultiTargetTransformController;
         fn upcast_ni_psys_modifier_ctlr(obj: &NiPSysModifierCtlr) -> &NiSingleInterpController;
         fn downcast_ni_psys_modifier_ctlr(obj: &NiObject) -> *const NiPSysModifierCtlr;
         fn upcast_ni_psys_modifier_bool_ctlr(obj: &NiPSysModifierBoolCtlr) -> &NiPSysModifierCtlr;
         fn downcast_ni_psys_modifier_bool_ctlr(obj: &NiObject) -> *const NiPSysModifierBoolCtlr;
-        fn upcast_ni_psys_modifier_active_ctlr(obj: &NiPSysModifierActiveCtlr) -> &NiPSysModifierBoolCtlr;
-        fn downcast_ni_psys_modifier_active_ctlr(obj: &NiObject) -> *const NiPSysModifierActiveCtlr;
-        fn upcast_ni_psys_modifier_float_ctlr(obj: &NiPSysModifierFloatCtlr) -> &NiPSysModifierCtlr;
+        fn upcast_ni_psys_modifier_active_ctlr(
+            obj: &NiPSysModifierActiveCtlr,
+        ) -> &NiPSysModifierBoolCtlr;
+        fn downcast_ni_psys_modifier_active_ctlr(obj: &NiObject)
+        -> *const NiPSysModifierActiveCtlr;
+        fn upcast_ni_psys_modifier_float_ctlr(obj: &NiPSysModifierFloatCtlr)
+        -> &NiPSysModifierCtlr;
         fn downcast_ni_psys_modifier_float_ctlr(obj: &NiObject) -> *const NiPSysModifierFloatCtlr;
-        fn upcast_ni_psys_emitter_life_span_ctlr(obj: &NiPSysEmitterLifeSpanCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_emitter_life_span_ctlr(obj: &NiObject) -> *const NiPSysEmitterLifeSpanCtlr;
-        fn upcast_ni_psys_emitter_speed_ctlr(obj: &NiPSysEmitterSpeedCtlr) -> &NiPSysModifierFloatCtlr;
+        fn upcast_ni_psys_emitter_life_span_ctlr(
+            obj: &NiPSysEmitterLifeSpanCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_emitter_life_span_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysEmitterLifeSpanCtlr;
+        fn upcast_ni_psys_emitter_speed_ctlr(
+            obj: &NiPSysEmitterSpeedCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
         fn downcast_ni_psys_emitter_speed_ctlr(obj: &NiObject) -> *const NiPSysEmitterSpeedCtlr;
-        fn upcast_ni_psys_emitter_initial_radius_ctlr(obj: &NiPSysEmitterInitialRadiusCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_emitter_initial_radius_ctlr(obj: &NiObject) -> *const NiPSysEmitterInitialRadiusCtlr;
-        fn upcast_ni_psys_emitter_declination_ctlr(obj: &NiPSysEmitterDeclinationCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_emitter_declination_ctlr(obj: &NiObject) -> *const NiPSysEmitterDeclinationCtlr;
-        fn upcast_ni_psys_gravity_strength_ctlr(obj: &NiPSysGravityStrengthCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_gravity_strength_ctlr(obj: &NiObject) -> *const NiPSysGravityStrengthCtlr;
-        fn upcast_ni_psys_emitter_declination_var_ctlr(obj: &NiPSysEmitterDeclinationVarCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_emitter_declination_var_ctlr(obj: &NiObject) -> *const NiPSysEmitterDeclinationVarCtlr;
-        fn upcast_ni_psys_field_magnitude_ctlr(obj: &NiPSysFieldMagnitudeCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_field_magnitude_ctlr(obj: &NiObject) -> *const NiPSysFieldMagnitudeCtlr;
-        fn upcast_ni_psys_field_attenuation_ctlr(obj: &NiPSysFieldAttenuationCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_field_attenuation_ctlr(obj: &NiObject) -> *const NiPSysFieldAttenuationCtlr;
-        fn upcast_ni_psys_field_max_distance_ctlr(obj: &NiPSysFieldMaxDistanceCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_field_max_distance_ctlr(obj: &NiObject) -> *const NiPSysFieldMaxDistanceCtlr;
-        fn upcast_ni_psys_air_field_air_friction_ctlr(obj: &NiPSysAirFieldAirFrictionCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_air_field_air_friction_ctlr(obj: &NiObject) -> *const NiPSysAirFieldAirFrictionCtlr;
-        fn upcast_ni_psys_air_field_inherit_velocity_ctlr(obj: &NiPSysAirFieldInheritVelocityCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_air_field_inherit_velocity_ctlr(obj: &NiObject) -> *const NiPSysAirFieldInheritVelocityCtlr;
-        fn upcast_ni_psys_air_field_spread_ctlr(obj: &NiPSysAirFieldSpreadCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_air_field_spread_ctlr(obj: &NiObject) -> *const NiPSysAirFieldSpreadCtlr;
-        fn upcast_ni_psys_initial_rot_speed_ctlr(obj: &NiPSysInitialRotSpeedCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_initial_rot_speed_ctlr(obj: &NiObject) -> *const NiPSysInitialRotSpeedCtlr;
-        fn upcast_ni_psys_initial_rot_speed_var_ctlr(obj: &NiPSysInitialRotSpeedVarCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_initial_rot_speed_var_ctlr(obj: &NiObject) -> *const NiPSysInitialRotSpeedVarCtlr;
-        fn upcast_ni_psys_initial_rot_angle_ctlr(obj: &NiPSysInitialRotAngleCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_initial_rot_angle_ctlr(obj: &NiObject) -> *const NiPSysInitialRotAngleCtlr;
-        fn upcast_ni_psys_initial_rot_angle_var_ctlr(obj: &NiPSysInitialRotAngleVarCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_initial_rot_angle_var_ctlr(obj: &NiObject) -> *const NiPSysInitialRotAngleVarCtlr;
-        fn upcast_ni_psys_emitter_planar_angle_ctlr(obj: &NiPSysEmitterPlanarAngleCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_emitter_planar_angle_ctlr(obj: &NiObject) -> *const NiPSysEmitterPlanarAngleCtlr;
-        fn upcast_ni_psys_emitter_planar_angle_var_ctlr(obj: &NiPSysEmitterPlanarAngleVarCtlr) -> &NiPSysModifierFloatCtlr;
-        fn downcast_ni_psys_emitter_planar_angle_var_ctlr(obj: &NiObject) -> *const NiPSysEmitterPlanarAngleVarCtlr;
-        fn upcast_ni_psys_rot_dampening_ctlr(obj: &NiPSysRotDampeningCtlr) -> &NiPSysModifierFloatCtlr;
+        fn upcast_ni_psys_emitter_initial_radius_ctlr(
+            obj: &NiPSysEmitterInitialRadiusCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_emitter_initial_radius_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysEmitterInitialRadiusCtlr;
+        fn upcast_ni_psys_emitter_declination_ctlr(
+            obj: &NiPSysEmitterDeclinationCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_emitter_declination_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysEmitterDeclinationCtlr;
+        fn upcast_ni_psys_gravity_strength_ctlr(
+            obj: &NiPSysGravityStrengthCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_gravity_strength_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysGravityStrengthCtlr;
+        fn upcast_ni_psys_emitter_declination_var_ctlr(
+            obj: &NiPSysEmitterDeclinationVarCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_emitter_declination_var_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysEmitterDeclinationVarCtlr;
+        fn upcast_ni_psys_field_magnitude_ctlr(
+            obj: &NiPSysFieldMagnitudeCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_field_magnitude_ctlr(obj: &NiObject)
+        -> *const NiPSysFieldMagnitudeCtlr;
+        fn upcast_ni_psys_field_attenuation_ctlr(
+            obj: &NiPSysFieldAttenuationCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_field_attenuation_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysFieldAttenuationCtlr;
+        fn upcast_ni_psys_field_max_distance_ctlr(
+            obj: &NiPSysFieldMaxDistanceCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_field_max_distance_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysFieldMaxDistanceCtlr;
+        fn upcast_ni_psys_air_field_air_friction_ctlr(
+            obj: &NiPSysAirFieldAirFrictionCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_air_field_air_friction_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysAirFieldAirFrictionCtlr;
+        fn upcast_ni_psys_air_field_inherit_velocity_ctlr(
+            obj: &NiPSysAirFieldInheritVelocityCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_air_field_inherit_velocity_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysAirFieldInheritVelocityCtlr;
+        fn upcast_ni_psys_air_field_spread_ctlr(
+            obj: &NiPSysAirFieldSpreadCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_air_field_spread_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysAirFieldSpreadCtlr;
+        fn upcast_ni_psys_initial_rot_speed_ctlr(
+            obj: &NiPSysInitialRotSpeedCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_initial_rot_speed_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysInitialRotSpeedCtlr;
+        fn upcast_ni_psys_initial_rot_speed_var_ctlr(
+            obj: &NiPSysInitialRotSpeedVarCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_initial_rot_speed_var_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysInitialRotSpeedVarCtlr;
+        fn upcast_ni_psys_initial_rot_angle_ctlr(
+            obj: &NiPSysInitialRotAngleCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_initial_rot_angle_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysInitialRotAngleCtlr;
+        fn upcast_ni_psys_initial_rot_angle_var_ctlr(
+            obj: &NiPSysInitialRotAngleVarCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_initial_rot_angle_var_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysInitialRotAngleVarCtlr;
+        fn upcast_ni_psys_emitter_planar_angle_ctlr(
+            obj: &NiPSysEmitterPlanarAngleCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_emitter_planar_angle_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysEmitterPlanarAngleCtlr;
+        fn upcast_ni_psys_emitter_planar_angle_var_ctlr(
+            obj: &NiPSysEmitterPlanarAngleVarCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
+        fn downcast_ni_psys_emitter_planar_angle_var_ctlr(
+            obj: &NiObject,
+        ) -> *const NiPSysEmitterPlanarAngleVarCtlr;
+        fn upcast_ni_psys_rot_dampening_ctlr(
+            obj: &NiPSysRotDampeningCtlr,
+        ) -> &NiPSysModifierFloatCtlr;
         fn downcast_ni_psys_rot_dampening_ctlr(obj: &NiObject) -> *const NiPSysRotDampeningCtlr;
         fn upcast_ni_sequence(obj: &NiSequence) -> &NiObject;
         fn downcast_ni_sequence(obj: &NiObject) -> *const NiSequence;
@@ -457,7 +651,8 @@ pub mod ffi {
         /// The quaternion keys, with the rotation type as their interpolation.
         fn keyframe_quaternion_keys(obj: &NiKeyframeData) -> KeyGroupFfi;
         /// Sets quaternion keys and the rotation type, clearing the XYZ groups.
-        fn set_keyframe_quaternion_keys(obj: Pin<&mut NiKeyframeData>, group: &KeyGroupFfi) -> bool;
+        fn set_keyframe_quaternion_keys(obj: Pin<&mut NiKeyframeData>, group: &KeyGroupFfi)
+        -> bool;
         /// XYZ rotation group `axis` (0 to 2).
         fn keyframe_xyz_rotations(obj: &NiKeyframeData, axis: usize) -> KeyGroupFfi;
         /// Sets the three XYZ groups and the rotation type, clearing the quaternion keys.
@@ -566,25 +761,43 @@ pub mod ffi {
         fn bspline_point3_offset(obj: &NiBSplineCompPoint3Interpolator) -> f32;
         fn set_bspline_point3_offset(obj: Pin<&mut NiBSplineCompPoint3Interpolator>, value: f32);
         fn bspline_point3_half_range(obj: &NiBSplineCompPoint3Interpolator) -> f32;
-        fn set_bspline_point3_half_range(obj: Pin<&mut NiBSplineCompPoint3Interpolator>, value: f32);
+        fn set_bspline_point3_half_range(
+            obj: Pin<&mut NiBSplineCompPoint3Interpolator>,
+            value: f32,
+        );
         fn bspline_translation_offset(obj: &NiBSplineTransformInterpolator) -> u32;
-        fn set_bspline_translation_offset(obj: Pin<&mut NiBSplineTransformInterpolator>, value: u32);
+        fn set_bspline_translation_offset(
+            obj: Pin<&mut NiBSplineTransformInterpolator>,
+            value: u32,
+        );
         fn bspline_rotation_offset(obj: &NiBSplineTransformInterpolator) -> u32;
         fn set_bspline_rotation_offset(obj: Pin<&mut NiBSplineTransformInterpolator>, value: u32);
         fn bspline_scale_offset(obj: &NiBSplineTransformInterpolator) -> u32;
         fn set_bspline_scale_offset(obj: Pin<&mut NiBSplineTransformInterpolator>, value: u32);
         fn bspline_translation_bias(obj: &NiBSplineCompTransformInterpolator) -> f32;
-        fn set_bspline_translation_bias(obj: Pin<&mut NiBSplineCompTransformInterpolator>, value: f32);
+        fn set_bspline_translation_bias(
+            obj: Pin<&mut NiBSplineCompTransformInterpolator>,
+            value: f32,
+        );
         fn bspline_translation_multiplier(obj: &NiBSplineCompTransformInterpolator) -> f32;
-        fn set_bspline_translation_multiplier(obj: Pin<&mut NiBSplineCompTransformInterpolator>, value: f32);
+        fn set_bspline_translation_multiplier(
+            obj: Pin<&mut NiBSplineCompTransformInterpolator>,
+            value: f32,
+        );
         fn bspline_rotation_bias(obj: &NiBSplineCompTransformInterpolator) -> f32;
         fn set_bspline_rotation_bias(obj: Pin<&mut NiBSplineCompTransformInterpolator>, value: f32);
         fn bspline_rotation_multiplier(obj: &NiBSplineCompTransformInterpolator) -> f32;
-        fn set_bspline_rotation_multiplier(obj: Pin<&mut NiBSplineCompTransformInterpolator>, value: f32);
+        fn set_bspline_rotation_multiplier(
+            obj: Pin<&mut NiBSplineCompTransformInterpolator>,
+            value: f32,
+        );
         fn bspline_scale_bias(obj: &NiBSplineCompTransformInterpolator) -> f32;
         fn set_bspline_scale_bias(obj: Pin<&mut NiBSplineCompTransformInterpolator>, value: f32);
         fn bspline_scale_multiplier(obj: &NiBSplineCompTransformInterpolator) -> f32;
-        fn set_bspline_scale_multiplier(obj: Pin<&mut NiBSplineCompTransformInterpolator>, value: f32);
+        fn set_bspline_scale_multiplier(
+            obj: Pin<&mut NiBSplineCompTransformInterpolator>,
+            value: f32,
+        );
         fn point3_interpolator_value(obj: &NiPoint3Interpolator) -> Vec3;
         fn set_point3_interpolator_value(obj: Pin<&mut NiPoint3Interpolator>, value: Vec3);
         fn blend_point3_value(obj: &NiBlendPoint3Interpolator) -> Vec3;
@@ -592,9 +805,15 @@ pub mod ffi {
         fn bspline_point3_value(obj: &NiBSplinePoint3Interpolator) -> Vec3;
         fn set_bspline_point3_value(obj: Pin<&mut NiBSplinePoint3Interpolator>, value: Vec3);
         fn transform_interpolator_value(obj: &NiTransformInterpolator) -> QuatTransformFfi;
-        fn set_transform_interpolator_value(obj: Pin<&mut NiTransformInterpolator>, value: &QuatTransformFfi);
+        fn set_transform_interpolator_value(
+            obj: Pin<&mut NiTransformInterpolator>,
+            value: &QuatTransformFfi,
+        );
         fn bspline_transform_value(obj: &NiBSplineTransformInterpolator) -> QuatTransformFfi;
-        fn set_bspline_transform_value(obj: Pin<&mut NiBSplineTransformInterpolator>, value: &QuatTransformFfi);
+        fn set_bspline_transform_value(
+            obj: Pin<&mut NiBSplineTransformInterpolator>,
+            value: &QuatTransformFfi,
+        );
         fn path_flags(obj: &NiPathInterpolator) -> u16;
         fn set_path_flags(obj: Pin<&mut NiPathInterpolator>, value: u16);
         fn path_bank_direction(obj: &NiPathInterpolator) -> i32;
@@ -606,7 +825,10 @@ pub mod ffi {
         fn path_follow_axis(obj: &NiPathInterpolator) -> u16;
         fn set_path_follow_axis(obj: Pin<&mut NiPathInterpolator>, value: u16);
         fn blend_transform_value(obj: &NiBlendTransformInterpolator) -> QuatTransformFfi;
-        fn set_blend_transform_value(obj: Pin<&mut NiBlendTransformInterpolator>, value: &QuatTransformFfi);
+        fn set_blend_transform_value(
+            obj: Pin<&mut NiBlendTransformInterpolator>,
+            value: &QuatTransformFfi,
+        );
         fn blend_transform_valid(obj: &NiBlendTransformInterpolator) -> [bool; 3];
         fn set_blend_transform_valid(obj: Pin<&mut NiBlendTransformInterpolator>, valid: [bool; 3]);
         fn blend_items(obj: &NiBlendInterpolator) -> Vec<BlendItemFfi>;
@@ -677,23 +899,41 @@ pub mod ffi {
         fn lightning_branch_count(obj: &BSProceduralLightningController) -> u16;
         fn set_lightning_branch_count(obj: Pin<&mut BSProceduralLightningController>, value: u16);
         fn lightning_branch_variation(obj: &BSProceduralLightningController) -> u16;
-        fn set_lightning_branch_variation(obj: Pin<&mut BSProceduralLightningController>, value: u16);
+        fn set_lightning_branch_variation(
+            obj: Pin<&mut BSProceduralLightningController>,
+            value: u16,
+        );
         fn lightning_length(obj: &BSProceduralLightningController) -> f32;
         fn set_lightning_length(obj: Pin<&mut BSProceduralLightningController>, value: f32);
         fn lightning_length_variation(obj: &BSProceduralLightningController) -> f32;
-        fn set_lightning_length_variation(obj: Pin<&mut BSProceduralLightningController>, value: f32);
+        fn set_lightning_length_variation(
+            obj: Pin<&mut BSProceduralLightningController>,
+            value: f32,
+        );
         fn lightning_width(obj: &BSProceduralLightningController) -> f32;
         fn set_lightning_width(obj: Pin<&mut BSProceduralLightningController>, value: f32);
         fn lightning_child_width_multiplier(obj: &BSProceduralLightningController) -> f32;
-        fn set_lightning_child_width_multiplier(obj: Pin<&mut BSProceduralLightningController>, value: f32);
+        fn set_lightning_child_width_multiplier(
+            obj: Pin<&mut BSProceduralLightningController>,
+            value: f32,
+        );
         fn lightning_arc_offset(obj: &BSProceduralLightningController) -> f32;
         fn set_lightning_arc_offset(obj: Pin<&mut BSProceduralLightningController>, value: f32);
         fn lightning_fade_main_bolt(obj: &BSProceduralLightningController) -> bool;
-        fn set_lightning_fade_main_bolt(obj: Pin<&mut BSProceduralLightningController>, value: bool);
+        fn set_lightning_fade_main_bolt(
+            obj: Pin<&mut BSProceduralLightningController>,
+            value: bool,
+        );
         fn lightning_fade_child_bolts(obj: &BSProceduralLightningController) -> bool;
-        fn set_lightning_fade_child_bolts(obj: Pin<&mut BSProceduralLightningController>, value: bool);
+        fn set_lightning_fade_child_bolts(
+            obj: Pin<&mut BSProceduralLightningController>,
+            value: bool,
+        );
         fn lightning_animate_arc_offset(obj: &BSProceduralLightningController) -> bool;
-        fn set_lightning_animate_arc_offset(obj: Pin<&mut BSProceduralLightningController>, value: bool);
+        fn set_lightning_animate_arc_offset(
+            obj: Pin<&mut BSProceduralLightningController>,
+            value: bool,
+        );
         fn point3_controller_target_color(obj: &NiPoint3InterpController) -> u16;
         fn set_point3_controller_target_color(obj: Pin<&mut NiPoint3InterpController>, value: u16);
         fn flip_texture_slot(obj: &NiFlipController) -> u32;
@@ -703,21 +943,42 @@ pub mod ffi {
         fn flip_delta(obj: &NiFlipController) -> f32;
         fn set_flip_delta(obj: Pin<&mut NiFlipController>, value: f32);
         fn texture_transform_shader_map(obj: &NiTextureTransformController) -> bool;
-        fn set_texture_transform_shader_map(obj: Pin<&mut NiTextureTransformController>, value: bool);
+        fn set_texture_transform_shader_map(
+            obj: Pin<&mut NiTextureTransformController>,
+            value: bool,
+        );
         fn texture_transform_slot(obj: &NiTextureTransformController) -> u32;
         fn set_texture_transform_slot(obj: Pin<&mut NiTextureTransformController>, value: u32);
         fn texture_transform_operation(obj: &NiTextureTransformController) -> u32;
         fn set_texture_transform_operation(obj: Pin<&mut NiTextureTransformController>, value: u32);
         fn lighting_color_controller_color(obj: &BSLightingShaderPropertyColorController) -> u32;
-        fn set_lighting_color_controller_color(obj: Pin<&mut BSLightingShaderPropertyColorController>, value: u32);
-        fn lighting_float_controller_variable(obj: &BSLightingShaderPropertyFloatController) -> u32;
-        fn set_lighting_float_controller_variable(obj: Pin<&mut BSLightingShaderPropertyFloatController>, value: u32);
-        fn lighting_ushort_controller_variable(obj: &BSLightingShaderPropertyUShortController) -> u32;
-        fn set_lighting_ushort_controller_variable(obj: Pin<&mut BSLightingShaderPropertyUShortController>, value: u32);
+        fn set_lighting_color_controller_color(
+            obj: Pin<&mut BSLightingShaderPropertyColorController>,
+            value: u32,
+        );
+        fn lighting_float_controller_variable(obj: &BSLightingShaderPropertyFloatController)
+        -> u32;
+        fn set_lighting_float_controller_variable(
+            obj: Pin<&mut BSLightingShaderPropertyFloatController>,
+            value: u32,
+        );
+        fn lighting_ushort_controller_variable(
+            obj: &BSLightingShaderPropertyUShortController,
+        ) -> u32;
+        fn set_lighting_ushort_controller_variable(
+            obj: Pin<&mut BSLightingShaderPropertyUShortController>,
+            value: u32,
+        );
         fn effect_color_controller_color(obj: &BSEffectShaderPropertyColorController) -> u32;
-        fn set_effect_color_controller_color(obj: Pin<&mut BSEffectShaderPropertyColorController>, value: u32);
+        fn set_effect_color_controller_color(
+            obj: Pin<&mut BSEffectShaderPropertyColorController>,
+            value: u32,
+        );
         fn effect_float_controller_variable(obj: &BSEffectShaderPropertyFloatController) -> u32;
-        fn set_effect_float_controller_variable(obj: Pin<&mut BSEffectShaderPropertyFloatController>, value: u32);
+        fn set_effect_float_controller_variable(
+            obj: Pin<&mut BSEffectShaderPropertyFloatController>,
+            value: u32,
+        );
         fn geom_morpher_flags(obj: &NiGeomMorpherController) -> u16;
         fn set_geom_morpher_flags(obj: Pin<&mut NiGeomMorpherController>, value: u16);
         fn geom_morpher_always_update(obj: &NiGeomMorpherController) -> bool;
@@ -728,7 +989,10 @@ pub mod ffi {
         fn set_blend_controller_keys(obj: Pin<&mut bhkBlendController>, value: u32);
         fn bone_lod_controller_count(obj: &NiBoneLODController) -> u32;
         fn float_extra_data_controller_name(obj: &NiFloatExtraDataController) -> &[u8];
-        fn set_float_extra_data_controller_name(obj: Pin<&mut NiFloatExtraDataController>, name: &[u8]);
+        fn set_float_extra_data_controller_name(
+            obj: Pin<&mut NiFloatExtraDataController>,
+            name: &[u8],
+        );
         fn geom_morpher_unknown_ints(obj: &NiGeomMorpherController) -> Vec<u32>;
         fn set_geom_morpher_unknown_ints(obj: Pin<&mut NiGeomMorpherController>, ints: &[u32]);
         /// The interpolators of the `NiGeomMorpherController` at `owner`, from the list the file
@@ -736,11 +1000,19 @@ pub mod ffi {
         fn morph_weights(file: &NifFile, owner: u32) -> Vec<MorphWeightFfi>;
         /// Replaces both interpolator lists. False, changing nothing, unless each interpolator
         /// is empty or an `NiInterpolator`.
-        fn set_morph_weights(file: Pin<&mut NifFile>, owner: u32, weights: &[MorphWeightFfi]) -> bool;
+        fn set_morph_weights(
+            file: Pin<&mut NifFile>,
+            owner: u32,
+            weights: &[MorphWeightFfi],
+        ) -> bool;
         fn bone_lod_groups(obj: &NiBoneLODController) -> Vec<NodeGroupFfi>;
         /// Replaces the node groups and sets the LOD count to their number. False, changing
         /// nothing, unless each node is an `NiNode`.
-        fn set_bone_lod_groups(file: Pin<&mut NifFile>, owner: u32, groups: &[NodeGroupFfi]) -> bool;
+        fn set_bone_lod_groups(
+            file: Pin<&mut NifFile>,
+            owner: u32,
+            groups: &[NodeGroupFfi],
+        ) -> bool;
         /// Adds a controller to the end of the chain of the `NiObjectNET` at `owner`, targeting
         /// it. `NIF_NPOS`, adding nothing, if `owner` isn't one.
         fn add_ni_look_at_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
@@ -763,17 +1035,33 @@ pub mod ffi {
         fn add_ni_light_dimmer_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_ni_light_radius_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_ni_alpha_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
-        fn add_bs_ni_alpha_property_test_ref_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_ni_alpha_property_test_ref_controller(file: Pin<&mut NifFile>, owner: u32)
+        -> u32;
         fn add_ni_keyframe_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_ni_transform_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_bs_material_emittance_mult_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_bs_refraction_strength_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_bs_refraction_fire_period_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
-        fn add_bs_lighting_shader_property_color_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
-        fn add_bs_lighting_shader_property_float_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
-        fn add_bs_lighting_shader_property_u_short_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
-        fn add_bs_effect_shader_property_color_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
-        fn add_bs_effect_shader_property_float_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_lighting_shader_property_color_controller(
+            file: Pin<&mut NifFile>,
+            owner: u32,
+        ) -> u32;
+        fn add_bs_lighting_shader_property_float_controller(
+            file: Pin<&mut NifFile>,
+            owner: u32,
+        ) -> u32;
+        fn add_bs_lighting_shader_property_u_short_controller(
+            file: Pin<&mut NifFile>,
+            owner: u32,
+        ) -> u32;
+        fn add_bs_effect_shader_property_color_controller(
+            file: Pin<&mut NifFile>,
+            owner: u32,
+        ) -> u32;
+        fn add_bs_effect_shader_property_float_controller(
+            file: Pin<&mut NifFile>,
+            owner: u32,
+        ) -> u32;
         fn add_ni_multi_target_transform_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_ni_controller_manager(file: Pin<&mut NifFile>, owner: u32) -> u32;
 
@@ -817,7 +1105,11 @@ pub mod ffi {
         /// Replaces the controlled blocks, setting their strings in every form and writing them
         /// to the sequence's string palette in the versions that use one. False, changing
         /// nothing, unless each ref is empty or the right type.
-        fn set_controlled_blocks(file: Pin<&mut NifFile>, owner: u32, blocks: &[ControlledBlockFfi]) -> bool;
+        fn set_controlled_blocks(
+            file: Pin<&mut NifFile>,
+            owner: u32,
+            blocks: &[ControlledBlockFfi],
+        ) -> bool;
         fn add_ni_sequence(file: Pin<&mut NifFile>, name: &[u8]) -> u32;
         fn add_ni_controller_sequence(file: Pin<&mut NifFile>, name: &[u8]) -> u32;
         fn add_ni_sequence_stream_helper(file: Pin<&mut NifFile>, name: &[u8]) -> u32;

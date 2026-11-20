@@ -164,7 +164,10 @@ pub mod ffi {
         fn set_mesh_lod_tri_shape_sizes(s: Pin<&mut BSMeshLODTriShape>, v: &[u32]);
         /// `BSSegmentedTriShape::GetSegments` and `SetSegments`, the setter checking ranges.
         fn segmented_tri_shape_segments(s: &BSSegmentedTriShape) -> Vec<GeometrySegment>;
-        fn set_segmented_tri_shape_segments(s: Pin<&mut BSSegmentedTriShape>, segments: &[GeometrySegment]) -> bool;
+        fn set_segmented_tri_shape_segments(
+            s: Pin<&mut BSSegmentedTriShape>,
+            segments: &[GeometrySegment],
+        ) -> bool;
         /// `NiLinesData::lineFlags`; the setter needs one per vertex.
         fn lines_data_flags(d: &NiLinesData) -> Vec<bool>;
         fn set_lines_data_flags(d: Pin<&mut NiLinesData>, flags: &[bool]) -> bool;
@@ -191,10 +194,16 @@ pub mod ffi {
 
         fn upcast_additional_geom_data(obj: &AdditionalGeomData) -> &NiObject;
         fn downcast_additional_geom_data(obj: &NiObject) -> *const AdditionalGeomData;
-        fn upcast_ni_additional_geometry_data(obj: &NiAdditionalGeometryData) -> &AdditionalGeomData;
+        fn upcast_ni_additional_geometry_data(
+            obj: &NiAdditionalGeometryData,
+        ) -> &AdditionalGeomData;
         fn downcast_ni_additional_geometry_data(obj: &NiObject) -> *const NiAdditionalGeometryData;
-        fn upcast_bs_packed_additional_geometry_data(obj: &BSPackedAdditionalGeometryData) -> &AdditionalGeomData;
-        fn downcast_bs_packed_additional_geometry_data(obj: &NiObject) -> *const BSPackedAdditionalGeometryData;
+        fn upcast_bs_packed_additional_geometry_data(
+            obj: &BSPackedAdditionalGeometryData,
+        ) -> &AdditionalGeomData;
+        fn downcast_bs_packed_additional_geometry_data(
+            obj: &NiObject,
+        ) -> *const BSPackedAdditionalGeometryData;
         /// `numVertices` and `blockInfos` of either type.
         fn agd_vertex_count(d: &AdditionalGeomData) -> u16;
         fn set_agd_vertex_count(d: Pin<&mut AdditionalGeomData>, v: u16);
@@ -242,7 +251,11 @@ pub mod ffi {
         /// `NiGeometryData`'s arrays: `which` is 0 vertices, 1 normals, 2 tangents,
         /// 3 bitangents. The setter needs one per vertex and enables normals or tangents.
         fn geometry_data_vectors(d: &NiGeometryData, which: u8) -> Vec<Vec3>;
-        fn set_geometry_data_vectors(d: Pin<&mut NiGeometryData>, which: u8, values: &[Vec3]) -> bool;
+        fn set_geometry_data_vectors(
+            d: Pin<&mut NiGeometryData>,
+            which: u8,
+            values: &[Vec3],
+        ) -> bool;
         /// `vertexColors`, 4 floats each.
         fn geometry_data_colors(d: &NiGeometryData) -> &[f32];
         fn set_geometry_data_colors(d: Pin<&mut NiGeometryData>, flat: &[f32]) -> bool;
@@ -251,7 +264,12 @@ pub mod ffi {
         /// `uvSets`, 2 floats per UV. The setter takes `count` sets and updates `dataFlags`.
         fn geometry_data_uv_set_count(d: &NiGeometryData) -> usize;
         fn geometry_data_uv_set(d: &NiGeometryData, i: usize) -> &[f32];
-        fn set_geometry_data_uv_sets(d: Pin<&mut NiGeometryData>, flat: &[f32], count: usize, bethesda: bool) -> bool;
+        fn set_geometry_data_uv_sets(
+            d: Pin<&mut NiGeometryData>,
+            flat: &[f32],
+            count: usize,
+            bethesda: bool,
+        ) -> bool;
         /// `dataFlags`; the setter resizes the UV sets and tangents to match.
         fn geometry_data_flags(d: &NiGeometryData) -> u16;
         fn set_geometry_data_flags(d: Pin<&mut NiGeometryData>, flags: u16, bethesda: bool);
@@ -267,17 +285,30 @@ pub mod ffi {
         /// lists joined, with their lengths, and check counts and vertex indices.
         fn tri_shape_data_match_group_count(d: &NiTriShapeData) -> usize;
         fn tri_shape_data_match_group(d: &NiTriShapeData, i: usize) -> &[u16];
-        fn set_tri_shape_data_match_groups(d: Pin<&mut NiTriShapeData>, flat: &[u16], lengths: &[usize]) -> bool;
+        fn set_tri_shape_data_match_groups(
+            d: Pin<&mut NiTriShapeData>,
+            flat: &[u16],
+            lengths: &[usize],
+        ) -> bool;
         fn tri_strips_data_strip_count(d: &NiTriStripsData) -> usize;
         fn tri_strips_data_strip(d: &NiTriStripsData, i: usize) -> &[u16];
-        fn set_tri_strips_data_strips(d: Pin<&mut NiTriStripsData>, flat: &[u16], lengths: &[usize]) -> bool;
+        fn set_tri_strips_data_strips(
+            d: Pin<&mut NiTriStripsData>,
+            flat: &[u16],
+            lengths: &[usize],
+        ) -> bool;
 
         /// `NiGeometry`'s `materialNames` and `materialExtraData`, `activeMaterial`,
         /// `defaultMatNeedsUpdateFlag`, and `shader`, `shaderName` and `implementation`.
         fn geometry_material_count(g: &NiGeometry) -> usize;
         fn geometry_material_name(g: &NiGeometry, i: usize) -> &[u8];
         fn geometry_material_extra_data(g: &NiGeometry) -> &[u32];
-        fn set_geometry_materials(g: Pin<&mut NiGeometry>, bytes: &[u8], lengths: &[usize], extra_data: &[u32]);
+        fn set_geometry_materials(
+            g: Pin<&mut NiGeometry>,
+            bytes: &[u8],
+            lengths: &[usize],
+            extra_data: &[u32],
+        );
         fn geometry_active_material(g: &NiGeometry) -> i32;
         fn set_geometry_active_material(g: Pin<&mut NiGeometry>, v: i32);
         fn geometry_material_update_flag(g: &NiGeometry) -> u8;
@@ -302,7 +333,12 @@ pub mod ffi {
         /// Each vertex's `extra` floats, `per` per vertex.
         fn bs_tri_shape_vertex_count(s: &BSTriShape) -> usize;
         fn bs_tri_shape_extra_floats(s: &BSTriShape, per: &mut usize) -> Vec<f32>;
-        fn set_bs_tri_shape_extra_floats(s: Pin<&mut BSTriShape>, flat: &[f32], per: usize, sse: bool) -> bool;
+        fn set_bs_tri_shape_extra_floats(
+            s: Pin<&mut BSTriShape>,
+            flat: &[f32],
+            per: usize,
+            sse: bool,
+        ) -> bool;
         /// The Skyrim SE particle data.
         fn bs_tri_shape_has_particle_data(s: &BSTriShape) -> bool;
         fn bs_tri_shape_particle_vectors(s: &BSTriShape, normals: bool) -> Vec<Vec3>;
@@ -317,7 +353,10 @@ pub mod ffi {
         /// `BSSubIndexTriShape::GetSegments` and `SetSegments` (Skyrim SE), the setter
         /// checking ranges.
         fn sub_index_tri_shape_sse_segments(s: &BSSubIndexTriShape) -> Vec<GeometrySegment>;
-        fn set_sub_index_tri_shape_sse_segments(s: Pin<&mut BSSubIndexTriShape>, segments: &[GeometrySegment]) -> bool;
+        fn set_sub_index_tri_shape_sse_segments(
+            s: Pin<&mut BSSubIndexTriShape>,
+            segments: &[GeometrySegment],
+        ) -> bool;
 
         /// `BSGeometry`'s bounds, `boundMinMax` (6 elements) and meshes. Mesh pointers are
         /// null if `i` is out of range. Mesh info is `triSize`, `numVerts` and `flags`.
@@ -349,14 +388,26 @@ pub mod ffi {
         fn set_mesh_data_tangent_ws(d: Pin<&mut BSGeometryMeshData>, ws: &[u8]) -> bool;
         fn mesh_data_weights_per_vertex(d: &BSGeometryMeshData) -> u32;
         fn mesh_data_skin_weights(d: &BSGeometryMeshData) -> Vec<u16>;
-        fn set_mesh_data_skin_weights(d: Pin<&mut BSGeometryMeshData>, flat: &[u16], per: u32) -> bool;
+        fn set_mesh_data_skin_weights(
+            d: Pin<&mut BSGeometryMeshData>,
+            flat: &[u16],
+            per: u32,
+        ) -> bool;
         fn mesh_data_lod_count(d: &BSGeometryMeshData) -> usize;
         fn mesh_data_lod(d: &BSGeometryMeshData, i: usize) -> &[u16];
-        fn set_mesh_data_lods(d: Pin<&mut BSGeometryMeshData>, flat: &[u16], lengths: &[usize]) -> bool;
+        fn set_mesh_data_lods(
+            d: Pin<&mut BSGeometryMeshData>,
+            flat: &[u16],
+            lengths: &[usize],
+        ) -> bool;
         fn mesh_data_meshlets(d: &BSGeometryMeshData) -> &[u32];
         fn set_mesh_data_meshlets(d: Pin<&mut BSGeometryMeshData>, flat: &[u32]);
         fn mesh_data_cull_data(d: &BSGeometryMeshData) -> Vec<Vec3>;
         fn set_mesh_data_cull_data(d: Pin<&mut BSGeometryMeshData>, flat: &[Vec3]);
-        fn generate_mesh_data_meshlets(d: Pin<&mut BSGeometryMeshData>, max_vertices: u32, max_primitives: u32) -> bool;
+        fn generate_mesh_data_meshlets(
+            d: Pin<&mut BSGeometryMeshData>,
+            max_vertices: u32,
+            max_primitives: u32,
+        ) -> bool;
     }
 }

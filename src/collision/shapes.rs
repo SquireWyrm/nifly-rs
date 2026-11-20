@@ -62,7 +62,10 @@ impl BhkMultiSphereShape {
 
     /// The spheres, in Havok units.
     pub fn spheres(&self) -> Vec<BoundingSphere> {
-        ffi::multi_sphere_spheres(&self.0).into_iter().map(BoundingSphere::from_ffi).collect()
+        ffi::multi_sphere_spheres(&self.0)
+            .into_iter()
+            .map(BoundingSphere::from_ffi)
+            .collect()
     }
 
     pub fn set_spheres(&mut self, spheres: &[BoundingSphere]) {
@@ -84,7 +87,10 @@ impl BhkConvexVerticesShape {
 
     /// The vertices whose convex hull is the shape.
     pub fn vertices(&self) -> Vec<[f32; 4]> {
-        ffi::convex_vertices_list(&self.0, false).as_chunks::<4>().0.to_vec()
+        ffi::convex_vertices_list(&self.0, false)
+            .as_chunks::<4>()
+            .0
+            .to_vec()
     }
 
     pub fn set_vertices(&mut self, vertices: &[[f32; 4]]) {
@@ -95,7 +101,10 @@ impl BhkConvexVerticesShape {
     /// distance from the origin, negated, in `w`. They aren't updated when the
     /// [vertices](Self::vertices) change.
     pub fn normals(&self) -> Vec<[f32; 4]> {
-        ffi::convex_vertices_list(&self.0, true).as_chunks::<4>().0.to_vec()
+        ffi::convex_vertices_list(&self.0, true)
+            .as_chunks::<4>()
+            .0
+            .to_vec()
     }
 
     pub fn set_normals(&mut self, normals: &[[f32; 4]]) {
@@ -174,7 +183,10 @@ impl BhkListShape {
 
     /// The sub-shapes' collision filters, usually one per sub-shape.
     pub fn filters(&self) -> Vec<HavokFilter> {
-        ffi::list_shape_filters(&self.0).into_iter().map(HavokFilter::from_ffi).collect()
+        ffi::list_shape_filters(&self.0)
+            .into_iter()
+            .map(HavokFilter::from_ffi)
+            .collect()
     }
 
     /// Replaces the [filters](Self::filters). Returns `false`, changing nothing, unless there's
@@ -303,7 +315,8 @@ impl<T: NiType> Edit<'_, T> {
         T: HasShape,
     {
         let owner = self.index() as u32;
-        index_from_ffi(S::assign(self.file_mut().inner.pin_mut(), owner)).expect("the block has a shape ref")
+        index_from_ffi(S::assign(self.file_mut().inner.pin_mut(), owner))
+            .expect("the block has a shape ref")
     }
 
     /// Replaces the list shape's [sub-shapes](View::sub_shapes). A [`BhkListShape`]'s
@@ -385,8 +398,11 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<BhkCompressedMeshShape, I>,
     {
         let shape = self.index() as u32;
-        index_from_ffi(ffi::assign_compressed_data(self.file_mut().inner.pin_mut(), shape))
-            .expect("the block is a compressed mesh shape")
+        index_from_ffi(ffi::assign_compressed_data(
+            self.file_mut().inner.pin_mut(),
+            shape,
+        ))
+        .expect("the block is a compressed mesh shape")
     }
 
     /// Like [`View::packed_data`], for editing.
@@ -413,8 +429,11 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<BhkPackedNiTriStripsShape, I>,
     {
         let shape = self.index() as u32;
-        index_from_ffi(ffi::assign_packed_data(self.file_mut().inner.pin_mut(), shape))
-            .expect("the block is a packed shape")
+        index_from_ffi(ffi::assign_packed_data(
+            self.file_mut().inner.pin_mut(),
+            shape,
+        ))
+        .expect("the block is a packed shape")
     }
 }
 

@@ -11,12 +11,12 @@ pub mod object3d;
 pub mod objects;
 
 // The order of these sets the order of `NifFile`'s doc sections, one per module.
-pub mod file;
-pub mod nodes;
-pub mod geometry;
-pub mod skin;
-pub mod shaders;
-pub mod effects;
-pub mod collision;
 pub mod animation;
+pub mod collision;
+pub mod effects;
+pub mod file;
+pub mod geometry;
+pub mod nodes;
 pub mod particles;
+pub mod shaders;
+pub mod skin;

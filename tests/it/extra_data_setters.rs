@@ -5,19 +5,21 @@ use std::{fs, io::Cursor};
 
 use nifly::{
     extra_data::{
-        EntryPoints,
-        BoneLod, BoneTranslation, BoneTranslations, BsBehaviorGraphExtraData, BsBoneLodExtraData, BsBound,
-        BsClothExtraData, BsCollisionQueryProxyExtraData, BsConnectPointChildren, BsConnectPointParents,
-        BsDecalPlacementVectorExtraData, BsDistantObjectExtraData, BsDistantObjectLargeRefExtraData,
-        BsEyeCenterExtraData, BsFurnitureMarker, BsInvMarker, BsPositionData, BsWArray, BsxFlags, ConnectPoint,
-        DecalPoint, ExtraBehaviorGraph, ExtraBinary, ExtraBoneLods, ExtraBoneTranslations, ExtraBoolean, ExtraBsBound,
-        ExtraBsCloth, ExtraBsCollisionQueryProxy, BsxBitflags, ExtraBsxFlags, ExtraColor, ExtraConnectPointChildren,
-        ExtraConnectPointParents, ExtraDecalPlacement, ExtraDistantObject, ExtraDistantObjectLargeRef, ExtraEyeCenter,
-        ExtraFloat, ExtraFloats, ExtraFurnitureMarkerNode, ExtraInteger, ExtraIntegers, ExtraInvMarker,
-        ExtraPositionData, ExtraSkinAttach, ExtraString, ExtraStrings, ExtraVector, ExtraVertWeights, ExtraWArray,
-        FurniturePosition, IntoExtraData, NiBinaryExtraData, NiBooleanExtraData, NiColorExtraData, NiExtraData,
-        NiFloatExtraData, NiFloatsExtraData, NiIntegerExtraData, NiIntegersExtraData, NiStringExtraData,
-        NiStringsExtraData, NiVectorExtraData, NiVertWeightsExtraData, SkinAttach,
+        BoneLod, BoneTranslation, BoneTranslations, BsBehaviorGraphExtraData, BsBoneLodExtraData,
+        BsBound, BsClothExtraData, BsCollisionQueryProxyExtraData, BsConnectPointChildren,
+        BsConnectPointParents, BsDecalPlacementVectorExtraData, BsDistantObjectExtraData,
+        BsDistantObjectLargeRefExtraData, BsEyeCenterExtraData, BsFurnitureMarker, BsInvMarker,
+        BsPositionData, BsWArray, BsxBitflags, BsxFlags, ConnectPoint, DecalPoint, EntryPoints,
+        ExtraBehaviorGraph, ExtraBinary, ExtraBoneLods, ExtraBoneTranslations, ExtraBoolean,
+        ExtraBsBound, ExtraBsCloth, ExtraBsCollisionQueryProxy, ExtraBsxFlags, ExtraColor,
+        ExtraConnectPointChildren, ExtraConnectPointParents, ExtraDecalPlacement,
+        ExtraDistantObject, ExtraDistantObjectLargeRef, ExtraEyeCenter, ExtraFloat, ExtraFloats,
+        ExtraFurnitureMarkerNode, ExtraInteger, ExtraIntegers, ExtraInvMarker, ExtraPositionData,
+        ExtraSkinAttach, ExtraString, ExtraStrings, ExtraVector, ExtraVertWeights, ExtraWArray,
+        FurniturePosition, IntoExtraData, NiBinaryExtraData, NiBooleanExtraData, NiColorExtraData,
+        NiExtraData, NiFloatExtraData, NiFloatsExtraData, NiIntegerExtraData, NiIntegersExtraData,
+        NiStringExtraData, NiStringsExtraData, NiVectorExtraData, NiVertWeightsExtraData,
+        SkinAttach,
     },
     file::{Index, NifFile, NifVersion, SaveOptions},
     object3d::Vec3,
@@ -26,14 +28,24 @@ use nifly::{
 
 fn reload(nif: &mut NifFile) -> NifFile {
     let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, Some(SaveOptions { optimize: false, sort_blocks: false })).unwrap();
+    nif.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize: false,
+            sort_blocks: false,
+        }),
+    )
+    .unwrap();
     NifFile::load(cur.into_inner().as_slice(), None).unwrap()
 }
 
 /// Attaches `value` to the root and returns its index.
 fn add(nif: &mut NifFile, value: impl IntoExtraData) -> Index {
     let root = nif.root_node().unwrap().index();
-    nif.edit::<NiAvObject>(root).unwrap().assign_extra_data(value).unwrap()
+    nif.edit::<NiAvObject>(root)
+        .unwrap()
+        .assign_extra_data(value)
+        .unwrap()
 }
 
 fn set<T: NiType>(nif: &mut NifFile, index: Index, f: impl FnOnce(&mut T)) {
@@ -80,14 +92,31 @@ fn values_and_names() {
     assert_eq!(get::<NiIntegerExtraData>(&nif, integer).value(), 42);
     assert_eq!(get::<NiFloatExtraData>(&nif, float).value(), 2.5);
     assert!(get::<NiBooleanExtraData>(&nif, boolean).value());
-    assert_eq!(get::<NiIntegersExtraData>(&nif, integers).values(), [3, 4, 5]);
+    assert_eq!(
+        get::<NiIntegersExtraData>(&nif, integers).values(),
+        [3, 4, 5]
+    );
     assert_eq!(get::<NiBinaryExtraData>(&nif, binary).data(), [9, 8]);
     assert!(get::<NiFloatsExtraData>(&nif, floats).values().is_empty());
-    assert_eq!(get::<NiStringsExtraData>(&nif, strings).values().collect::<Vec<_>>(), ["x", "", "yz"]);
-    assert_eq!(get::<NiColorExtraData>(&nif, color).value(), [0.1, 0.2, 0.3, 0.4]);
-    assert_eq!(get::<NiVectorExtraData>(&nif, vector).value(), [1.0, 2.0, 3.0, 4.0]);
+    assert_eq!(
+        get::<NiStringsExtraData>(&nif, strings)
+            .values()
+            .collect::<Vec<_>>(),
+        ["x", "", "yz"]
+    );
+    assert_eq!(
+        get::<NiColorExtraData>(&nif, color).value(),
+        [0.1, 0.2, 0.3, 0.4]
+    );
+    assert_eq!(
+        get::<NiVectorExtraData>(&nif, vector).value(),
+        [1.0, 2.0, 3.0, 4.0]
+    );
     let bsx_block = get::<BsxFlags>(&nif, bsx);
-    assert_eq!((bsx_block.name(), bsx_block.value()), ("Renamed".into(), 0x82));
+    assert_eq!(
+        (bsx_block.name(), bsx_block.value()),
+        ("Renamed".into(), 0x82)
+    );
 }
 
 #[test]
@@ -97,23 +126,50 @@ fn lists_and_records() {
     let eye = add(&mut nif, ExtraEyeCenter("E", [1.0]));
     let position = add(&mut nif, ExtraPositionData("P", [1.0]));
     let w_array = add(&mut nif, ExtraWArray("WA", [1]));
-    let decal = add(&mut nif, ExtraDecalPlacement("D", 1.0, Vec::<Vec<DecalPoint>>::new()));
+    let decal = add(
+        &mut nif,
+        ExtraDecalPlacement("D", 1.0, Vec::<Vec<DecalPoint>>::new()),
+    );
     let bone_lods = add(&mut nif, ExtraBoneLods("BL", Vec::new()));
     let distant = add(&mut nif, ExtraDistantObject("DO", 0));
     let large_ref = add(&mut nif, ExtraDistantObjectLargeRef("LR", false));
     let translations = add(&mut nif, ExtraBoneTranslations("BT", Vec::new()));
     let furniture = add(&mut nif, ExtraFurnitureMarkerNode("FRN", Vec::new()));
     let parents = add(&mut nif, ExtraConnectPointParents("CPA", Vec::new()));
-    let children = add(&mut nif, ExtraConnectPointChildren("CPT", false, Vec::<&str>::new()));
+    let children = add(
+        &mut nif,
+        ExtraConnectPointChildren("CPT", false, Vec::<&str>::new()),
+    );
     let inv = add(&mut nif, ExtraInvMarker("INV", [0; 3], 1.0));
     let bound = add(&mut nif, ExtraBsBound("BBX", Vec3::ZERO, Vec3::ZERO));
     let graph = add(&mut nif, ExtraBehaviorGraph("BGED", "a.hkx", false));
     let attach = add(&mut nif, ExtraSkinAttach("SkinBMP", Vec::<&str>::new()));
 
-    let point = |x: f32| DecalPoint { position: Vec3::new(x, 0.0, 0.0), normal: Vec3::new(0.0, 0.0, 1.0) };
-    let lods = vec![BoneLod { distance: 10, bone: "A".into() }, BoneLod { distance: 20, bone: "B".into() }];
-    let bone_translations = vec![BoneTranslation { bone: "Spine".into(), translation: Vec3::new(1.0, 2.0, 3.0) }];
-    let positions = vec![FurniturePosition { offset: Vec3::new(1.0, 0.0, 0.0), heading: 1.5, animation_type: 1, entry_points: EntryPoints::FRONT | EntryPoints::BEHIND, ..Default::default() }];
+    let point = |x: f32| DecalPoint {
+        position: Vec3::new(x, 0.0, 0.0),
+        normal: Vec3::new(0.0, 0.0, 1.0),
+    };
+    let lods = vec![
+        BoneLod {
+            distance: 10,
+            bone: "A".into(),
+        },
+        BoneLod {
+            distance: 20,
+            bone: "B".into(),
+        },
+    ];
+    let bone_translations = vec![BoneTranslation {
+        bone: "Spine".into(),
+        translation: Vec3::new(1.0, 2.0, 3.0),
+    }];
+    let positions = vec![FurniturePosition {
+        offset: Vec3::new(1.0, 0.0, 0.0),
+        heading: 1.5,
+        animation_type: 1,
+        entry_points: EntryPoints::FRONT | EntryPoints::BEHIND,
+        ..Default::default()
+    }];
     let points = vec![ConnectPoint {
         parent: "Root".into(),
         name: "P-Point".into(),
@@ -126,12 +182,16 @@ fn lists_and_records() {
     set::<BsEyeCenterExtraData>(&mut nif, eye, |b| b.set_values(&[1.0, 2.0, 3.0, 4.0]));
     set::<BsPositionData>(&mut nif, position, |b| b.set_values(&[0.5, 2.0]));
     set::<BsWArray>(&mut nif, w_array, |b| b.set_values(&[7, 8]));
-    set::<BsDecalPlacementVectorExtraData>(&mut nif, decal, |b| assert!(b.set_blocks([vec![point(1.0), point(2.0)], vec![point(3.0)]])));
+    set::<BsDecalPlacementVectorExtraData>(&mut nif, decal, |b| {
+        assert!(b.set_blocks([vec![point(1.0), point(2.0)], vec![point(3.0)]]))
+    });
     set::<NiFloatExtraData>(&mut nif, decal, |b| b.set_value(0.5));
     set::<BsBoneLodExtraData>(&mut nif, bone_lods, |b| b.set_bone_lods(&lods));
     set::<BsDistantObjectExtraData>(&mut nif, distant, |b| b.set_raw_flags(0x13));
     set::<BsDistantObjectLargeRefExtraData>(&mut nif, large_ref, |b| b.set_large_ref(true));
-    set::<BoneTranslations>(&mut nif, translations, |b| b.set_translations(&bone_translations));
+    set::<BoneTranslations>(&mut nif, translations, |b| {
+        b.set_translations(&bone_translations)
+    });
     set::<BsFurnitureMarker>(&mut nif, furniture, |b| b.set_positions(&positions));
     set::<BsConnectPointParents>(&mut nif, parents, |b| b.set_connect_points(&points));
     set::<BsConnectPointChildren>(&mut nif, children, |b| {
@@ -153,28 +213,58 @@ fn lists_and_records() {
     set::<SkinAttach>(&mut nif, attach, |b| b.set_bones(["Bone1", "Bone2"]));
 
     let nif = reload(&mut nif);
-    assert_eq!(get::<NiVertWeightsExtraData>(&nif, weights).weights(), [0.25, 0.75]);
-    assert_eq!(get::<BsEyeCenterExtraData>(&nif, eye).values(), [1.0, 2.0, 3.0, 4.0]);
+    assert_eq!(
+        get::<NiVertWeightsExtraData>(&nif, weights).weights(),
+        [0.25, 0.75]
+    );
+    assert_eq!(
+        get::<BsEyeCenterExtraData>(&nif, eye).values(),
+        [1.0, 2.0, 3.0, 4.0]
+    );
     assert_eq!(get::<BsPositionData>(&nif, position).values(), [0.5, 2.0]);
     assert_eq!(get::<BsWArray>(&nif, w_array).values(), [7, 8]);
-    assert_eq!(get::<BsDecalPlacementVectorExtraData>(&nif, decal).blocks(), [vec![point(1.0), point(2.0)], vec![point(3.0)]]);
+    assert_eq!(
+        get::<BsDecalPlacementVectorExtraData>(&nif, decal).blocks(),
+        [vec![point(1.0), point(2.0)], vec![point(3.0)]]
+    );
     assert_eq!(get::<NiFloatExtraData>(&nif, decal).value(), 0.5);
     assert_eq!(get::<BsBoneLodExtraData>(&nif, bone_lods).bone_lods(), lods);
-    assert_eq!(get::<BsDistantObjectExtraData>(&nif, distant).raw_flags(), 0x13);
+    assert_eq!(
+        get::<BsDistantObjectExtraData>(&nif, distant).raw_flags(),
+        0x13
+    );
     assert!(get::<BsDistantObjectLargeRefExtraData>(&nif, large_ref).large_ref());
-    assert_eq!(get::<BoneTranslations>(&nif, translations).translations(), bone_translations);
-    assert_eq!(get::<BsFurnitureMarker>(&nif, furniture).positions(), positions);
-    assert_eq!(get::<BsConnectPointParents>(&nif, parents).connect_points(), points);
+    assert_eq!(
+        get::<BoneTranslations>(&nif, translations).translations(),
+        bone_translations
+    );
+    assert_eq!(
+        get::<BsFurnitureMarker>(&nif, furniture).positions(),
+        positions
+    );
+    assert_eq!(
+        get::<BsConnectPointParents>(&nif, parents).connect_points(),
+        points
+    );
     let c = get::<BsConnectPointChildren>(&nif, children);
     assert!(c.skinned());
     assert_eq!(c.targets().collect::<Vec<_>>(), ["P-Point", "P-Other"]);
     let m = get::<BsInvMarker>(&nif, inv);
     assert_eq!((m.rotation(), m.zoom()), ([100, 200, 300], 0.75));
     let b = get::<BsBound>(&nif, bound);
-    assert_eq!((b.center(), b.half_extents()), (Vec3::new(1.0, 2.0, 3.0), Vec3::new(4.0, 5.0, 6.0)));
+    assert_eq!(
+        (b.center(), b.half_extents()),
+        (Vec3::new(1.0, 2.0, 3.0), Vec3::new(4.0, 5.0, 6.0))
+    );
     let g = get::<BsBehaviorGraphExtraData>(&nif, graph);
-    assert_eq!((g.graph_file(), g.controls_base_skeleton()), ("Actors\\Graph.hkx".into(), true));
-    assert_eq!(get::<SkinAttach>(&nif, attach).bones().collect::<Vec<_>>(), ["Bone1", "Bone2"]);
+    assert_eq!(
+        (g.graph_file(), g.controls_base_skeleton()),
+        ("Actors\\Graph.hkx".into(), true)
+    );
+    assert_eq!(
+        get::<SkinAttach>(&nif, attach).bones().collect::<Vec<_>>(),
+        ["Bone1", "Bone2"]
+    );
 }
 
 #[test]
@@ -186,22 +276,37 @@ fn blobs() {
     set::<BsCollisionQueryProxyExtraData>(&mut nif, proxy, |b| b.set_data(&[]));
     let nif = reload(&mut nif);
     assert_eq!(get::<BsClothExtraData>(&nif, cloth).data(), [5, 6, 7]);
-    assert!(get::<BsCollisionQueryProxyExtraData>(&nif, proxy).data().is_empty());
+    assert!(
+        get::<BsCollisionQueryProxyExtraData>(&nif, proxy)
+            .data()
+            .is_empty()
+    );
 }
 
 #[test]
 fn rejected_values_change_nothing() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let weights = add(&mut nif, ExtraVertWeights("W", [1.0]));
-    let decal = add(&mut nif, ExtraDecalPlacement("D", 1.0, [vec![DecalPoint::default()]]));
+    let decal = add(
+        &mut nif,
+        ExtraDecalPlacement("D", 1.0, [vec![DecalPoint::default()]]),
+    );
 
-    set::<NiVertWeightsExtraData>(&mut nif, weights, |b| assert!(!b.set_weights(&vec![0.0; 0x10000])));
-    assert_eq!(get::<NiVertWeightsExtraData>(&nif, weights).weights(), [1.0]);
+    set::<NiVertWeightsExtraData>(&mut nif, weights, |b| {
+        assert!(!b.set_weights(&vec![0.0; 0x10000]))
+    });
+    assert_eq!(
+        get::<NiVertWeightsExtraData>(&nif, weights).weights(),
+        [1.0]
+    );
     set::<BsDecalPlacementVectorExtraData>(&mut nif, decal, |b| {
         assert!(!b.set_blocks([vec![DecalPoint::default(); 0x10000]]));
         assert!(!b.set_blocks(vec![Vec::<DecalPoint>::new(); 0x10000]));
     });
-    assert_eq!(get::<BsDecalPlacementVectorExtraData>(&nif, decal).blocks(), [vec![DecalPoint::default()]]);
+    assert_eq!(
+        get::<BsDecalPlacementVectorExtraData>(&nif, decal).blocks(),
+        [vec![DecalPoint::default()]]
+    );
 }
 
 #[test]
@@ -211,14 +316,27 @@ fn setting_existing_blocks() {
     let mut nif = NifFile::load(file.as_slice(), None).unwrap();
     let attach = nif.blocks_of::<SkinAttach>().indices().next().unwrap();
     set::<SkinAttach>(&mut nif, attach, |b| b.set_bones(["Only"]));
-    assert_eq!(reload(&mut nif).block_of::<SkinAttach>(attach).unwrap().bones().collect::<Vec<_>>(), ["Only"]);
+    assert_eq!(
+        reload(&mut nif)
+            .block_of::<SkinAttach>(attach)
+            .unwrap()
+            .bones()
+            .collect::<Vec<_>>(),
+        ["Only"]
+    );
 
     // The translation count is kept in step with the list.
     let mut nif = NifFile::create(NifVersion::FALLOUT_76);
     let translations = add(&mut nif, ExtraBoneTranslations("BT", &[]));
     let three = vec![BoneTranslation::default(); 3];
     set::<BoneTranslations>(&mut nif, translations, |b| b.set_translations(&three));
-    assert_eq!(reload(&mut nif).block_of::<BoneTranslations>(translations).unwrap().translations(), three);
+    assert_eq!(
+        reload(&mut nif)
+            .block_of::<BoneTranslations>(translations)
+            .unwrap()
+            .translations(),
+        three
+    );
 }
 
 #[test]
@@ -228,7 +346,13 @@ fn extra_data_chain() {
     let a = add(&mut nif, ExtraString("", "a"));
     let b = add(&mut nif, ExtraString("", "b"));
     let root = nif.root_node().unwrap().index();
-    assert_eq!(nif.view::<NiExtraData>(b).unwrap().next_extra_data().map(|n| n.index()), Some(a));
+    assert_eq!(
+        nif.view::<NiExtraData>(b)
+            .unwrap()
+            .next_extra_data()
+            .map(|n| n.index()),
+        Some(a)
+    );
 
     let mut edit = nif.edit::<NiExtraData>(a).unwrap();
     // Not extra data, itself, missing, or looping back through b.
@@ -245,6 +369,13 @@ fn extra_data_chain() {
     edit.next_extra_data().unwrap().set_num_bytes(5);
     assert_eq!(nif.block_of::<NiExtraData>(a).unwrap().num_bytes(), 5);
     let saved = reload(&mut nif);
-    assert_eq!(saved.view::<NiExtraData>(b).unwrap().next_extra_data().map(|n| n.index()), Some(a));
+    assert_eq!(
+        saved
+            .view::<NiExtraData>(b)
+            .unwrap()
+            .next_extra_data()
+            .map(|n| n.index()),
+        Some(a)
+    );
     assert_eq!(saved.block_of::<NiExtraData>(a).unwrap().num_bytes(), 5);
 }

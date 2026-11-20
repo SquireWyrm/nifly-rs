@@ -45,17 +45,35 @@ fn view_casts() {
 #[test]
 fn views_match_indexed() {
     let nif = load();
-    let views: Vec<_> = nif.blocks_of::<NiAvObject>().views().map(|v| (v.index(), v.name().to_string())).collect();
-    let indexed: Vec<_> = nif.blocks_of::<NiAvObject>().indexed().map(|(i, b)| (i, b.name().to_string())).collect();
+    let views: Vec<_> = nif
+        .blocks_of::<NiAvObject>()
+        .views()
+        .map(|v| (v.index(), v.name().to_string()))
+        .collect();
+    let indexed: Vec<_> = nif
+        .blocks_of::<NiAvObject>()
+        .indexed()
+        .map(|(i, b)| (i, b.name().to_string()))
+        .collect();
     assert_eq!(views, indexed);
     assert!(!views.is_empty());
-    assert_eq!(nif.blocks_of::<NiAvObject>().views().next_back().map(|v| v.index()), indexed.last().map(|p| p.0));
+    assert_eq!(
+        nif.blocks_of::<NiAvObject>()
+            .views()
+            .next_back()
+            .map(|v| v.index()),
+        indexed.last().map(|p| p.0)
+    );
 }
 
 #[test]
 fn edit_sets_and_casts() {
     let mut nif = load();
-    let index = nif.blocks_of::<NiMaterialProperty>().indices().next().unwrap();
+    let index = nif
+        .blocks_of::<NiMaterialProperty>()
+        .indices()
+        .next()
+        .unwrap();
     let mut edit = nif.edit::<NiMaterialProperty>(index).unwrap();
     edit.set_alpha(0.25);
     edit.set_glossiness(3.0);
@@ -72,7 +90,10 @@ fn edit_sets_and_casts() {
     let edit = edit.into_cast::<NiNode>().unwrap_err();
     let edit = edit.into_cast::<NiObject>().unwrap();
     assert_eq!(edit.index(), index);
-    assert_eq!(nif.block_of::<NiMaterialProperty>(index).unwrap().alpha(), 0.25);
+    assert_eq!(
+        nif.block_of::<NiMaterialProperty>(index).unwrap().alpha(),
+        0.25
+    );
 
     assert!(nif.edit::<NiNode>(index).is_none());
     assert!(nif.edit::<NiNode>(usize::MAX).is_none());
@@ -97,7 +118,9 @@ fn base_methods_reach_subtypes() {
     let mut copy = nif.edit::<BsFadeNode>(copy).unwrap();
     assert!(copy.set_parent(Some(0)));
     copy.add_property::<NiZBufferProperty, _>();
-    let extra = copy.assign_extra_data(nifly::extra_data::ExtraFloat("F", 1.0)).unwrap();
+    let extra = copy
+        .assign_extra_data(nifly::extra_data::ExtraFloat("F", 1.0))
+        .unwrap();
     let copy = copy.into_upcast::<NiAvObject, _>().index();
     let copy = nif.view::<NiAvObject>(copy).unwrap();
     assert_eq!(copy.parent().unwrap().index(), 0);
@@ -106,7 +129,8 @@ fn base_methods_reach_subtypes() {
 
 #[test]
 fn set_parent_rejects_cycles_and_non_nodes() {
-    let mut nif = NifFile::load(fs::read("assets/Icosphere.nif").unwrap().as_slice(), None).unwrap();
+    let mut nif =
+        NifFile::load(fs::read("assets/Icosphere.nif").unwrap().as_slice(), None).unwrap();
     // Root -> Indirect1 (1) -> Indirect2 (2) -> shape (3).
     let mut indirect1 = nif.edit::<NiNode>(1).unwrap();
     assert!(!indirect1.set_parent(Some(2)), "into its own subtree");

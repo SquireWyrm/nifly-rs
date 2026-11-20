@@ -57,7 +57,12 @@ fn assert_rotation_eq(actual: Matrix3, expected: [Vec3; 3]) {
 fn assert_transform_eq(a: &Transform, b: &Transform) {
     assert_vec_eq(a.translation, b.translation);
     assert_rotation_eq(a.rotation, b.rotation.rows);
-    assert!((a.scale - b.scale).abs() < EPS, "scale {} != {}", a.scale, b.scale);
+    assert!(
+        (a.scale - b.scale).abs() < EPS,
+        "scale {} != {}",
+        a.scale,
+        b.scale
+    );
 }
 
 /// Independent reimplementation of nifly's `MatTransform::ComposeTransforms`:
@@ -71,9 +76,19 @@ fn compose(parent: &Transform, child: &Transform) -> Transform {
     };
 
     let (p, c) = (&parent.rotation.rows, &child.rotation.rows);
-    let rows = p.map(|row| v(dot(row, col(c, 0)), dot(row, col(c, 1)), dot(row, col(c, 2))));
+    let rows = p.map(|row| {
+        v(
+            dot(row, col(c, 0)),
+            dot(row, col(c, 1)),
+            dot(row, col(c, 2)),
+        )
+    });
     let s = parent.scale;
-    let scaled = v(child.translation.x * s, child.translation.y * s, child.translation.z * s);
+    let scaled = v(
+        child.translation.x * s,
+        child.translation.y * s,
+        child.translation.z * s,
+    );
     let offset = mul_vec(&parent.rotation.rows, scaled);
     let t = parent.translation;
 
@@ -103,7 +118,13 @@ fn parent_chain() {
     let indirect2 = node(&nif, 2);
 
     let parent = |obj: &NiNode| nif.view_of(obj).and_then(|v| v.parent()).unwrap().get();
-    assert!(ptr::eq(nif.view_of(shape(&nif)).and_then(|v| v.parent()).unwrap().get(), indirect2));
+    assert!(ptr::eq(
+        nif.view_of(shape(&nif))
+            .and_then(|v| v.parent())
+            .unwrap()
+            .get(),
+        indirect2
+    ));
     assert!(ptr::eq(parent(indirect2), indirect1));
     assert!(ptr::eq(parent(indirect1), root.get()));
     assert!(root.parent().is_none());
@@ -122,7 +143,11 @@ fn transform_to_global_composes() {
     assert_vec_eq(global.translation, v(1.528, -0.616, 1.085));
     assert_rotation_eq(
         global.rotation,
-        [v(0.524, -0.849, -0.071), v(0.682, 0.368, 0.632), v(-0.510, -0.379, 0.772)],
+        [
+            v(0.524, -0.849, -0.071),
+            v(0.682, 0.368, 0.632),
+            v(-0.510, -0.379, 0.772),
+        ],
     );
 
     // And it differs from the local transform, so composition actually happened.

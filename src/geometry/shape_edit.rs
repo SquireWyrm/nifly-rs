@@ -8,7 +8,10 @@ impl Edit<'_, NiShape> {
     pub fn geometry_data(&mut self) -> Option<&mut NiGeometryData> {
         let index = self.index();
         // SAFETY: the data came from this file.
-        unsafe { self.file_mut().find_mut(|f| f.view::<NiShape>(index)?.geometry_data()) }
+        unsafe {
+            self.file_mut()
+                .find_mut(|f| f.view::<NiShape>(index)?.geometry_data())
+        }
     }
 
     /// Points an `NiGeometry` shape at the [`NiGeometryData`] at `data`. Returns `false`,
@@ -17,7 +20,9 @@ impl Edit<'_, NiShape> {
     /// the file until saving drops it, if nothing else uses it.
     pub fn set_geometry_data(&mut self, data: Index) -> bool {
         let (shape, file) = (self.index() as u32, self.file_mut());
-        block_index_to_ffi(data).is_some_and(|data| refs_ffi::set_shape_geometry_data(file.inner.pin_mut(), shape, data))
+        block_index_to_ffi(data).is_some_and(|data| {
+            refs_ffi::set_shape_geometry_data(file.inner.pin_mut(), shape, data)
+        })
     }
 
     /// Applies `position` to each vertex and `normal`/`tangent` to its directions, each weighted
@@ -40,11 +45,19 @@ impl Edit<'_, NiShape> {
         }
         let weight = |i: usize| weights.map_or(1.0, |w| w[i]);
         let blend = |items: Vec<Vec3>, f: &dyn Fn(Vec3) -> Vec3| -> Vec<Vec3> {
-            items.into_iter().enumerate().map(|(i, d)| (d + (f(d).normalize() - d) * weight(i)).normalize()).collect()
+            items
+                .into_iter()
+                .enumerate()
+                .map(|(i, d)| (d + (f(d).normalize() - d) * weight(i)).normalize())
+                .collect()
         };
         let (normals, tangents, bitangents) = (view.normals(), view.tangents(), view.bitangents());
 
-        let moved: Vec<Vec3> = vertices.iter().enumerate().map(|(i, &p)| p + (position(p) - p) * weight(i)).collect();
+        let moved: Vec<Vec3> = vertices
+            .iter()
+            .enumerate()
+            .map(|(i, &p)| p + (position(p) - p) * weight(i))
+            .collect();
         if !self.set_vertices(&moved) {
             return false;
         }
@@ -60,7 +73,6 @@ impl Edit<'_, NiShape> {
         }
         true
     }
-
 
     /// Replaces the triangles of the shape.
     ///
@@ -79,8 +91,9 @@ impl Edit<'_, NiShape> {
             .iter()
             .map(|&[p1, p2, p3]| nif_ffi::Triangle { p1, p2, p3 })
             .collect();
-        block_index_to_ffi(shape)
-            .is_some_and(|shape| nif_ffi::set_shape_triangles(file.inner.pin_mut(), shape, &triangles))
+        block_index_to_ffi(shape).is_some_and(|shape| {
+            nif_ffi::set_shape_triangles(file.inner.pin_mut(), shape, &triangles)
+        })
     }
 
     /// Reads the data of external mesh `lod` (see [`mesh_paths`](View::mesh_paths))
@@ -109,7 +122,10 @@ impl Edit<'_, NiShape> {
             0 => Ok(true),
             1 => Ok(false),
             3 => Err(LoadError::UnsupportedVersion.into()),
-            _ => Err(Error::Io(io::Error::new(io::ErrorKind::UnexpectedEof, "mesh data ended early"))),
+            _ => Err(Error::Io(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                "mesh data ended early",
+            ))),
         }
     }
 
@@ -134,7 +150,8 @@ impl Edit<'_, NiShape> {
     /// or another block shares its data.
     pub fn triangulate(&mut self) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::triangulate_shape(file.inner.pin_mut(), shape))
+        block_index_to_ffi(shape)
+            .is_some_and(|shape| nif_ffi::triangulate_shape(file.inner.pin_mut(), shape))
     }
 
     /// Deletes the shape, removing it from its parent's children. The
@@ -146,7 +163,8 @@ impl Edit<'_, NiShape> {
     /// block isn't a shape.
     pub fn delete(mut self) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::delete_shape(file.inner.pin_mut(), shape))
+        block_index_to_ffi(shape)
+            .is_some_and(|shape| nif_ffi::delete_shape(file.inner.pin_mut(), shape))
     }
 
     /// Copies the shape, with deep copies of the blocks it refers to
@@ -159,7 +177,11 @@ impl Edit<'_, NiShape> {
     pub fn clone_shape(&mut self, name: impl AsRef<[u8]>) -> Option<Index> {
         let (shape, file) = (self.index(), self.file_mut());
         let shape = block_index_to_ffi(shape)?;
-        index_from_ffi(nif_ffi::clone_shape(file.inner.pin_mut(), shape, name.as_ref()))
+        index_from_ffi(nif_ffi::clone_shape(
+            file.inner.pin_mut(),
+            shape,
+            name.as_ref(),
+        ))
     }
 
     /// Reorders the triangles of the shape: triangle `i` becomes the old
@@ -177,7 +199,10 @@ impl Edit<'_, NiShape> {
         let (shape, file) = (self.index(), self.file_mut());
         let (Some(shape), Ok(order)) = (
             block_index_to_ffi(shape),
-            order.iter().map(|&i| u32::try_from(i)).collect::<Result<Vec<u32>, _>>(),
+            order
+                .iter()
+                .map(|&i| u32::try_from(i))
+                .collect::<Result<Vec<u32>, _>>(),
         ) else {
             return false;
         };
@@ -222,7 +247,8 @@ impl Edit<'_, NiShape> {
     /// [`NiTriShape`], [`NiTriStrips`] or [`BsTriShape`]) or it has no normals or UVs.
     pub fn calc_tangents(&mut self) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::calc_shape_tangents(file.inner.pin_mut(), shape))
+        block_index_to_ffi(shape)
+            .is_some_and(|shape| nif_ffi::calc_shape_tangents(file.inner.pin_mut(), shape))
     }
 
     /// Copies the locked normals of `source`, usually a shape in another file, to this shape.
@@ -260,7 +286,12 @@ impl Edit<'_, NiShape> {
     pub fn apply_locked_normals(&mut self, source: View<'_, NiShape>) -> bool {
         let shape = self.index() as u32;
         let (source_file, source_shape) = (source.file(), source.get());
-        nif_ffi::apply_locked_normals(self.file_mut().inner.pin_mut(), shape, &source_file.inner, source_shape.as_ffi())
+        nif_ffi::apply_locked_normals(
+            self.file_mut().inner.pin_mut(),
+            shape,
+            &source_file.inner,
+            source_shape.as_ffi(),
+        )
     }
 
     /// Replaces the segments of the [`BsSubIndexTriShape`]. Triangles
@@ -296,7 +327,11 @@ impl Edit<'_, NiShape> {
                 let Ok(extra_len) = u32::try_from(sub.extra_data.len()) else {
                     return false;
                 };
-                subs.push(nif_ffi::SubsegmentFfi { user_slot: sub.user_slot.unwrap_or(0), material: sub.material, extra_len });
+                subs.push(nif_ffi::SubsegmentFfi {
+                    user_slot: sub.user_slot.unwrap_or(0),
+                    material: sub.material,
+                    extra_len,
+                });
                 extra.extend_from_slice(&sub.extra_data);
             }
         }
@@ -305,7 +340,10 @@ impl Edit<'_, NiShape> {
             .iter()
             .map(|t| match t {
                 None => Some(-1),
-                Some(SegmentIndex { segment, subsegment }) => {
+                Some(SegmentIndex {
+                    segment,
+                    subsegment,
+                }) => {
                     let seg = segments.segments.get(*segment)?;
                     let offset = match subsegment {
                         None => 0,
@@ -319,7 +357,15 @@ impl Edit<'_, NiShape> {
         let Some(parts) = parts else {
             return false;
         };
-        nif_ffi::set_shape_segments(file.inner.pin_mut(), shape, &segments.ssf_file, &segs, &subs, &extra, &parts)
+        nif_ffi::set_shape_segments(
+            file.inner.pin_mut(),
+            shape,
+            &segments.ssf_file,
+            &segs,
+            &subs,
+            &extra,
+            &parts,
+        )
     }
 
     /// Replaces the vertex positions of the shape.
@@ -348,9 +394,13 @@ impl Edit<'_, NiShape> {
     /// vertices.
     pub fn delete_vertices(&mut self, vertices: &[usize]) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        let (Some(shape), Ok(vertices)) =
-            (block_index_to_ffi(shape), vertices.iter().map(|&v| u32::try_from(v)).collect::<Result<Vec<u32>, _>>())
-        else {
+        let (Some(shape), Ok(vertices)) = (
+            block_index_to_ffi(shape),
+            vertices
+                .iter()
+                .map(|&v| u32::try_from(v))
+                .collect::<Result<Vec<u32>, _>>(),
+        ) else {
             return false;
         };
         nif_ffi::delete_shape_vertices(file.inner.pin_mut(), shape, &vertices)
@@ -392,13 +442,21 @@ impl Edit<'_, NiShape> {
     /// positive and finite (use [`mirror`](Self::mirror) to mirror), or `weights` has
     /// a different length or a value that isn't finite.
     pub fn scale(&mut self, scale: Vec3, weights: Option<&[f32]>) -> bool {
-        if ![scale.x, scale.y, scale.z].iter().all(|s| s.is_finite() && *s > 0.0) {
+        if ![scale.x, scale.y, scale.z]
+            .iter()
+            .all(|s| s.is_finite() && *s > 0.0)
+        {
             return false;
         }
         // Normals transform by the cofactor matrix, which for a scale is this.
         let cofactor = Vec3::new(scale.y * scale.z, scale.x * scale.z, scale.x * scale.y);
         let mul = |a: Vec3, b: Vec3| Vec3::new(a.x * b.x, a.y * b.y, a.z * b.z);
-        self.transform(weights, |p| mul(p, scale), |n| mul(n, cofactor), |t| mul(t, scale))
+        self.transform(
+            weights,
+            |p| mul(p, scale),
+            |n| mul(n, cofactor),
+            |t| mul(t, scale),
+        )
     }
 
     /// Rotates the shape about its own origin by `degrees` around the X,
@@ -410,10 +468,15 @@ impl Edit<'_, NiShape> {
     /// changing nothing, if the shape has no vertices, an angle isn't finite, or
     /// `weights` has a different length or a value that isn't finite.
     pub fn rotate(&mut self, degrees: Vec3, weights: Option<&[f32]>) -> bool {
-        if ![degrees.x, degrees.y, degrees.z].iter().all(|d| d.is_finite()) {
+        if ![degrees.x, degrees.y, degrees.z]
+            .iter()
+            .all(|d| d.is_finite())
+        {
             return false;
         }
-        let r = rotation(Vec3::Z, degrees.z) * rotation(Vec3::Y, degrees.y) * rotation(Vec3::X, degrees.x);
+        let r = rotation(Vec3::Z, degrees.z)
+            * rotation(Vec3::Y, degrees.y)
+            * rotation(Vec3::X, degrees.x);
         self.transform(weights, |p| r * p, |n| r * n, |t| r * t)
     }
 
@@ -430,7 +493,8 @@ impl Edit<'_, NiShape> {
     /// [`NiTriStrips`] and an odd number of axes is mirrored (its winding can't be reversed).
     pub fn mirror(&mut self, x: bool, y: bool, z: bool) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::mirror_shape(file.inner.pin_mut(), shape, x, y, z))
+        block_index_to_ffi(shape)
+            .is_some_and(|shape| nif_ffi::mirror_shape(file.inner.pin_mut(), shape, x, y, z))
     }
 
     /// Flips the first UV set of the shape: each `u` becomes `1 - u` if
@@ -438,7 +502,9 @@ impl Edit<'_, NiShape> {
     /// vertically. Returns `false`, changing nothing, if the shape has no UVs.
     pub fn invert_uvs(&mut self, flip_u: bool, flip_v: bool) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::invert_shape_uvs(file.inner.pin_mut(), shape, flip_u, flip_v))
+        block_index_to_ffi(shape).is_some_and(|shape| {
+            nif_ffi::invert_shape_uvs(file.inner.pin_mut(), shape, flip_u, flip_v)
+        })
     }
 
     /// Replaces the first UV set of the shape, as `[u, v]`. See
@@ -453,7 +519,10 @@ impl Edit<'_, NiShape> {
     /// [`set_vertices`](Self::set_vertices).
     pub fn set_vertex_colors(&mut self, colors: &[[f32; 4]]) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        let values: Vec<_> = colors.iter().map(|&[r, g, b, a]| nif_ffi::Color { r, g, b, a }).collect();
+        let values: Vec<_> = colors
+            .iter()
+            .map(|&[r, g, b, a]| nif_ffi::Color { r, g, b, a })
+            .collect();
         file.set_vertex_array(shape, &values, nif_ffi::set_shape_colors)
     }
 
@@ -536,8 +605,12 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiGeometryData, I>,
     {
         let data = self.index() as u32;
-        index_from_ffi(nif_ffi::assign_additional_geometry_data(self.file_mut().inner.pin_mut(), data, A::PACKED))
-            .expect("the block is geometry data")
+        index_from_ffi(nif_ffi::assign_additional_geometry_data(
+            self.file_mut().inner.pin_mut(),
+            data,
+            A::PACKED,
+        ))
+        .expect("the block is geometry data")
     }
 
     /// Clears the data's additional data. It stays in the file until saving drops it, if
@@ -558,9 +631,15 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiGeometryData, I>,
     {
         let bethesda = self.view().file().version().stream >= 34;
-        let flat: Vec<f32> = sets.iter().flat_map(|s| s.as_ref().as_flattened().iter().copied()).collect();
+        let flat: Vec<f32> = sets
+            .iter()
+            .flat_map(|s| s.as_ref().as_flattened().iter().copied())
+            .collect();
         let index = self.index();
-        let data = self.file_mut().block_of_mut::<NiGeometryData>(index).expect("the block is geometry data");
+        let data = self
+            .file_mut()
+            .block_of_mut::<NiGeometryData>(index)
+            .expect("the block is geometry data");
         ffi::set_geometry_data_uv_sets(data.ffi_mut(), &flat, sets.len(), bethesda)
     }
 
@@ -573,7 +652,10 @@ impl<T: NiType> Edit<'_, T> {
     {
         let bethesda = self.view().file().version().stream >= 34;
         let index = self.index();
-        let data = self.file_mut().block_of_mut::<NiGeometryData>(index).expect("the block is geometry data");
+        let data = self
+            .file_mut()
+            .block_of_mut::<NiGeometryData>(index)
+            .expect("the block is geometry data");
         ffi::set_geometry_data_flags(data.ffi_mut(), flags, bethesda);
     }
 

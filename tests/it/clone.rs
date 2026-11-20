@@ -11,7 +11,13 @@ use nifly::{
 };
 
 fn skinned_se() -> NifFile {
-    NifFile::load(fs::read(format!("{UPSTREAM}/TestNifFile_Skinned_SE.nif")).unwrap().as_slice(), None).unwrap()
+    NifFile::load(
+        fs::read(format!("{UPSTREAM}/TestNifFile_Skinned_SE.nif"))
+            .unwrap()
+            .as_slice(),
+        None,
+    )
+    .unwrap()
 }
 
 fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
@@ -19,19 +25,34 @@ fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
 }
 
 fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes().indexed().find(|(_, s)| s.name() == name).unwrap().0
+    nif.shapes()
+        .indexed()
+        .find(|(_, s)| s.name() == name)
+        .unwrap()
+        .0
 }
 
 fn node(nif: &NifFile, name: &str) -> Index {
-    nif.nodes().indexed().find(|(_, n)| n.name() == name).unwrap().0
+    nif.nodes()
+        .indexed()
+        .find(|(_, n)| n.name() == name)
+        .unwrap()
+        .0
 }
 
 fn bones(nif: &NifFile, name: &str) -> Vec<String> {
-    nif.view_of(shape(nif, name)).unwrap().bone_list().iter().map(ToString::to_string).collect()
+    nif.view_of(shape(nif, name))
+        .unwrap()
+        .bone_list()
+        .iter()
+        .map(ToString::to_string)
+        .collect()
 }
 
 fn parent_name(nif: &NifFile, name: &str) -> Option<String> {
-    nif.view_of(shape(nif, name)).and_then(|v| v.parent()).map(|p| p.name().to_string())
+    nif.view_of(shape(nif, name))
+        .and_then(|v| v.parent())
+        .map(|p| p.name().to_string())
 }
 
 #[test]
@@ -39,7 +60,10 @@ fn clones_a_shape_in_place() {
     let mut nif = load("Bones");
     let limb = index(&nif, "Limb");
     let count = nif.blocks().count();
-    let copy = nif.edit::<nifly::geometry::NiShape>(limb).and_then(|mut e| e.clone_shape("Limb Copy")).unwrap();
+    let copy = nif
+        .edit::<nifly::geometry::NiShape>(limb)
+        .and_then(|mut e| e.clone_shape("Limb Copy"))
+        .unwrap();
     assert!(nif.blocks().count() > count);
     assert_eq!(nif.block_of::<NiShape>(copy).unwrap().name(), "Limb Copy");
 
@@ -49,12 +73,27 @@ fn clones_a_shape_in_place() {
         // Same parent, bones, geometry and weights...
         assert_eq!(parent_name(nif, "Limb Copy"), parent_name(nif, "Limb"));
         assert_eq!(bones(nif, "Limb Copy"), bones(nif, "Limb"));
-        assert_eq!(nif.view_of(b).unwrap().bone_ids(), nif.view_of(a).unwrap().bone_ids());
-        assert_eq!(nif.view_of(b).unwrap().vertices(), nif.view_of(a).unwrap().vertices());
-        assert_eq!(nif.view_of(b).unwrap().triangles(), nif.view_of(a).unwrap().triangles());
-        assert_eq!(nif.view_of(b).unwrap().bone_weights(0), nif.view_of(a).unwrap().bone_weights(0));
+        assert_eq!(
+            nif.view_of(b).unwrap().bone_ids(),
+            nif.view_of(a).unwrap().bone_ids()
+        );
+        assert_eq!(
+            nif.view_of(b).unwrap().vertices(),
+            nif.view_of(a).unwrap().vertices()
+        );
+        assert_eq!(
+            nif.view_of(b).unwrap().triangles(),
+            nif.view_of(a).unwrap().triangles()
+        );
+        assert_eq!(
+            nif.view_of(b).unwrap().bone_weights(0),
+            nif.view_of(a).unwrap().bone_weights(0)
+        );
         // ...in blocks of its own.
-        assert!(!ptr::eq(nif.view_of(a).unwrap().geometry_data().unwrap(), nif.view_of(b).unwrap().geometry_data().unwrap()));
+        assert!(!ptr::eq(
+            nif.view_of(a).unwrap().geometry_data().unwrap(),
+            nif.view_of(b).unwrap().geometry_data().unwrap()
+        ));
     }
 }
 
@@ -63,7 +102,12 @@ fn clones_a_shape_from_another_file() {
     let source = skinned_se();
     let mut nif = load("Cube");
     let count = (nif.blocks().count(), source.blocks().count());
-    let copy = nif.clone_shape_from(source.view_of(shape(&source, "cylinder_1")).unwrap(), "Cylinder").unwrap();
+    let copy = nif
+        .clone_shape_from(
+            source.view_of(shape(&source, "cylinder_1")).unwrap(),
+            "Cylinder",
+        )
+        .unwrap();
     assert_eq!(nif.block_of::<NiShape>(copy).unwrap().name(), "Cylinder");
     assert_eq!(source.blocks().count(), count.1);
     assert!(nif.blocks().count() > count.0);
@@ -75,16 +119,36 @@ fn clones_a_shape_from_another_file() {
         assert_eq!(bones(nif, "Cylinder"), ["BoneA", "BoneB"]);
         assert!(nif.nodes().any(|n| n.name() == "BoneA"));
         let (a, b) = (shape(&source, "cylinder_1"), shape(nif, "Cylinder"));
-        assert_eq!(nif.view_of(b).unwrap().vertices(), source.view_of(a).unwrap().vertices());
-        assert_eq!(nif.view_of(b).unwrap().triangles(), source.view_of(a).unwrap().triangles());
-        assert_eq!(nif.view_of(b).unwrap().bone_weights(1), source.view_of(a).unwrap().bone_weights(1));
+        assert_eq!(
+            nif.view_of(b).unwrap().vertices(),
+            source.view_of(a).unwrap().vertices()
+        );
+        assert_eq!(
+            nif.view_of(b).unwrap().triangles(),
+            source.view_of(a).unwrap().triangles()
+        );
+        assert_eq!(
+            nif.view_of(b).unwrap().bone_weights(1),
+            source.view_of(a).unwrap().bone_weights(1)
+        );
         // The original cube is untouched.
-        assert_eq!(nif.view_of(shape(nif, "Cube")).unwrap().triangles().unwrap().len(), 12);
+        assert_eq!(
+            nif.view_of(shape(nif, "Cube"))
+                .unwrap()
+                .triangles()
+                .unwrap()
+                .len(),
+            12
+        );
     }
 
     // A second shape reuses the bones already there.
     let nodes = nif.nodes().count();
-    nif.clone_shape_from(source.view_of(shape(&source, "cylinder_2")).unwrap(), "Cylinder 2").unwrap();
+    nif.clone_shape_from(
+        source.view_of(shape(&source, "cylinder_2")).unwrap(),
+        "Cylinder 2",
+    )
+    .unwrap();
     assert_eq!(nif.nodes().count(), nodes);
     assert_eq!(bones(&nif, "Cylinder 2"), ["BoneA", "BoneB"]);
 }
@@ -93,40 +157,80 @@ fn clones_a_shape_from_another_file() {
 fn clones_nodes() {
     let mut nif = load("Bones");
     let bone2 = node(&nif, "Bone2");
-    nif.add_node("Tip", nifly::object3d::Transform::IDENTITY, Some(bone2)).unwrap();
+    nif.add_node("Tip", nifly::object3d::Transform::IDENTITY, Some(bone2))
+        .unwrap();
     let original = nif.block_of::<NiNode>(bone2).unwrap();
     let (transform, children) = (original.transform(), original.child_count());
     assert!(children > 0);
 
-    let copy = nif.edit::<nifly::nodes::NiNode>(bone2).map(|mut e| e.clone_node()).unwrap();
+    let copy = nif
+        .edit::<nifly::nodes::NiNode>(bone2)
+        .map(|mut e| e.clone_node())
+        .unwrap();
     let c = nif.block_of::<NiNode>(copy).unwrap();
-    assert_eq!((c.name(), c.transform(), c.child_count()), ("Bone2".into(), transform, 0));
+    assert_eq!(
+        (c.name(), c.transform(), c.child_count()),
+        ("Bone2".into(), transform, 0)
+    );
     assert!(nif.view_of(c).and_then(|v| v.parent()).is_none());
     // The original keeps its children.
-    assert_eq!(nif.block_of::<NiNode>(bone2).unwrap().child_count(), children);
+    assert_eq!(
+        nif.block_of::<NiNode>(bone2).unwrap().child_count(),
+        children
+    );
 
     // From another file of the same game.
     let source = load("Bones");
     let mut other = NifFile::load(fs::read("assets/Bones.nif").unwrap().as_slice(), None).unwrap();
-    let copy = other.clone_node_from(source.view_of(source.nodes().find(|n| n.name() == "Bone3").unwrap()).unwrap()).unwrap();
+    let copy = other
+        .clone_node_from(
+            source
+                .view_of(source.nodes().find(|n| n.name() == "Bone3").unwrap())
+                .unwrap(),
+        )
+        .unwrap();
     assert_eq!(other.block_of::<NiNode>(copy).unwrap().name(), "Bone3");
 }
 
 #[test]
 fn versions_of_one_game() {
     // Fallout 4 stream 130 into stream 132, saved in the target's version.
-    let read = |name: &str| NifFile::load(fs::read(format!("{UPSTREAM}/{name}.nif")).unwrap().as_slice(), None).unwrap();
+    let read = |name: &str| {
+        NifFile::load(
+            fs::read(format!("{UPSTREAM}/{name}.nif"))
+                .unwrap()
+                .as_slice(),
+            None,
+        )
+        .unwrap()
+    };
     let source = read("TestNifFile_Static_FO4");
     let mut nif = read("TestNifFile_Static_FO4_132");
     assert_ne!(source.version(), nif.version());
     let s = source.shapes().next().unwrap();
-    let copy = nif.clone_shape_from(source.view_of(s).unwrap(), "Copy").unwrap();
-    assert!(nif.clone_node_from(source.view_of(source.nodes().next().unwrap()).unwrap()).is_some());
+    let copy = nif
+        .clone_shape_from(source.view_of(s).unwrap(), "Copy")
+        .unwrap();
+    assert!(
+        nif.clone_node_from(source.view_of(source.nodes().next().unwrap()).unwrap())
+            .is_some()
+    );
     let vertices = source.view_of(s).unwrap().vertices();
-    assert_eq!(nif.view_of(nif.block_of::<NiShape>(copy).unwrap()).unwrap().vertices(), vertices);
+    assert_eq!(
+        nif.view_of(nif.block_of::<NiShape>(copy).unwrap())
+            .unwrap()
+            .vertices(),
+        vertices
+    );
     let saved = reload(&mut nif);
-    assert_eq!(saved.version(), read("TestNifFile_Static_FO4_132").version());
-    assert_eq!(saved.view_of(shape(&saved, "Copy")).unwrap().vertices(), vertices);
+    assert_eq!(
+        saved.version(),
+        read("TestNifFile_Static_FO4_132").version()
+    );
+    assert_eq!(
+        saved.view_of(shape(&saved, "Copy")).unwrap().vertices(),
+        vertices
+    );
 }
 
 #[test]
@@ -135,8 +239,14 @@ fn different_games_are_refused() {
     let source = load("Bones");
     let mut nif = load("Cube");
     let count = nif.blocks().count();
-    assert_eq!(nif.clone_shape_from(source.view_of(shape(&source, "Limb")).unwrap(), "Limb"), None);
-    assert_eq!(nif.clone_node_from(source.view_of(source.nodes().next().unwrap()).unwrap()), None);
+    assert_eq!(
+        nif.clone_shape_from(source.view_of(shape(&source, "Limb")).unwrap(), "Limb"),
+        None
+    );
+    assert_eq!(
+        nif.clone_node_from(source.view_of(source.nodes().next().unwrap()).unwrap()),
+        None
+    );
     assert_eq!(nif.blocks().count(), count);
 }
 
@@ -145,7 +255,13 @@ fn clones_children() {
     // The cube's shader becomes a block of its own; the original is left unreferenced.
     let mut nif = load("Cube");
     let cube = index(&nif, "Cube");
-    let shader_index = |nif: &NifFile| nif.view_of(shape(nif, "Cube")).unwrap().shader().unwrap().index();
+    let shader_index = |nif: &NifFile| {
+        nif.view_of(shape(nif, "Cube"))
+            .unwrap()
+            .shader()
+            .unwrap()
+            .index()
+    };
     let before = shader_index(&nif);
     let count = nif.blocks().count();
     assert!(nif.clone_children(cube));
@@ -162,11 +278,29 @@ fn none_without_a_source_block() {
     let mut nif = load("Bones");
     let count = nif.blocks().count();
     let root = node(&nif, "Scene Root");
-    assert_eq!(nif.edit::<nifly::geometry::NiShape>(root).and_then(|mut e| e.clone_shape("x")), None);
-    assert_eq!(nif.edit::<nifly::nodes::NiNode>(index(&nif, "Limb")).map(|mut e| e.clone_node()), None);
+    assert_eq!(
+        nif.edit::<nifly::geometry::NiShape>(root)
+            .and_then(|mut e| e.clone_shape("x")),
+        None
+    );
+    assert_eq!(
+        nif.edit::<nifly::nodes::NiNode>(index(&nif, "Limb"))
+            .map(|mut e| e.clone_node()),
+        None
+    );
     for i in [count, usize::MAX] {
-        assert_eq!(nif.edit::<nifly::geometry::NiShape>(i).and_then(|mut e| e.clone_shape("x")), None, "{i}");
-        assert_eq!(nif.edit::<nifly::nodes::NiNode>(i).map(|mut e| e.clone_node()), None, "{i}");
+        assert_eq!(
+            nif.edit::<nifly::geometry::NiShape>(i)
+                .and_then(|mut e| e.clone_shape("x")),
+            None,
+            "{i}"
+        );
+        assert_eq!(
+            nif.edit::<nifly::nodes::NiNode>(i)
+                .map(|mut e| e.clone_node()),
+            None,
+            "{i}"
+        );
         assert!(!nif.clone_children(i), "{i}");
     }
     assert_eq!(nif.blocks().count(), count);

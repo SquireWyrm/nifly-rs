@@ -1,6 +1,6 @@
 //! Tests for NifFile::set_shape_order.
 
-use crate::common::{load};
+use crate::common::load;
 use std::io::Cursor;
 
 use nifly::file::{NifFile, SaveOptions};
@@ -8,7 +8,10 @@ use nifly::file::{NifFile, SaveOptions};
 /// The file as it is in memory: no optimizing or sorting on save.
 fn raw(nif: &mut NifFile) -> Vec<u8> {
     let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions { optimize: false, sort_blocks: false };
+    let options = SaveOptions {
+        optimize: false,
+        sort_blocks: false,
+    };
     nif.save(&mut cur, Some(options)).unwrap();
     cur.into_inner()
 }
@@ -34,11 +37,11 @@ fn invalid_orders_change_nothing() {
     let before = raw(&mut nif);
 
     let cases: [&[&[u8]]; 5] = [
-        &[],                            // empty
-        &[b"missing"],                  // unknown name
-        &[b"Suzanne"],                  // a node, not a shape
-        &[&name, &name],                // repeated
-        &[&name, b"missing"],           // too many
+        &[],                  // empty
+        &[b"missing"],        // unknown name
+        &[b"Suzanne"],        // a node, not a shape
+        &[&name, &name],      // repeated
+        &[&name, b"missing"], // too many
     ];
     for order in cases {
         assert!(!nif.set_shape_order(order), "{order:?}");
@@ -64,6 +67,13 @@ fn sorts_blocks() {
     assert!(a.set_shape_order([shape_name(&a)]));
 
     let mut cur = Cursor::new(Vec::new());
-    b.save(&mut cur, Some(SaveOptions { optimize: false, sort_blocks: true })).unwrap();
+    b.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize: false,
+            sort_blocks: true,
+        }),
+    )
+    .unwrap();
     assert_eq!(raw(&mut a), cur.into_inner());
 }

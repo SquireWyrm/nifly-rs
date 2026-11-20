@@ -126,13 +126,15 @@ use int_enum::IntEnum;
 use nifly_sys::animation::ffi;
 
 use crate::{
-    file::{block_index_to_ffi, index_from_ffi, optional_index_to_ffi, Index, NifFile},
+    file::{Index, NifFile, block_index_to_ffi, index_from_ffi, optional_index_to_ffi},
     handle::{Edit, View},
     iter::{BlockIter, RefIndices},
     nodes::NiNode,
     object3d::Vec3,
     objects::{IsA, NiObject, NiObjectNet, NiType, Sealed},
-    shaders::{get_bits, set_bits, BitField, BsShaderProperty, MapSlot, NiSourceTexture, TextureMap},
+    shaders::{
+        BitField, BsShaderProperty, MapSlot, NiSourceTexture, TextureMap, get_bits, set_bits,
+    },
 };
 use nifly_sys::nif_file_refs::ffi::{self as refs_ffi, RefKind, RefList};
 
@@ -456,7 +458,8 @@ impl NifFile {
     /// and frequency 1 and loops. Nothing refers to it, so it suits the root of a `.kf` file;
     /// [`Edit::add_sequence`] adds one to a manager.
     pub fn add_sequence<T: NewSequence>(&mut self, name: impl AsRef<[u8]>) -> Index {
-        index_from_ffi(T::add(self.inner.pin_mut(), name.as_ref())).expect("adding a block succeeds")
+        index_from_ffi(T::add(self.inner.pin_mut(), name.as_ref()))
+            .expect("adding a block succeeds")
     }
 }
 
@@ -472,18 +475,18 @@ pub(crate) fn vec3_to_ffi(v: Vec3) -> ffi::Vec3 {
     v.to_ffi()
 }
 
-mod keys;
-mod data;
-mod interpolators;
-mod interpolator_refs;
-mod controllers;
 mod controller_types;
+mod controllers;
+mod data;
+mod interpolator_refs;
+mod interpolators;
+mod keys;
 mod sequences;
 
-pub use self::keys::*;
-pub use self::data::*;
-pub use self::interpolators::*;
-pub use self::interpolator_refs::*;
-pub use self::controllers::*;
 pub use self::controller_types::*;
+pub use self::controllers::*;
+pub use self::data::*;
+pub use self::interpolator_refs::*;
+pub use self::interpolators::*;
+pub use self::keys::*;
 pub use self::sequences::*;

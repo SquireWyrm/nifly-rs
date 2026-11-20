@@ -32,7 +32,10 @@ impl Hierarchy {
             if let Some(name) = line.strip_prefix("impl HasParent for ") {
                 let name = name.trim_end_matches(" {").to_owned();
                 let parent = lines.next().unwrap().trim();
-                let parent = parent.strip_prefix("type Parent = ").unwrap().trim_end_matches(';');
+                let parent = parent
+                    .strip_prefix("type Parent = ")
+                    .unwrap()
+                    .trim_end_matches(';');
                 entries.push((name, Some(parent.to_owned()), "objects".to_owned()));
             }
         }
@@ -44,7 +47,13 @@ impl Hierarchy {
                 continue;
             }
             let rel = file.strip_prefix(src).unwrap();
-            let module = rel.components().next().unwrap().as_os_str().to_str().unwrap();
+            let module = rel
+                .components()
+                .next()
+                .unwrap()
+                .as_os_str()
+                .to_str()
+                .unwrap();
             let module = module.trim_end_matches(".rs").to_owned();
             let text = fs::read_to_string(&file).unwrap();
             let mut in_block = false;
@@ -77,15 +86,20 @@ impl Hierarchy {
             }
         }
 
-        let index: BTreeMap<_, _> =
-            entries.iter().enumerate().map(|(i, (name, ..))| (name.clone(), i)).collect();
+        let index: BTreeMap<_, _> = entries
+            .iter()
+            .enumerate()
+            .map(|(i, (name, ..))| (name.clone(), i))
+            .collect();
         assert_eq!(index.len(), entries.len(), "duplicate type names");
         let mut classes: Vec<Class> = entries
             .iter()
             .map(|(name, parent, module)| Class {
                 name: name.clone(),
                 parent: parent.as_ref().map(|p| {
-                    *index.get(p).unwrap_or_else(|| panic!("unknown parent {p} of {name}"))
+                    *index
+                        .get(p)
+                        .unwrap_or_else(|| panic!("unknown parent {p} of {name}"))
                 }),
                 module: module.clone(),
                 children: Vec::new(),
@@ -113,11 +127,17 @@ impl Hierarchy {
         let in_module = |i: usize| self.classes[i].module == module;
         let mut lines = Vec::new();
         if module == "objects" {
-            self.render_tree(module, 0, 0, &|i| {
-                in_module(i)
-                    || (self.classes[i].parent.is_some_and(in_module)
-                        && !self.classes[i].children.is_empty())
-            }, &mut lines);
+            self.render_tree(
+                module,
+                0,
+                0,
+                &|i| {
+                    in_module(i)
+                        || (self.classes[i].parent.is_some_and(in_module)
+                            && !self.classes[i].children.is_empty())
+                },
+                &mut lines,
+            );
             return lines;
         }
         // Roots by outside parent, in order of first appearance.
@@ -148,7 +168,11 @@ impl Hierarchy {
         members: &dyn Fn(usize) -> bool,
         lines: &mut Vec<String>,
     ) {
-        lines.push(format!("{}- {}", "  ".repeat(depth), self.link(module, class)));
+        lines.push(format!(
+            "{}- {}",
+            "  ".repeat(depth),
+            self.link(module, class)
+        ));
         for &child in &self.classes[class].children {
             if members(child) {
                 self.render_tree(module, child, depth + 1, members, lines);
@@ -167,7 +191,10 @@ impl Hierarchy {
 }
 
 fn collect_rs(dir: &Path, out: &mut Vec<PathBuf>) {
-    let mut entries: Vec<_> = fs::read_dir(dir).unwrap().map(|e| e.unwrap().path()).collect();
+    let mut entries: Vec<_> = fs::read_dir(dir)
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .collect();
     entries.sort();
     for path in entries {
         if path.is_dir() {
@@ -190,13 +217,22 @@ fn module_docs_list_ni_types() {
         let expected: Vec<String> = std::iter::once(String::new())
             .chain(lines)
             .chain(std::iter::once(String::new()))
-            .map(|l| if l.is_empty() { "//!".into() } else { format!("//! {l}") })
+            .map(|l| {
+                if l.is_empty() {
+                    "//!".into()
+                } else {
+                    format!("//! {l}")
+                }
+            })
             .collect();
 
-        let file = [src.join(format!("{module}.rs")), src.join(&module).join("mod.rs")]
-            .into_iter()
-            .find(|f| f.exists())
-            .unwrap();
+        let file = [
+            src.join(format!("{module}.rs")),
+            src.join(&module).join("mod.rs"),
+        ]
+        .into_iter()
+        .find(|f| f.exists())
+        .unwrap();
         let text = fs::read_to_string(&file).unwrap();
         let newline = if text.contains("\r\n") { "\r\n" } else { "\n" };
         let current: Vec<&str> = text.lines().collect();

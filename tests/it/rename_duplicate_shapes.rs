@@ -2,10 +2,7 @@
 
 use crate::common::{load, save};
 
-use nifly::{
-    file::NifFile,
-    object3d::Transform,
-};
+use nifly::{file::NifFile, object3d::Transform};
 
 const ASSETS: [&str; 5] = ["Bones", "Cone", "Cube", "Icosphere", "Suzanne"];
 
@@ -44,7 +41,10 @@ fn shapes_below_root_children_are_not_checked() {
     // Icosphere's shape is under Root -> Indirect1 -> Indirect2, deeper than nifly looks.
     let mut nif = load("Icosphere");
     let name = shape_name(&nif);
-    let indirect2 = nif.block_index(nif.find_block_by_name::<nifly::nodes::NiNode>("Indirect2").unwrap());
+    let indirect2 = nif.block_index(
+        nif.find_block_by_name::<nifly::nodes::NiNode>("Indirect2")
+            .unwrap(),
+    );
     nif.add_node(&name, identity(), indirect2).unwrap();
 
     assert!(!nif.rename_duplicate_shapes());

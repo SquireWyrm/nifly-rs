@@ -381,7 +381,10 @@ impl NiPSysEmitterCtlrData {
 
     /// When the emitter is on. Only each key's time and value are saved.
     pub fn visibility_keys(&self) -> Vec<Key<bool>> {
-        ffi::emitter_ctlr_data_visibility_keys(&self.0).iter().map(key_from_ffi).collect()
+        ffi::emitter_ctlr_data_visibility_keys(&self.0)
+            .iter()
+            .map(key_from_ffi)
+            .collect()
     }
 
     /// Replaces [`visibility_keys`](Self::visibility_keys).

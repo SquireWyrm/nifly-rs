@@ -34,7 +34,11 @@ pub struct BlockIter<'a, T: NiType = NiObject, I = Range<usize>> {
 
 impl<'a, T: NiType, I> BlockIter<'a, T, I> {
     pub(crate) fn new(file: &'a NifFile, indices: I) -> Self {
-        Self { file, indices, _type: PhantomData }
+        Self {
+            file,
+            indices,
+            _type: PhantomData,
+        }
     }
 
     /// `(index, block)` pairs instead of blocks.
@@ -73,7 +77,9 @@ impl<'a, T: NiType, I: Iterator<Item = Index>> Iterator for BlockIter<'a, T, I> 
 
     fn next(&mut self) -> Option<&'a T> {
         let file = self.file;
-        self.indices.find_map(|i| Self::resolve(file, i)).map(|(_, b)| b)
+        self.indices
+            .find_map(|i| Self::resolve(file, i))
+            .map(|(_, b)| b)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -81,10 +87,16 @@ impl<'a, T: NiType, I: Iterator<Item = Index>> Iterator for BlockIter<'a, T, I> 
     }
 }
 
-impl<'a, T: NiType, I: DoubleEndedIterator<Item = Index>> DoubleEndedIterator for BlockIter<'a, T, I> {
+impl<'a, T: NiType, I: DoubleEndedIterator<Item = Index>> DoubleEndedIterator
+    for BlockIter<'a, T, I>
+{
     fn next_back(&mut self) -> Option<&'a T> {
         let file = self.file;
-        self.indices.by_ref().rev().find_map(|i| Self::resolve(file, i)).map(|(_, b)| b)
+        self.indices
+            .by_ref()
+            .rev()
+            .find_map(|i| Self::resolve(file, i))
+            .map(|(_, b)| b)
     }
 }
 
@@ -99,7 +111,9 @@ impl<'a, T: NiType, I: Iterator<Item = Index>> Iterator for Indexed<'a, T, I> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let file = self.0.file;
-        self.0.indices.find_map(|i| BlockIter::<T, I>::resolve(file, i))
+        self.0
+            .indices
+            .find_map(|i| BlockIter::<T, I>::resolve(file, i))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -107,10 +121,16 @@ impl<'a, T: NiType, I: Iterator<Item = Index>> Iterator for Indexed<'a, T, I> {
     }
 }
 
-impl<'a, T: NiType, I: DoubleEndedIterator<Item = Index>> DoubleEndedIterator for Indexed<'a, T, I> {
+impl<'a, T: NiType, I: DoubleEndedIterator<Item = Index>> DoubleEndedIterator
+    for Indexed<'a, T, I>
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         let file = self.0.file;
-        self.0.indices.by_ref().rev().find_map(|i| BlockIter::<T, I>::resolve(file, i))
+        self.0
+            .indices
+            .by_ref()
+            .rev()
+            .find_map(|i| BlockIter::<T, I>::resolve(file, i))
     }
 }
 
@@ -160,7 +180,9 @@ impl<'a, T: NiType, I: Iterator<Item = Index>> Iterator for Views<'a, T, I> {
 impl<'a, T: NiType, I: DoubleEndedIterator<Item = Index>> DoubleEndedIterator for Views<'a, T, I> {
     fn next_back(&mut self) -> Option<View<'a, T>> {
         let file = self.0.0.file;
-        self.0.next_back().map(|(i, b)| View::from_parts(file, i, b))
+        self.0
+            .next_back()
+            .map(|(i, b)| View::from_parts(file, i, b))
     }
 }
 
@@ -207,7 +229,11 @@ pub struct TreeIndices<'a> {
 
 impl<'a> TreeIndices<'a> {
     pub(crate) fn new(file: &'a NifFile, start: Option<Index>) -> Self {
-        Self { file, stack: start.into_iter().collect(), visited: HashSet::new() }
+        Self {
+            file,
+            stack: start.into_iter().collect(),
+            visited: HashSet::new(),
+        }
     }
 }
 

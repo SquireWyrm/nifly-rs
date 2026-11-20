@@ -56,7 +56,11 @@ impl Vec3 {
     }
 
     pub(crate) fn to_ffi(self) -> ffi::Vec3 {
-        ffi::Vec3 { x: self.x, y: self.y, z: self.z }
+        ffi::Vec3 {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+        }
     }
 
     pub(crate) fn from_ffi(v: ffi::Vec3) -> Self {
@@ -178,7 +182,9 @@ impl Matrix3 {
 
     pub fn determinant(&self) -> f32 {
         let [a, b, c] = self.rows;
-        a.x * (b.y * c.z - b.z * c.y) + a.y * (b.z * c.x - b.x * c.z) + a.z * (b.x * c.y - b.y * c.x)
+        a.x * (b.y * c.z - b.z * c.y)
+            + a.y * (b.z * c.x - b.x * c.z)
+            + a.z * (b.x * c.y - b.y * c.x)
     }
 
     /// The inverse, or `None` if the determinant is 0.
@@ -190,9 +196,21 @@ impl Matrix3 {
         let i = 1.0 / det;
         let [a, b, c] = self.rows;
         Some(Self::from_rows(
-            Vec3::new((b.y * c.z - b.z * c.y) * i, (c.y * a.z - c.z * a.y) * i, (a.y * b.z - a.z * b.y) * i),
-            Vec3::new((b.z * c.x - b.x * c.z) * i, (c.z * a.x - c.x * a.z) * i, (a.z * b.x - a.x * b.z) * i),
-            Vec3::new((b.x * c.y - b.y * c.x) * i, (c.x * a.y - c.y * a.x) * i, (a.x * b.y - a.y * b.x) * i),
+            Vec3::new(
+                (b.y * c.z - b.z * c.y) * i,
+                (c.y * a.z - c.z * a.y) * i,
+                (a.y * b.z - a.z * b.y) * i,
+            ),
+            Vec3::new(
+                (b.z * c.x - b.x * c.z) * i,
+                (c.z * a.x - c.x * a.z) * i,
+                (a.z * b.x - a.x * b.z) * i,
+            ),
+            Vec3::new(
+                (b.x * c.y - b.y * c.x) * i,
+                (c.x * a.y - c.y * a.x) * i,
+                (a.x * b.y - a.y * b.x) * i,
+            ),
         ))
     }
 
@@ -216,7 +234,11 @@ impl Mul<Vec3> for Matrix3 {
     type Output = Vec3;
 
     fn mul(self, v: Vec3) -> Vec3 {
-        Vec3::new(self.rows[0].dot(v), self.rows[1].dot(v), self.rows[2].dot(v))
+        Vec3::new(
+            self.rows[0].dot(v),
+            self.rows[1].dot(v),
+            self.rows[2].dot(v),
+        )
     }
 }
 
@@ -224,7 +246,9 @@ impl Mul<f32> for Matrix3 {
     type Output = Self;
 
     fn mul(self, f: f32) -> Self {
-        Self { rows: self.rows.map(|r| r * f) }
+        Self {
+            rows: self.rows.map(|r| r * f),
+        }
     }
 }
 
@@ -268,7 +292,11 @@ impl Transform {
     pub const IDENTITY: Self = Self::new(Vec3::ZERO, Matrix3::IDENTITY, 1.0);
 
     pub const fn new(translation: Vec3, rotation: Matrix3, scale: f32) -> Self {
-        Self { translation, rotation, scale }
+        Self {
+            translation,
+            rotation,
+            scale,
+        }
     }
 
     /// Maps a point into the parent's coordinate system.
@@ -304,7 +332,9 @@ impl Transform {
     pub(crate) fn from_ffi(t: ffi::Transform) -> Self {
         Self::new(
             Vec3::from_ffi(t.translation),
-            Matrix3 { rows: t.rotation.map(Vec3::from_ffi) },
+            Matrix3 {
+                rows: t.rotation.map(Vec3::from_ffi),
+            },
             t.scale,
         )
     }
@@ -344,7 +374,10 @@ impl BoundingSphere {
     }
 
     pub(crate) fn to_ffi(self) -> ffi::BoundingSphere {
-        ffi::BoundingSphere { center: self.center.to_ffi(), radius: self.radius }
+        ffi::BoundingSphere {
+            center: self.center.to_ffi(),
+            radius: self.radius,
+        }
     }
 
     pub(crate) fn from_ffi(b: ffi::BoundingSphere) -> Self {
@@ -399,7 +432,11 @@ impl BoundingVolume {
                 put(3, &[s.radius]);
                 (Self::SPHERE, 0)
             }
-            Self::Box { center, axes, extents } => {
+            Self::Box {
+                center,
+                axes,
+                extents,
+            } => {
                 put(0, &<[f32; 3]>::from(*center));
                 for (i, axis) in axes.iter().enumerate() {
                     put(3 + 3 * i, &<[f32; 3]>::from(*axis));
@@ -407,14 +444,23 @@ impl BoundingVolume {
                 put(12, extents);
                 (Self::BOX, 0)
             }
-            Self::Capsule { center, origin, extent, radius } => {
+            Self::Capsule {
+                center,
+                origin,
+                extent,
+                radius,
+            } => {
                 put(0, &<[f32; 3]>::from(*center));
                 put(3, &<[f32; 3]>::from(*origin));
                 put(6, &[*extent, *radius]);
                 (Self::CAPSULE, 0)
             }
             Self::Union(children) => (Self::UNION, children.len() as u32),
-            Self::HalfSpace { normal, constant, center } => {
+            Self::HalfSpace {
+                normal,
+                constant,
+                center,
+            } => {
                 put(0, &<[f32; 3]>::from(*normal));
                 put(3, &[*constant]);
                 put(4, &<[f32; 3]>::from(*center));
@@ -422,24 +468,47 @@ impl BoundingVolume {
             }
             Self::Other(kind) => (*kind, 0),
         };
-        out.push(ffi::BoundingVolumeFfi { kind, values, children });
+        out.push(ffi::BoundingVolumeFfi {
+            kind,
+            values,
+            children,
+        });
         if let Self::Union(children) = self {
             children.iter().for_each(|c| c.to_ffi(out));
         }
     }
 
     /// Reads one volume from pre-order records, or `None` if they run out.
-    pub(crate) fn from_ffi(records: &mut impl Iterator<Item = ffi::BoundingVolumeFfi>) -> Option<Self> {
+    pub(crate) fn from_ffi(
+        records: &mut impl Iterator<Item = ffi::BoundingVolumeFfi>,
+    ) -> Option<Self> {
         let r = records.next()?;
         let v = r.values;
         let vec3 = |at: usize| Vec3::new(v[at], v[at + 1], v[at + 2]);
         Some(match r.kind {
             Self::BASE => Self::Base,
             Self::SPHERE => Self::Sphere(BoundingSphere::new(vec3(0), v[3])),
-            Self::BOX => Self::Box { center: vec3(0), axes: [vec3(3), vec3(6), vec3(9)], extents: [v[12], v[13], v[14]] },
-            Self::CAPSULE => Self::Capsule { center: vec3(0), origin: vec3(3), extent: v[6], radius: v[7] },
-            Self::UNION => Self::Union((0..r.children).map(|_| Self::from_ffi(records)).collect::<Option<_>>()?),
-            Self::HALF_SPACE => Self::HalfSpace { normal: vec3(0), constant: v[3], center: vec3(4) },
+            Self::BOX => Self::Box {
+                center: vec3(0),
+                axes: [vec3(3), vec3(6), vec3(9)],
+                extents: [v[12], v[13], v[14]],
+            },
+            Self::CAPSULE => Self::Capsule {
+                center: vec3(0),
+                origin: vec3(3),
+                extent: v[6],
+                radius: v[7],
+            },
+            Self::UNION => Self::Union(
+                (0..r.children)
+                    .map(|_| Self::from_ffi(records))
+                    .collect::<Option<_>>()?,
+            ),
+            Self::HALF_SPACE => Self::HalfSpace {
+                normal: vec3(0),
+                constant: v[3],
+                center: vec3(4),
+            },
             kind => Self::Other(kind),
         })
     }
@@ -457,7 +526,11 @@ mod mint_impls {
 
     impl From<Vec3> for mint::Vector3<f32> {
         fn from(v: Vec3) -> Self {
-            Self { x: v.x, y: v.y, z: v.z }
+            Self {
+                x: v.x,
+                y: v.y,
+                z: v.z,
+            }
         }
     }
 
@@ -469,7 +542,11 @@ mod mint_impls {
 
     impl From<Vec3> for mint::Point3<f32> {
         fn from(v: Vec3) -> Self {
-            Self { x: v.x, y: v.y, z: v.z }
+            Self {
+                x: v.x,
+                y: v.y,
+                z: v.z,
+            }
         }
     }
 

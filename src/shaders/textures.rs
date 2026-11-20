@@ -127,14 +127,24 @@ impl TextureRenderData {
         std::array::from_fn(|i| {
             let mut c = [0; 4];
             ffi::render_data_channel(&self.0, i, &mut c);
-            PixelChannel { component: c[0], representation: c[1], bits: c[2] as u8, signed: c[3] != 0 }
+            PixelChannel {
+                component: c[0],
+                representation: c[1],
+                bits: c[2] as u8,
+                signed: c[3] != 0,
+            }
         })
     }
 
     /// Sets the [channels](Self::channels).
     pub fn set_channels(&mut self, channels: [PixelChannel; 4]) {
         for (i, c) in channels.iter().enumerate() {
-            let v = [c.component, c.representation, c.bits.into(), c.signed.into()];
+            let v = [
+                c.component,
+                c.representation,
+                c.bits.into(),
+                c.signed.into(),
+            ];
             ffi::set_render_data_channel(self.ffi_mut(), i, &v);
         }
     }
@@ -143,12 +153,23 @@ impl TextureRenderData {
     /// [offset](MipMap::offset) in every face.
     pub fn mipmaps(&self) -> Vec<MipMap> {
         let flat = ffi::render_data_mipmaps(&self.0);
-        flat.as_chunks().0.iter().map(|&[width, height, offset]| MipMap { width, height, offset }).collect()
+        flat.as_chunks()
+            .0
+            .iter()
+            .map(|&[width, height, offset]| MipMap {
+                width,
+                height,
+                offset,
+            })
+            .collect()
     }
 
     /// Sets the [mipmaps](Self::mipmaps). Not checked against the pixel bytes.
     pub fn set_mipmaps(&mut self, mipmaps: &[MipMap]) {
-        let flat: Vec<u32> = mipmaps.iter().flat_map(|m| [m.width, m.height, m.offset]).collect();
+        let flat: Vec<u32> = mipmaps
+            .iter()
+            .flat_map(|m| [m.width, m.height, m.offset])
+            .collect();
         ffi::set_render_data_mipmaps(self.ffi_mut(), &flat);
     }
 }
@@ -190,7 +211,9 @@ macro_rules! pixel_faces {
     ($count:ident, $face:ident, $clear:ident, $push:ident) => {
         /// The pixel bytes of each face: one, or six for a cube map.
         pub fn faces(&self) -> Vec<&[u8]> {
-            (0..ffi::$count(&self.0)).map(|f| ffi::$face(&self.0, f)).collect()
+            (0..ffi::$count(&self.0))
+                .map(|f| ffi::$face(&self.0, f))
+                .collect()
         }
 
         /// Replaces the [faces](Self::faces). Returns `false`, changing nothing, unless they all
@@ -211,7 +234,12 @@ macro_rules! pixel_faces {
 
 /// Files before version 10.4.0.2 (Morrowind) store one face: saving one drops the others.
 impl NiPixelData {
-    pixel_faces!(pixel_data_face_count, pixel_data_face, clear_pixel_data_faces, push_pixel_data_face);
+    pixel_faces!(
+        pixel_data_face_count,
+        pixel_data_face,
+        clear_pixel_data_faces,
+        push_pixel_data_face
+    );
 }
 
 impl NiPersistentSrcTextureRendererData {
@@ -433,6 +461,12 @@ pub struct Translucency {
 
 impl Default for Translucency {
     fn default() -> Self {
-        Self { subsurface_color: [0.0; 3], transmissive_scale: 1.0, turbulence: 0.0, thick_object: false, mix_albedo: false }
+        Self {
+            subsurface_color: [0.0; 3],
+            transmissive_scale: 1.0,
+            turbulence: 0.0,
+            thick_object: false,
+            mix_albedo: false,
+        }
     }
 }

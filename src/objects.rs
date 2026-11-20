@@ -254,7 +254,10 @@ impl NiAvObject {
         if let Some(volume) = volume {
             volume.to_ffi(&mut records);
         }
-        assert!(ffi::set_bounding_volume(self.ffi_mut(), &records), "records of one volume");
+        assert!(
+            ffi::set_bounding_volume(self.ffi_mut(), &records),
+            "records of one volume"
+        );
     }
 
     fn ffi_mut(&mut self) -> Pin<&mut ffi::NiAVObject> {

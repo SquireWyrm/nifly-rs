@@ -1,6 +1,6 @@
 //! Tests for BlockIter: indexed(), indices(), of() and the iterators built on it.
 
-use crate::common::{load};
+use crate::common::load;
 
 use nifly::{
     extra_data::BsxFlags,
@@ -15,13 +15,29 @@ const ASSETS: [&str; 5] = ["Bones", "Cone", "Cube", "Icosphere", "Suzanne"];
 
 /// Checks `indexed()` and `indices()` against plain iteration, and that each index is the
 /// item's own block.
-fn check<T: NiType, I: Iterator<Item = Index> + Clone>(nif: &NifFile, iter: BlockIter<'_, T, I>, what: &str) {
+fn check<T: NiType, I: Iterator<Item = Index> + Clone>(
+    nif: &NifFile,
+    iter: BlockIter<'_, T, I>,
+    what: &str,
+) {
     let plain: Vec<*const T> = iter.clone().map(|b| b as *const T).collect();
-    let indexed: Vec<(Index, *const T)> = iter.clone().indexed().map(|(i, b)| (i, b as *const T)).collect();
+    let indexed: Vec<(Index, *const T)> = iter
+        .clone()
+        .indexed()
+        .map(|(i, b)| (i, b as *const T))
+        .collect();
     let indices: Vec<Index> = iter.indices().collect();
 
-    assert_eq!(indexed.iter().map(|&(_, b)| b).collect::<Vec<_>>(), plain, "{what}");
-    assert_eq!(indexed.iter().map(|&(i, _)| i).collect::<Vec<_>>(), indices, "{what}");
+    assert_eq!(
+        indexed.iter().map(|&(_, b)| b).collect::<Vec<_>>(),
+        plain,
+        "{what}"
+    );
+    assert_eq!(
+        indexed.iter().map(|&(i, _)| i).collect::<Vec<_>>(),
+        indices,
+        "{what}"
+    );
     for (i, b) in indexed {
         let at_index = nif.block(i).unwrap().downcast::<T>().unwrap() as *const T;
         assert_eq!(at_index, b, "{what}: index {i}");
@@ -37,15 +53,35 @@ fn every_iterator_reports_its_indices() {
         check(&nif, nif.shapes(), &format!("{asset} shapes"));
         check(&nif, nif.tree(), &format!("{asset} tree"));
         for (i, block) in nif.blocks().indexed() {
-            check(&nif, nif.child_blocks(block), &format!("{asset} child_blocks({i})"));
-            check(&nif, nif.child_blocks_of::<NiShader>(block), &format!("{asset} child_blocks_of({i})"));
+            check(
+                &nif,
+                nif.child_blocks(block),
+                &format!("{asset} child_blocks({i})"),
+            );
+            check(
+                &nif,
+                nif.child_blocks_of::<NiShader>(block),
+                &format!("{asset} child_blocks_of({i})"),
+            );
             check(&nif, nif.subtree(block), &format!("{asset} subtree({i})"));
             if let Some(obj) = block.downcast::<NiObjectNet>() {
-                check(&nif, nif.view_of(obj).unwrap().extra_data(), &format!("{asset} extra_data({i})"));
+                check(
+                    &nif,
+                    nif.view_of(obj).unwrap().extra_data(),
+                    &format!("{asset} extra_data({i})"),
+                );
             }
             if let Some(node) = block.downcast::<NiNode>() {
-                check(&nif, nif.view_of(node).unwrap().children(), &format!("{asset} children({i})"));
-                check(&nif, nif.view_of(node).unwrap().children_of::<NiNode, _>(), &format!("{asset} children_of({i})"));
+                check(
+                    &nif,
+                    nif.view_of(node).unwrap().children(),
+                    &format!("{asset} children({i})"),
+                );
+                check(
+                    &nif,
+                    nif.view_of(node).unwrap().children_of::<NiNode, _>(),
+                    &format!("{asset} children_of({i})"),
+                );
             }
         }
     }
@@ -71,7 +107,10 @@ fn known_indices() {
     let suzanne = load("Suzanne");
     let root = suzanne.root_node().unwrap();
     assert_eq!(root.extra_data().indices().collect::<Vec<_>>(), [1]);
-    assert_eq!(suzanne.tree().indices().collect::<Vec<_>>(), [0, 1, 6, 5, 4, 3, 2, 7, 8, 9]);
+    assert_eq!(
+        suzanne.tree().indices().collect::<Vec<_>>(),
+        [0, 1, 6, 5, 4, 3, 2, 7, 8, 9]
+    );
 }
 
 #[test]
@@ -99,10 +138,18 @@ fn reverse_and_clone() {
 
     let root = nif.root_node().unwrap();
     let fwd: Vec<_> = nif.child_blocks(&root).indexed().map(|(i, _)| i).collect();
-    let mut rev: Vec<_> = nif.child_blocks(&root).indexed().rev().map(|(i, _)| i).collect();
+    let mut rev: Vec<_> = nif
+        .child_blocks(&root)
+        .indexed()
+        .rev()
+        .map(|(i, _)| i)
+        .collect();
     rev.reverse();
     assert_eq!(fwd, rev);
-    assert_eq!(nif.child_blocks(&root).next_back().map(|b| b.block_name()), Some("BSTriShape"));
+    assert_eq!(
+        nif.child_blocks(&root).next_back().map(|b| b.block_name()),
+        Some("BSTriShape")
+    );
 
     let iter = nif.shapes();
     assert_eq!(iter.clone().count(), iter.count());
@@ -129,7 +176,9 @@ fn rename_without_block_index() {
     let mut nif = load("Suzanne");
     let shapes: Vec<_> = nif.shapes().indices().collect();
     for (n, i) in shapes.into_iter().enumerate() {
-        nif.block_of_mut::<nifly::objects::NiObjectNet>(i).unwrap().set_name(format!("Shape{n}"));
+        nif.block_of_mut::<nifly::objects::NiObjectNet>(i)
+            .unwrap()
+            .set_name(format!("Shape{n}"));
     }
     assert_eq!(nif.shape_names().collect::<Vec<_>>(), [b"Shape0"]);
 }

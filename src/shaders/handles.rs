@@ -12,7 +12,8 @@ impl<'a> View<'a, NiShape> {
     pub fn shader(&self) -> Option<View<'a, NiShader>> {
         let ptr = nif_ffi::shader(&self.file().inner, self.get().as_ffi());
         // SAFETY: the shader is owned by this file, which outlives `'a`.
-        self.file().view_of(unsafe { ptr.as_ref() }.map(NiShader::from_ffi)?)
+        self.file()
+            .view_of(unsafe { ptr.as_ref() }.map(NiShader::from_ffi)?)
     }
 
     /// The shape's alpha property, or `None` if it has none.
@@ -22,7 +23,8 @@ impl<'a> View<'a, NiShape> {
     pub fn alpha_property(&self) -> Option<View<'a, NiAlphaProperty>> {
         let ptr = nif_ffi::alpha_property(&self.file().inner, self.get().as_ffi());
         // SAFETY: as in `shader`.
-        self.file().view_of(unsafe { ptr.as_ref() }.map(NiAlphaProperty::from_ffi)?)
+        self.file()
+            .view_of(unsafe { ptr.as_ref() }.map(NiAlphaProperty::from_ffi)?)
     }
 
     /// The first [`NiStencilProperty`] in the shape's property list, or `None` if it has none.
@@ -30,7 +32,8 @@ impl<'a> View<'a, NiShape> {
     pub fn stencil_property(&self) -> Option<View<'a, NiStencilProperty>> {
         let ptr = nif_ffi::stencil_property(&self.file().inner, self.get().as_ffi());
         // SAFETY: as in `shader`.
-        self.file().view_of(unsafe { ptr.as_ref() }.map(NiStencilProperty::from_ffi)?)
+        self.file()
+            .view_of(unsafe { ptr.as_ref() }.map(NiStencilProperty::from_ffi)?)
     }
 
     /// The first [`NiTexturingProperty`] in the shape's property list, or `None` if it has
@@ -38,7 +41,8 @@ impl<'a> View<'a, NiShape> {
     pub fn texturing_property(&self) -> Option<View<'a, NiTexturingProperty>> {
         let ptr = nif_ffi::texturing_property(&self.file().inner, self.get().as_ffi());
         // SAFETY: as in `shader`.
-        self.file().view_of(unsafe { ptr.as_ref() }.map(NiTexturingProperty::from_ffi)?)
+        self.file()
+            .view_of(unsafe { ptr.as_ref() }.map(NiTexturingProperty::from_ffi)?)
     }
 
     /// The first [`NiMaterialProperty`] in the shape's property list, or `None` if it has none.
@@ -47,9 +51,9 @@ impl<'a> View<'a, NiShape> {
     pub fn material_property(&self) -> Option<View<'a, NiMaterialProperty>> {
         let ptr = nif_ffi::material_property(&self.file().inner, self.get().as_ffi());
         // SAFETY: as in `shader`.
-        self.file().view_of(unsafe { ptr.as_ref() }.map(NiMaterialProperty::from_ffi)?)
+        self.file()
+            .view_of(unsafe { ptr.as_ref() }.map(NiMaterialProperty::from_ffi)?)
     }
-
 
     /// Every texture path the shape uses, in this order:
     /// 1. the slots of the shader's `BSShaderTextureSet` (empty slots included, as `b""`),
@@ -125,7 +129,6 @@ impl Edit<'_, NiShape> {
         self.resolve(Some(index))
     }
 
-
     /// Gives the shape a new [`NiAlphaProperty`] with these
     /// [flags](NiAlphaProperty::flags) and threshold, replacing any it had (as
     /// [`remove_alpha_property`](Self::remove_alpha_property) does). Returns the new block's
@@ -143,7 +146,12 @@ impl Edit<'_, NiShape> {
     /// ```
     pub fn assign_alpha_property(&mut self, flags: AlphaFlags, threshold: u8) -> Index {
         let shape = self.index() as u32;
-        let index = nif_ffi::assign_alpha_property(self.file_mut().inner.pin_mut(), shape, flags.bits(), threshold);
+        let index = nif_ffi::assign_alpha_property(
+            self.file_mut().inner.pin_mut(),
+            shape,
+            flags.bits(),
+            threshold,
+        );
         index_from_ffi(index).expect("the block is a shape")
     }
 
@@ -153,7 +161,8 @@ impl Edit<'_, NiShape> {
     /// property.
     pub fn remove_alpha_property(&mut self) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::remove_alpha_property(file.inner.pin_mut(), shape))
+        block_index_to_ffi(shape)
+            .is_some_and(|shape| nif_ffi::remove_alpha_property(file.inner.pin_mut(), shape))
     }
 
     /// Removes the shader of the shape: its shader, the shaders and
@@ -165,7 +174,8 @@ impl Edit<'_, NiShape> {
     /// changing nothing, if the shape has none of these.
     pub fn delete_shader(&mut self) -> bool {
         let (shape, file) = (self.index(), self.file_mut());
-        block_index_to_ffi(shape).is_some_and(|shape| nif_ffi::delete_shader(file.inner.pin_mut(), shape))
+        block_index_to_ffi(shape)
+            .is_some_and(|shape| nif_ffi::delete_shader(file.inner.pin_mut(), shape))
     }
 
     /// Sets the texture path in slot `index` of the shape, using the same
@@ -239,7 +249,8 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiAvObject, I>,
     {
         let target = self.index() as u32;
-        index_from_ffi(P::add(self.file_mut().inner.pin_mut(), target)).expect("the block is an NiAVObject")
+        index_from_ffi(P::add(self.file_mut().inner.pin_mut(), target))
+            .expect("the block is an NiAVObject")
     }
 }
 
@@ -311,7 +322,12 @@ impl Edit<'_, NiTexturingProperty> {
             None => u32::MAX,
         };
         let property = self.index() as u32;
-        nif_ffi::set_map_source(self.file_mut().inner.pin_mut(), property, map.into().to_ffi(), source)
+        nif_ffi::set_map_source(
+            self.file_mut().inner.pin_mut(),
+            property,
+            map.into().to_ffi(),
+            source,
+        )
     }
 }
 
@@ -336,7 +352,8 @@ impl Edit<'_, NiSourceTexture> {
     /// in the file until saving drops it, if nothing else uses it.
     pub fn assign_pixel_data<T: NewPixelData>(&mut self) -> Index {
         let texture = self.index() as u32;
-        index_from_ffi(T::assign(self.file_mut().inner.pin_mut(), texture)).expect("the block is an NiSourceTexture")
+        index_from_ffi(T::assign(self.file_mut().inner.pin_mut(), texture))
+            .expect("the block is an NiSourceTexture")
     }
 
     /// Points the texture at the [`TextureRenderData`] at `data`, or clears it with `None`. It's
@@ -367,7 +384,12 @@ impl Edit<'_, TextureRenderData> {
     /// there are 16 or 256 colors.
     pub fn assign_palette(&mut self, colors: &[[u8; 4]], has_alpha: bool) -> Option<Index> {
         let data = self.index() as u32;
-        index_from_ffi(nif_ffi::assign_palette(self.file_mut().inner.pin_mut(), data, colors.as_flattened(), has_alpha))
+        index_from_ffi(nif_ffi::assign_palette(
+            self.file_mut().inner.pin_mut(),
+            data,
+            colors.as_flattened(),
+            has_alpha,
+        ))
     }
 
     /// Points the pixel data at the [`NiPalette`] at `palette`, or clears it with `None`. Returns

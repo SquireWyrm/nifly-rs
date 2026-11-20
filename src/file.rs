@@ -7,18 +7,15 @@ use std::io;
 use bstr::BString;
 use cxx::UniquePtr;
 use nifly_sys::{
-    nif_file::ffi,
-    nif_file_refs::ffi::RefList,
-    objects::ffi as objects_ffi,
-    read_bridge::RustReader,
-    write_bridge::RustWriter,
+    nif_file::ffi, nif_file_refs::ffi::RefList, objects::ffi as objects_ffi,
+    read_bridge::RustReader, write_bridge::RustWriter,
 };
 
 use crate::{
     error::{Error, LoadError, NifResult, SaveError},
+    extra_data::{IntoExtraData, NiExtraData},
     handle::{Edit, View},
     iter::{BlockIter, RefIndices, TreeIndices},
-    extra_data::{IntoExtraData, NiExtraData},
     objects::{IsA, NiObject, NiObjectNet, NiType},
 };
 
@@ -233,7 +230,9 @@ pub struct NifFile {
 /// belong to the other.
 impl Clone for NifFile {
     fn clone(&self) -> Self {
-        Self { inner: ffi::clone_nif(&self.inner) }
+        Self {
+            inner: ffi::clone_nif(&self.inner),
+        }
     }
 }
 
@@ -281,8 +280,12 @@ impl NifFile {
 
         let result = result?;
         match result.code {
-            0 => Ok(Self { inner: result.value }),
-            code => Err(LoadError::try_from(code).expect("unknown error code").into()),
+            0 => Ok(Self {
+                inner: result.value,
+            }),
+            code => Err(LoadError::try_from(code)
+                .expect("unknown error code")
+                .into()),
         }
     }
 
@@ -316,7 +319,9 @@ impl NifFile {
 
         match result? {
             0 => Ok(()),
-            code => Err(SaveError::try_from(code).expect("unknown error code").into()),
+            code => Err(SaveError::try_from(code)
+                .expect("unknown error code")
+                .into()),
         }
     }
 
@@ -431,7 +436,7 @@ impl NifFile {
     pub fn has_unknown(&self) -> bool {
         ffi::NifFile::HasUnknown(&self.inner)
     }
-    
+
     /// Whether the file was loaded with [`LoadOptions::is_terrain`].
     pub fn is_terrain(&self) -> bool {
         ffi::NifFile::IsTerrain(&self.inner)
@@ -450,8 +455,9 @@ impl NifFile {
     /// `include_ptrs`, back-references such as skin bones, the skeleton root and collision
     /// targets count too.
     pub fn block_ref_count(&self, index: Index, include_ptrs: bool) -> usize {
-        block_index_to_ffi(index)
-            .map_or(0, |i| ffi::block_ref_count(&self.inner, i, include_ptrs) as usize)
+        block_index_to_ffi(index).map_or(0, |i| {
+            ffi::block_ref_count(&self.inner, i, include_ptrs) as usize
+        })
     }
 
     /// Whether `obj` is one of this file's blocks. O(number of blocks).
@@ -503,7 +509,6 @@ impl NifFile {
         Some(BlockSorter { file: self, state })
     }
 
-
     /// Replaces every block the block at `block` refers to (its [child blocks](Self::child_blocks),
     /// recursively) with a deep copy, so it no longer shares them with other blocks. The
     /// originals stay; [`optimize`](Self::optimize) deletes those nothing refers to any more.
@@ -511,7 +516,8 @@ impl NifFile {
     /// New blocks are added at the end, so existing block indices don't change. Returns `false`
     /// if there's no block at `block`.
     pub fn clone_children(&mut self, block: Index) -> bool {
-        block_index_to_ffi(block).is_some_and(|block| ffi::clone_children(self.inner.pin_mut(), block))
+        block_index_to_ffi(block)
+            .is_some_and(|block| ffi::clone_children(self.inner.pin_mut(), block))
     }
 
     /// Returns the block at `index`, or `None` if `index` is out of range.
@@ -581,7 +587,10 @@ impl NifFile {
     ///
     /// `find` must return a block owned by this file (or a base-class view of one), or an object
     /// inside one, such as a [`BsGeometry`](crate::geometry::BsGeometry)'s mesh data.
-    pub(crate) unsafe fn find_mut<T: NiType>(&mut self, find: impl FnOnce(&Self) -> Option<&T>) -> Option<&mut T> {
+    pub(crate) unsafe fn find_mut<T: NiType>(
+        &mut self,
+        find: impl FnOnce(&Self) -> Option<&T>,
+    ) -> Option<&mut T> {
         let found: *const T = find(self)?;
         // SAFETY: `found` is valid until the file is next borrowed mutably, below.
         let obj: *const objects_ffi::NiObject = unsafe { &*found }.as_object().as_ffi();
@@ -692,7 +701,10 @@ impl<'a, T: NiType> View<'a, T> {
         T: IsA<NiObjectNet, I>,
     {
         let obj: &NiObjectNet = self.get().upcast_ref();
-        BlockIter::new(self.file(), RefIndices::new(ffi::extra_data_indices(obj.as_ffi())))
+        BlockIter::new(
+            self.file(),
+            RefIndices::new(ffi::extra_data_indices(obj.as_ffi())),
+        )
     }
 
     /// The extra data chain of files up to version 4.2.2.0: the first block, then each block's

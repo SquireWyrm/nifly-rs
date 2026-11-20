@@ -84,8 +84,8 @@ use nifly_sys::{collision::ffi, nif_file::ffi as nif_ffi, nif_file_refs::ffi::Re
 
 use crate::{
     effects::Plane,
-    extra_data::{joined, BsExtraData, NiExtraData},
-    file::{index_from_ffi, Index, NifFile},
+    extra_data::{BsExtraData, NiExtraData, joined},
+    file::{Index, NifFile, index_from_ffi},
     geometry::NiTriStripsData,
     handle::{Edit, View},
     iter::{BlockIter, RefIndices},
@@ -272,34 +272,37 @@ impl NifFile {
     /// Adds a new, empty [`BhkPoseArray`] and returns its index. Nothing refers to it, so saving
     /// with [`SaveOptions::optimize`](crate::file::SaveOptions::optimize) drops it.
     pub fn add_pose_array(&mut self) -> Index {
-        index_from_ffi(ffi::add_bhk_pose_array(self.inner.pin_mut())).expect("adding a block succeeds")
+        index_from_ffi(ffi::add_bhk_pose_array(self.inner.pin_mut()))
+            .expect("adding a block succeeds")
     }
 
     /// Adds a new [`BhkRagdollTemplate`] with no bones and returns its index. Attach it to an
     /// object with [`Edit::set_extra_data`].
     pub fn add_ragdoll_template(&mut self) -> Index {
-        index_from_ffi(ffi::add_bhk_ragdoll_template(self.inner.pin_mut())).expect("adding a block succeeds")
+        index_from_ffi(ffi::add_bhk_ragdoll_template(self.inner.pin_mut()))
+            .expect("adding a block succeeds")
     }
 
     /// Adds a new [`BhkRagdollTemplateData`] with default settings and returns its index. Add it
     /// to a template with [`Edit::set_ragdoll_bones`].
     pub fn add_ragdoll_template_data(&mut self) -> Index {
-        index_from_ffi(ffi::add_bhk_ragdoll_template_data(self.inner.pin_mut())).expect("adding a block succeeds")
+        index_from_ffi(ffi::add_bhk_ragdoll_template_data(self.inner.pin_mut()))
+            .expect("adding a block succeeds")
     }
 }
 
-mod objects;
 mod bodies;
-mod shapes;
+mod constraints;
 mod mesh_shapes;
 mod motors;
-mod constraints;
+mod objects;
 mod ragdolls;
+mod shapes;
 
-pub use self::objects::*;
 pub use self::bodies::*;
-pub use self::shapes::*;
+pub use self::constraints::*;
 pub use self::mesh_shapes::*;
 pub use self::motors::*;
-pub use self::constraints::*;
+pub use self::objects::*;
 pub use self::ragdolls::*;
+pub use self::shapes::*;

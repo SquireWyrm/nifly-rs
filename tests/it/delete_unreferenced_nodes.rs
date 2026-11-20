@@ -1,6 +1,6 @@
 //! Tests for NifFile::delete_unreferenced_nodes.
 
-use crate::common::{load};
+use crate::common::load;
 use std::io::Cursor;
 
 use nifly::{
@@ -13,7 +13,10 @@ use nifly::{
 /// The file as it is in memory: no optimizing or sorting on save.
 fn raw(nif: &mut NifFile) -> Vec<u8> {
     let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions { optimize: false, sort_blocks: false };
+    let options = SaveOptions {
+        optimize: false,
+        sort_blocks: false,
+    };
     nif.save(&mut cur, Some(options)).unwrap();
     cur.into_inner()
 }
@@ -63,7 +66,9 @@ fn deletes_empty_branches() {
 fn keeps_nodes_that_own_something() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let tagged = nif.add_node("Tagged", identity(), None).unwrap();
-    nif.edit::<nifly::objects::NiAvObject>(tagged).and_then(|mut e| e.assign_extra_data(ExtraInteger("Id", 7))).unwrap();
+    nif.edit::<nifly::objects::NiAvObject>(tagged)
+        .and_then(|mut e| e.assign_extra_data(ExtraInteger("Id", 7)))
+        .unwrap();
     nif.add_node("Empty", identity(), None).unwrap();
 
     assert_eq!(nif.delete_unreferenced_nodes(), Some(1));

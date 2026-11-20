@@ -6,8 +6,8 @@ use std::io::Cursor;
 
 use nifly::{
     effects::{
-        CoordinateGeneration, EffectType, NiAmbientLight, NiDirectionalLight, NiDynamicEffect, NiLight, NiPointLight,
-        NiSpotLight, NiTextureEffect, Plane,
+        CoordinateGeneration, EffectType, NiAmbientLight, NiDirectionalLight, NiDynamicEffect,
+        NiLight, NiPointLight, NiSpotLight, NiTextureEffect, Plane,
     },
     file::{Index, NifFile, SaveOptions},
     nodes::NiNode,
@@ -18,12 +18,23 @@ use nifly::{
 /// Saves without optimizing or sorting, so block indices stay the same.
 fn reload(nif: &mut NifFile) -> NifFile {
     let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, Some(SaveOptions { optimize: false, sort_blocks: false })).unwrap();
+    nif.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize: false,
+            sort_blocks: false,
+        }),
+    )
+    .unwrap();
     NifFile::load(cur.into_inner().as_slice(), None).unwrap()
 }
 
 fn effects(nif: &NifFile, node: Index) -> Vec<Index> {
-    nif.view::<NiNode>(node).unwrap().effects().indices().collect()
+    nif.view::<NiNode>(node)
+        .unwrap()
+        .effects()
+        .indices()
+        .collect()
 }
 
 #[test]
@@ -32,7 +43,13 @@ fn reads_morrowind_texture_effects() {
     assert_eq!(effects(&nif, 0), [19]);
     assert_eq!(effects(&nif, 2), [3]);
     // Each effect is also a child of the node listing it.
-    assert!(nif.view::<NiNode>(2).unwrap().children().indices().any(|i| i == 3));
+    assert!(
+        nif.view::<NiNode>(2)
+            .unwrap()
+            .children()
+            .indices()
+            .any(|i| i == 3)
+    );
 
     let effect = nif.view::<NiTextureEffect>(3).unwrap();
     assert_eq!(effect.projection_matrix(), Matrix3::IDENTITY);
@@ -40,16 +57,30 @@ fn reads_morrowind_texture_effects() {
     assert_eq!(effect.filter_mode(), Some(FilterMode::Trilinear));
     assert_eq!(effect.clamp_mode(), Some(ClampMode::WrapBoth));
     assert_eq!(effect.effect_type(), Some(EffectType::EnvironmentMap));
-    assert_eq!(effect.coordinate_generation(), Some(CoordinateGeneration::SphereMap));
+    assert_eq!(
+        effect.coordinate_generation(),
+        Some(CoordinateGeneration::SphereMap)
+    );
     assert_eq!(effect.source_texture().map(|t| t.index()), Some(4));
     assert!(!effect.clipping());
-    assert_eq!(effect.clipping_plane(), Plane { normal: Vec3::new(1.0, 0.0, 0.0), constant: 0.0 });
+    assert_eq!(
+        effect.clipping_plane(),
+        Plane {
+            normal: Vec3::new(1.0, 0.0, 0.0),
+            constant: 0.0
+        }
+    );
     assert_eq!((effect.ps2_l(), effect.ps2_k()), (0, -75));
     // Morrowind stores affected nodes as pointers, not block indices.
     assert_eq!(effect.affected_node_pointers(), [12467848]);
     assert_eq!(effect.affected_nodes().count(), 0);
     assert!(effect.switch_state());
-    assert_eq!(nif.view::<NiTextureEffect>(19).unwrap().affected_node_pointers(), [12333816]);
+    assert_eq!(
+        nif.view::<NiTextureEffect>(19)
+            .unwrap()
+            .affected_node_pointers(),
+        [12333816]
+    );
 }
 
 #[test]
@@ -57,7 +88,13 @@ fn texture_effect_fields_survive_save() {
     let mut nif = upstream("TestNifFile_TextureEffect_MW");
     let mut edit = nif.edit::<NiTextureEffect>(3).unwrap();
     let b = &mut *edit;
-    let matrix = Matrix3 { rows: [Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 2.0)] };
+    let matrix = Matrix3 {
+        rows: [
+            Vec3::new(0.0, 1.0, 0.0),
+            Vec3::new(1.0, 0.0, 0.0),
+            Vec3::new(0.0, 0.0, 2.0),
+        ],
+    };
     b.set_projection_matrix(matrix);
     b.set_projection_translation(Vec3::new(1.0, 2.0, 3.0));
     b.set_filter_mode(FilterMode::Bilinear);
@@ -65,7 +102,10 @@ fn texture_effect_fields_survive_save() {
     b.set_effect_type(EffectType::ProjectedShadow);
     b.set_coordinate_generation(CoordinateGeneration::WorldPerspective);
     b.set_clipping(true);
-    b.set_clipping_plane(Plane { normal: Vec3::new(0.0, 0.0, 1.0), constant: 5.0 });
+    b.set_clipping_plane(Plane {
+        normal: Vec3::new(0.0, 0.0, 1.0),
+        constant: 5.0,
+    });
     b.set_ps2_l(3);
     b.set_ps2_k(-4);
     b.set_affected_node_pointers(&[1, 2]);
@@ -78,9 +118,18 @@ fn texture_effect_fields_survive_save() {
     assert_eq!(effect.filter_mode(), Some(FilterMode::Bilinear));
     assert_eq!(effect.clamp_mode(), Some(ClampMode::ClampBoth));
     assert_eq!(effect.effect_type(), Some(EffectType::ProjectedShadow));
-    assert_eq!(effect.coordinate_generation(), Some(CoordinateGeneration::WorldPerspective));
+    assert_eq!(
+        effect.coordinate_generation(),
+        Some(CoordinateGeneration::WorldPerspective)
+    );
     assert!(effect.clipping());
-    assert_eq!(effect.clipping_plane(), Plane { normal: Vec3::new(0.0, 0.0, 1.0), constant: 5.0 });
+    assert_eq!(
+        effect.clipping_plane(),
+        Plane {
+            normal: Vec3::new(0.0, 0.0, 1.0),
+            constant: 5.0
+        }
+    );
     assert_eq!((effect.ps2_l(), effect.ps2_k()), (3, -4));
     assert_eq!(effect.affected_node_pointers(), [1, 2]);
     assert_eq!(effect.source_texture().map(|t| t.index()), Some(7));
@@ -95,8 +144,13 @@ fn set_source_texture_checks_type() {
         assert!(!edit.set_source_texture(Some(bad)), "{bad}");
     }
     assert_eq!(edit.source_texture().map(|t| t.index()), Some(4));
-    edit.source_texture().unwrap().set_file_name("textures\\new.dds");
-    assert_eq!(nif.view::<NiSourceTexture>(4).unwrap().file_name(), "textures\\new.dds");
+    edit.source_texture()
+        .unwrap()
+        .set_file_name("textures\\new.dds");
+    assert_eq!(
+        nif.view::<NiSourceTexture>(4).unwrap().file_name(),
+        "textures\\new.dds"
+    );
 
     let mut edit = nif.edit::<NiTextureEffect>(3).unwrap();
     assert!(edit.set_source_texture(None));
@@ -127,18 +181,30 @@ fn set_effects_checks_type() {
 #[test]
 fn affected_nodes() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
-    let light = nif.edit::<NiNode>(0).unwrap().add_effect::<NiAmbientLight, _>();
+    let light = nif
+        .edit::<NiNode>(0)
+        .unwrap()
+        .add_effect::<NiAmbientLight, _>();
     let shape = nif.shapes().indices().next().unwrap();
     let mut edit = nif.edit::<NiAmbientLight>(light).unwrap();
     assert!(!edit.set_affected_nodes(&[shape]), "a shape isn't a node");
     assert!(!edit.set_affected_nodes(&[usize::MAX]));
     assert_eq!(edit.view().affected_nodes().count(), 0);
     assert!(edit.set_affected_nodes(&[0]));
-    assert_eq!(edit.view().affected_nodes().indices().collect::<Vec<_>>(), [0]);
+    assert_eq!(
+        edit.view().affected_nodes().indices().collect::<Vec<_>>(),
+        [0]
+    );
 
     let saved = reload(&mut nif);
     let light = saved.blocks_of::<NiAmbientLight>().views().next().unwrap();
-    assert_eq!(light.affected_nodes().map(|n| n.name().to_owned()).collect::<Vec<_>>(), [saved.root_node().unwrap().name()]);
+    assert_eq!(
+        light
+            .affected_nodes()
+            .map(|n| n.name().to_owned())
+            .collect::<Vec<_>>(),
+        [saved.root_node().unwrap().name()]
+    );
     // A node can reach them through its effects, as the base type.
     let effect = saved.root_node().unwrap().effects().views().next().unwrap();
     assert_eq!(effect.index(), light.index());
@@ -167,8 +233,14 @@ fn new_lights_have_defaults() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let root = nif.root_node().unwrap().index();
     let count = nif.blocks().count();
-    let point = nif.edit::<NiNode>(root).unwrap().add_effect::<NiPointLight, _>();
-    let texture = nif.edit::<NiNode>(root).unwrap().add_effect::<NiTextureEffect, _>();
+    let point = nif
+        .edit::<NiNode>(root)
+        .unwrap()
+        .add_effect::<NiPointLight, _>();
+    let texture = nif
+        .edit::<NiNode>(root)
+        .unwrap()
+        .add_effect::<NiTextureEffect, _>();
     assert_eq!((point, texture), (count, count + 1));
     assert_eq!(effects(&nif, root), [point, texture]);
 
@@ -177,7 +249,11 @@ fn new_lights_have_defaults() {
     assert_eq!(light.diffuse_color(), [0.0; 3]);
     assert!(light.switch_state());
     assert_eq!(
-        (light.constant_attenuation(), light.linear_attenuation(), light.quadratic_attenuation()),
+        (
+            light.constant_attenuation(),
+            light.linear_attenuation(),
+            light.quadratic_attenuation()
+        ),
         (0.0, 1.0, 0.0)
     );
     let effect = nif.view::<NiTextureEffect>(texture).unwrap();
@@ -190,13 +266,29 @@ fn new_lights_have_defaults() {
 fn lights_survive_save() {
     let mut nif = upstream("TestNifFile_Static_SE");
     let root = nif.root_node().unwrap().index();
-    let ambient = nif.edit::<NiNode>(root).unwrap().add_effect::<NiAmbientLight, _>();
-    let directional = nif.edit::<NiNode>(root).unwrap().add_effect::<NiDirectionalLight, _>();
-    let point = nif.edit::<NiNode>(root).unwrap().add_effect::<NiPointLight, _>();
-    let spot = nif.edit::<NiNode>(root).unwrap().add_effect::<NiSpotLight, _>();
+    let ambient = nif
+        .edit::<NiNode>(root)
+        .unwrap()
+        .add_effect::<NiAmbientLight, _>();
+    let directional = nif
+        .edit::<NiNode>(root)
+        .unwrap()
+        .add_effect::<NiDirectionalLight, _>();
+    let point = nif
+        .edit::<NiNode>(root)
+        .unwrap()
+        .add_effect::<NiPointLight, _>();
+    let spot = nif
+        .edit::<NiNode>(root)
+        .unwrap()
+        .add_effect::<NiSpotLight, _>();
     for i in [ambient, directional, point, spot] {
         set_light(&mut nif, i);
-        assert!(nif.edit::<NiDynamicEffect>(i).unwrap().set_parent(Some(root)));
+        assert!(
+            nif.edit::<NiDynamicEffect>(i)
+                .unwrap()
+                .set_parent(Some(root))
+        );
     }
     let mut edit = nif.edit::<NiPointLight>(point).unwrap();
     let p = &mut *edit;
@@ -221,9 +313,19 @@ fn lights_survive_save() {
     assert_eq!(root.children().of::<NiLight>().count(), 4);
 
     let p = root.effects().of::<NiPointLight>().next().unwrap();
-    assert_eq!((p.constant_attenuation(), p.linear_attenuation(), p.quadratic_attenuation()), (1.0, 2.0, 3.0));
+    assert_eq!(
+        (
+            p.constant_attenuation(),
+            p.linear_attenuation(),
+            p.quadratic_attenuation()
+        ),
+        (1.0, 2.0, 3.0)
+    );
     let s = root.effects().of::<NiSpotLight>().next().unwrap();
-    assert_eq!((s.outer_angle(), s.inner_angle(), s.exponent()), (0.75, 0.25, 2.0));
+    assert_eq!(
+        (s.outer_angle(), s.inner_angle(), s.exponent()),
+        (0.75, 0.25, 2.0)
+    );
     check_light(s);
 }
 
@@ -232,7 +334,10 @@ fn lights_survive_save() {
 fn spot_light_round_trip(name: &str) -> (f32, f32, f32) {
     let mut nif = upstream(name);
     let root = nif.root_node().unwrap().index();
-    let spot = nif.edit::<NiNode>(root).unwrap().add_effect::<NiSpotLight, _>();
+    let spot = nif
+        .edit::<NiNode>(root)
+        .unwrap()
+        .add_effect::<NiSpotLight, _>();
     let mut edit = nif.edit::<NiSpotLight>(spot).unwrap();
     let s = &mut *edit;
     s.set_outer_angle(0.75);
@@ -256,18 +361,34 @@ fn spot_light_round_trip(name: &str) -> (f32, f32, f32) {
 #[test]
 fn spot_light_inner_angle_by_version() {
     // Not stored before Fallout 3: the exponent after it is still read correctly.
-    assert_eq!(spot_light_round_trip("TestNifFile_Static_MW"), (0.75, 0.0, 2.0));
-    assert_eq!(spot_light_round_trip("TestNifFile_Skinned_OB"), (0.75, 0.0, 2.0));
-    assert_eq!(spot_light_round_trip("TestNifFile_Static_SE"), (0.75, 0.25, 2.0));
+    assert_eq!(
+        spot_light_round_trip("TestNifFile_Static_MW"),
+        (0.75, 0.0, 2.0)
+    );
+    assert_eq!(
+        spot_light_round_trip("TestNifFile_Skinned_OB"),
+        (0.75, 0.0, 2.0)
+    );
+    assert_eq!(
+        spot_light_round_trip("TestNifFile_Static_SE"),
+        (0.75, 0.25, 2.0)
+    );
 }
 
 #[test]
 fn fallout_4_drops_effect_lists() {
     let mut nif = upstream("TestNifFile_Static_FO4");
     let root = nif.root_node().unwrap().index();
-    let light = nif.edit::<NiNode>(root).unwrap().add_effect::<NiPointLight, _>();
+    let light = nif
+        .edit::<NiNode>(root)
+        .unwrap()
+        .add_effect::<NiPointLight, _>();
     assert_eq!(effects(&nif, root), [light]);
-    assert!(nif.edit::<NiPointLight>(light).unwrap().set_parent(Some(root)));
+    assert!(
+        nif.edit::<NiPointLight>(light)
+            .unwrap()
+            .set_parent(Some(root))
+    );
     set_light(&mut nif, light);
 
     let saved = reload(&mut nif);

@@ -2,10 +2,11 @@
 
 use nifly::{
     collision::{
-        BhkBoxShape, BhkCapsuleShape, BhkCollisionObject, BhkCompressedMeshShape, BhkCompressedMeshShapeData,
-        BhkConvexListShape, BhkConvexShape, BhkConvexTransformShape, BhkConvexVerticesShape, BhkCylinderShape,
-        BhkListShape, BhkMoppBvTreeShape, BhkMultiSphereShape, BhkNiTriStripsShape, BhkPackedNiTriStripsShape,
-        BhkPlaneShape, BhkRigidBody, BhkSphereShape, BhkTransformShape, BigTriangle, CInfoProperty, ChunkMaterial,
+        BhkBoxShape, BhkCapsuleShape, BhkCollisionObject, BhkCompressedMeshShape,
+        BhkCompressedMeshShapeData, BhkConvexListShape, BhkConvexShape, BhkConvexTransformShape,
+        BhkConvexVerticesShape, BhkCylinderShape, BhkListShape, BhkMoppBvTreeShape,
+        BhkMultiSphereShape, BhkNiTriStripsShape, BhkPackedNiTriStripsShape, BhkPlaneShape,
+        BhkRigidBody, BhkSphereShape, BhkTransformShape, BigTriangle, CInfoProperty, ChunkMaterial,
         ChunkTransform, HavokFilter, HkPackedNiTriStripsData, MeshChunk, PackedTriangle, SubPart,
     },
     effects::Plane,
@@ -19,15 +20,25 @@ use crate::common::{load, reload_in_place as reload};
 /// A new file of `version` whose root has a collision object with a new rigid body.
 fn with_body(version: NifVersion) -> (NifFile, Index) {
     let mut nif = NifFile::create(version);
-    let collision = nif.root_node_mut().unwrap().assign_collision::<BhkCollisionObject, _>();
-    let body = nif.edit::<BhkCollisionObject>(collision).unwrap().assign_body::<BhkRigidBody, _>().unwrap();
+    let collision = nif
+        .root_node_mut()
+        .unwrap()
+        .assign_collision::<BhkCollisionObject, _>();
+    let body = nif
+        .edit::<BhkCollisionObject>(collision)
+        .unwrap()
+        .assign_body::<BhkRigidBody, _>()
+        .unwrap();
     (nif, body)
 }
 
 #[test]
 fn convex_shapes() {
     let (mut nif, body) = with_body(NifVersion::SKYRIM_SE);
-    let list = nif.edit::<BhkRigidBody>(body).unwrap().assign_shape::<BhkListShape>();
+    let list = nif
+        .edit::<BhkRigidBody>(body)
+        .unwrap()
+        .assign_shape::<BhkListShape>();
     let mut edit = nif.edit::<BhkListShape>(list).unwrap();
     let cube = edit.add_sub_shape::<BhkBoxShape>().unwrap();
     let sphere = edit.add_sub_shape::<BhkSphereShape>().unwrap();
@@ -41,7 +52,9 @@ fn convex_shapes() {
     let convex = b;
     convex.set_radius(0.1);
     convex.set_material(42);
-    nif.block_of_mut::<BhkConvexShape>(sphere).unwrap().set_radius(0.5);
+    nif.block_of_mut::<BhkConvexShape>(sphere)
+        .unwrap()
+        .set_radius(0.5);
     let c = nif.block_of_mut::<BhkCapsuleShape>(capsule).unwrap();
     c.set_point_1(Vec3::new(0.0, 0.0, -1.0));
     c.set_point_2(Vec3::new(0.0, 0.0, 1.0));
@@ -51,40 +64,84 @@ fn convex_shapes() {
     c.set_vertex_a([0.0, 0.0, -2.0, 0.0]);
     c.set_vertex_b([0.0, 0.0, 2.0, 0.0]);
     c.set_cylinder_radius(0.75);
-    let spheres = [BoundingSphere::new(Vec3::new(1.0, 0.0, 0.0), 0.5), BoundingSphere::new(Vec3::ZERO, 1.0)];
+    let spheres = [
+        BoundingSphere::new(Vec3::new(1.0, 0.0, 0.0), 0.5),
+        BoundingSphere::new(Vec3::ZERO, 1.0),
+    ];
     let m = nif.block_of_mut::<BhkMultiSphereShape>(multi).unwrap();
     m.set_spheres(&spheres);
-    m.set_shape_property(CInfoProperty { data: 1, size: 2, capacity_and_raw_flags: 3 });
-    let vertices = [[0.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]];
+    m.set_shape_property(CInfoProperty {
+        data: 1,
+        size: 2,
+        capacity_and_raw_flags: 3,
+    });
+    let vertices = [
+        [0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+    ];
     let normals = [[0.0, 0.0, 1.0, -0.5]];
     let h = nif.block_of_mut::<BhkConvexVerticesShape>(hull).unwrap();
     h.set_vertices(&vertices);
     h.set_normals(&normals);
-    h.set_vertices_property(CInfoProperty { data: 4, size: 5, capacity_and_raw_flags: 6 });
+    h.set_vertices_property(CInfoProperty {
+        data: 4,
+        size: 5,
+        capacity_and_raw_flags: 6,
+    });
 
     let saved = reload(&mut nif);
-    let shapes: Vec<_> = saved.view::<BhkListShape>(list).unwrap().sub_shapes().indices().collect();
+    let shapes: Vec<_> = saved
+        .view::<BhkListShape>(list)
+        .unwrap()
+        .sub_shapes()
+        .indices()
+        .collect();
     assert_eq!(shapes, [cube, sphere, capsule, cylinder, multi, hull]);
     let b = saved.block_of::<BhkBoxShape>(cube).unwrap();
-    assert_eq!((b.dimensions(), b.radius(), b.material()), (Vec3::new(1.0, 2.0, 3.0), 0.1, 42));
-    assert_eq!(saved.block_of::<BhkConvexShape>(sphere).unwrap().radius(), 0.5);
+    assert_eq!(
+        (b.dimensions(), b.radius(), b.material()),
+        (Vec3::new(1.0, 2.0, 3.0), 0.1, 42)
+    );
+    assert_eq!(
+        saved.block_of::<BhkConvexShape>(sphere).unwrap().radius(),
+        0.5
+    );
     let c = saved.block_of::<BhkCapsuleShape>(capsule).unwrap();
-    assert_eq!((c.point_1(), c.point_2()), (Vec3::new(0.0, 0.0, -1.0), Vec3::new(0.0, 0.0, 1.0)));
+    assert_eq!(
+        (c.point_1(), c.point_2()),
+        (Vec3::new(0.0, 0.0, -1.0), Vec3::new(0.0, 0.0, 1.0))
+    );
     assert_eq!((c.radius_1(), c.radius_2()), (0.25, 0.5));
     let c = saved.block_of::<BhkCylinderShape>(cylinder).unwrap();
-    assert_eq!((c.vertex_a()[2], c.vertex_b()[2], c.cylinder_radius()), (-2.0, 2.0, 0.75));
+    assert_eq!(
+        (c.vertex_a()[2], c.vertex_b()[2], c.cylinder_radius()),
+        (-2.0, 2.0, 0.75)
+    );
     let m = saved.block_of::<BhkMultiSphereShape>(multi).unwrap();
-    assert_eq!((m.spheres(), m.shape_property().size), (spheres.to_vec(), 2));
+    assert_eq!(
+        (m.spheres(), m.shape_property().size),
+        (spheres.to_vec(), 2)
+    );
     let h = saved.block_of::<BhkConvexVerticesShape>(hull).unwrap();
-    assert_eq!((h.vertices(), h.normals()), (vertices.to_vec(), normals.to_vec()));
+    assert_eq!(
+        (h.vertices(), h.normals()),
+        (vertices.to_vec(), normals.to_vec())
+    );
     assert_eq!(h.vertices_property().capacity_and_raw_flags, 6);
 }
 
 #[test]
 fn plane_shape() {
     let (mut nif, body) = with_body(NifVersion::SKYRIM_SE);
-    let plane = nif.edit::<BhkRigidBody>(body).unwrap().assign_shape::<BhkPlaneShape>();
-    let value = Plane { normal: Vec3::new(0.0, 0.0, 1.0), constant: 2.0 };
+    let plane = nif
+        .edit::<BhkRigidBody>(body)
+        .unwrap()
+        .assign_shape::<BhkPlaneShape>();
+    let value = Plane {
+        normal: Vec3::new(0.0, 0.0, 1.0),
+        constant: 2.0,
+    };
     let p = nif.block_of_mut::<BhkPlaneShape>(plane).unwrap();
     p.set_plane(value);
     p.set_unknown_vector(Vec3::new(1.0, 2.0, 3.0));
@@ -94,19 +151,36 @@ fn plane_shape() {
 
     let saved = reload(&mut nif);
     let p = saved.block_of::<BhkPlaneShape>(plane).unwrap();
-    assert_eq!((p.plane(), p.unknown_vector()), (value, Vec3::new(1.0, 2.0, 3.0)));
-    assert_eq!((p.half_extents(), p.center(), p.material()), ([5.0, 5.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], 7));
+    assert_eq!(
+        (p.plane(), p.unknown_vector()),
+        (value, Vec3::new(1.0, 2.0, 3.0))
+    );
+    assert_eq!(
+        (p.half_extents(), p.center(), p.material()),
+        ([5.0, 5.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], 7)
+    );
 }
 
 #[test]
 fn list_shapes() {
     let (mut nif, body) = with_body(NifVersion::SKYRIM_SE);
-    let list = nif.edit::<BhkRigidBody>(body).unwrap().assign_shape::<BhkListShape>();
+    let list = nif
+        .edit::<BhkRigidBody>(body)
+        .unwrap()
+        .assign_shape::<BhkListShape>();
     let mut edit = nif.edit::<BhkListShape>(list).unwrap();
     let cube = edit.add_sub_shape::<BhkBoxShape>().unwrap();
     let convex = edit.add_sub_shape::<BhkConvexListShape>().unwrap();
-    let filter = HavokFilter { layer: 9, raw_flags_and_parts: 0, group: 1 };
-    assert_eq!(edit.filters(), [HavokFilter::default(); 2], "one default filter per added shape");
+    let filter = HavokFilter {
+        layer: 9,
+        raw_flags_and_parts: 0,
+        group: 1,
+    };
+    assert_eq!(
+        edit.filters(),
+        [HavokFilter::default(); 2],
+        "one default filter per added shape"
+    );
     assert!(!edit.set_filters(&[filter]), "not one per sub-shape");
     assert!(edit.set_filters(&[filter, filter]));
     assert!(!edit.set_sub_shapes(&[list]), "contains itself");
@@ -126,36 +200,71 @@ fn list_shapes() {
     c.set_unknown_float(0.5);
     c.set_use_cached_aabb(true);
     c.set_closest_point_min_distance(0.25);
-    c.set_child_shape_property(CInfoProperty { data: 0, size: 0, capacity_and_raw_flags: 7 });
+    c.set_child_shape_property(CInfoProperty {
+        data: 0,
+        size: 0,
+        capacity_and_raw_flags: 7,
+    });
     let l = nif.block_of_mut::<BhkListShape>(list).unwrap();
     l.set_material(11);
-    l.set_child_shape_property(CInfoProperty { data: 1, size: 0, capacity_and_raw_flags: 0 });
-    l.set_child_filter_property(CInfoProperty { data: 2, size: 0, capacity_and_raw_flags: 0 });
+    l.set_child_shape_property(CInfoProperty {
+        data: 1,
+        size: 0,
+        capacity_and_raw_flags: 0,
+    });
+    l.set_child_filter_property(CInfoProperty {
+        data: 2,
+        size: 0,
+        capacity_and_raw_flags: 0,
+    });
 
     let saved = reload(&mut nif);
     let l = saved.view::<BhkListShape>(list).unwrap();
     assert_eq!(l.sub_shapes().indices().collect::<Vec<_>>(), [convex]);
     assert_eq!((l.filters(), l.material()), (vec![filter], 11));
-    assert_eq!((l.child_shape_property().data, l.child_filter_property().data), (1, 2));
+    assert_eq!(
+        (
+            l.child_shape_property().data,
+            l.child_filter_property().data
+        ),
+        (1, 2)
+    );
     let c = saved.view::<BhkConvexListShape>(convex).unwrap();
     assert_eq!(c.sub_shapes().indices().collect::<Vec<_>>(), [cube, sphere]);
-    assert_eq!((c.material(), c.radius(), c.unknown_int(), c.unknown_float()), (3, 0.05, 4, 0.5));
-    assert_eq!((c.use_cached_aabb(), c.closest_point_min_distance()), (true, 0.25));
+    assert_eq!(
+        (c.material(), c.radius(), c.unknown_int(), c.unknown_float()),
+        (3, 0.05, 4, 0.5)
+    );
+    assert_eq!(
+        (c.use_cached_aabb(), c.closest_point_min_distance()),
+        (true, 0.25)
+    );
     assert_eq!(c.child_shape_property().capacity_and_raw_flags, 7);
 }
 
 #[test]
 fn transform_and_mopp() {
     let (mut nif, body) = with_body(NifVersion::SKYRIM_SE);
-    let mopp = nif.edit::<BhkRigidBody>(body).unwrap().assign_shape::<BhkMoppBvTreeShape>();
-    let transform = nif.edit::<BhkMoppBvTreeShape>(mopp).unwrap().assign_shape::<BhkConvexTransformShape>();
+    let mopp = nif
+        .edit::<BhkRigidBody>(body)
+        .unwrap()
+        .assign_shape::<BhkMoppBvTreeShape>();
+    let transform = nif
+        .edit::<BhkMoppBvTreeShape>(mopp)
+        .unwrap()
+        .assign_shape::<BhkConvexTransformShape>();
     let mut edit = nif.edit::<BhkConvexTransformShape>(transform).unwrap();
     let cube = edit.assign_shape::<BhkBoxShape>();
     assert!(!edit.set_shape(Some(mopp)), "contains the transform");
     assert!(!edit.set_shape(Some(transform)), "itself");
     assert_eq!(edit.shape().unwrap().index(), cube);
 
-    let matrix = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [1.0, 2.0, 3.0, 1.0]];
+    let matrix = [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [1.0, 2.0, 3.0, 1.0],
+    ];
     let t = nif.block_of_mut::<BhkTransformShape>(transform).unwrap();
     t.set_transform(matrix);
     t.set_material(5);
@@ -172,14 +281,26 @@ fn transform_and_mopp() {
     assert_eq!((t.transform(), t.material(), t.radius()), (matrix, 5, 0.01));
     let m = saved.view::<BhkMoppBvTreeShape>(mopp).unwrap();
     assert_eq!(m.shape().unwrap().index(), transform);
-    assert_eq!((m.mopp_code(), m.mopp_offset(), m.mopp_scale(), m.build_type()), (&[1, 2, 3][..], [1.0, 2.0, 3.0, 0.0], 4.0, 1));
+    assert_eq!(
+        (
+            m.mopp_code(),
+            m.mopp_offset(),
+            m.mopp_scale(),
+            m.build_type()
+        ),
+        (&[1, 2, 3][..], [1.0, 2.0, 3.0, 0.0], 4.0, 1)
+    );
 }
 
 #[test]
 fn compressed_mesh() {
     // Suzanne.nif: a MOPP shape over a compressed mesh shape.
     let mut nif = load("Suzanne");
-    let shape = nif.blocks_of::<BhkCompressedMeshShape>().indices().next().unwrap();
+    let shape = nif
+        .blocks_of::<BhkCompressedMeshShape>()
+        .indices()
+        .next()
+        .unwrap();
     let view = nif.view::<BhkCompressedMeshShape>(shape).unwrap();
     let data = view.compressed_data().unwrap().index();
     assert!(view.mesh_target().is_some());
@@ -190,7 +311,10 @@ fn compressed_mesh() {
     let root = nif.root_node().unwrap().index();
     let mut edit = nif.edit::<BhkCompressedMeshShape>(shape).unwrap();
     assert!(!edit.set_mesh_target(Some(data)), "not an NiAvObject");
-    assert!(!edit.set_compressed_data(Some(root)), "not compressed mesh data");
+    assert!(
+        !edit.set_compressed_data(Some(root)),
+        "not compressed mesh data"
+    );
     assert!(edit.set_mesh_target(Some(root)));
     let s = &mut *edit;
     s.set_radius(0.02);
@@ -208,16 +332,34 @@ fn compressed_mesh() {
         strips: vec![],
         welding_info: vec![0],
     };
-    let big = BigTriangle { triangle: [0, 1, 2], material: 0, welding_info: 5 };
-    let d = nif.block_of_mut::<BhkCompressedMeshShapeData>(data).unwrap();
+    let big = BigTriangle {
+        triangle: [0, 1, 2],
+        material: 0,
+        welding_info: 5,
+    };
+    let d = nif
+        .block_of_mut::<BhkCompressedMeshShapeData>(data)
+        .unwrap();
     assert!(d.set_big_triangles(&[]));
     assert!(d.set_big_vertices(&[[0.0; 4], [1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]]));
     assert!(d.set_big_triangles(&[big]));
-    assert!(!d.set_big_vertices(&[[0.0; 4]]), "the big triangle uses vertex 2");
-    assert!(!d.set_big_triangles(&[BigTriangle { triangle: [0, 1, 3], ..big }]));
+    assert!(
+        !d.set_big_vertices(&[[0.0; 4]]),
+        "the big triangle uses vertex 2"
+    );
+    assert!(!d.set_big_triangles(&[BigTriangle {
+        triangle: [0, 1, 3],
+        ..big
+    }]));
     d.set_chunks(std::slice::from_ref(&chunk));
-    d.set_chunk_materials(&[ChunkMaterial { material: 0x1234, filter: HavokFilter::default() }]);
-    d.set_chunk_transforms(&[ChunkTransform { translation: [0.0; 4], rotation: [0.0, 0.0, 0.0, 1.0] }]);
+    d.set_chunk_materials(&[ChunkMaterial {
+        material: 0x1234,
+        filter: HavokFilter::default(),
+    }]);
+    d.set_chunk_transforms(&[ChunkTransform {
+        translation: [0.0; 4],
+        rotation: [0.0, 0.0, 0.0, 1.0],
+    }]);
     d.set_materials_8(&[8]);
     d.set_error(0.001);
     d.set_aabb_min([-1.0; 4]);
@@ -226,24 +368,49 @@ fn compressed_mesh() {
     let saved = reload(&mut nif);
     let s = saved.view::<BhkCompressedMeshShape>(shape).unwrap();
     assert_eq!(s.mesh_target().unwrap().index(), root);
-    assert_eq!((s.radius(), s.radius_copy(), s.scale(), s.user_data()), (0.02, 0.03, [2.0, 2.0, 2.0, 0.0], 9));
+    assert_eq!(
+        (s.radius(), s.radius_copy(), s.scale(), s.user_data()),
+        (0.02, 0.03, [2.0, 2.0, 2.0, 0.0], 9)
+    );
     let d = s.compressed_data().unwrap();
     assert_eq!((d.chunks(), d.big_triangles()), (vec![chunk], vec![big]));
     assert_eq!(d.big_vertices().len(), 3);
     assert_eq!(d.chunk_materials()[0].material, 0x1234);
     assert_eq!(d.chunk_transforms()[0].rotation, [0.0, 0.0, 0.0, 1.0]);
-    assert_eq!((d.materials_8(), d.error(), d.aabb_min(), d.bits_per_index()), (&[8][..], 0.001, [-1.0; 4], 17));
+    assert_eq!(
+        (d.materials_8(), d.error(), d.aabb_min(), d.bits_per_index()),
+        (&[8][..], 0.001, [-1.0; 4], 17)
+    );
 }
 
 #[test]
 fn packed_mesh_by_version() {
-    let vertices = [Vec3::ZERO, Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0)];
-    let triangle = PackedTriangle { triangle: [0, 1, 2], welding_info: 3, normal: Vec3::new(0.0, 0.0, 1.0) };
-    let part = SubPart { filter: HavokFilter { layer: 2, raw_flags_and_parts: 0, group: 0 }, vertex_count: 3, material: 6 };
+    let vertices = [
+        Vec3::ZERO,
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+    ];
+    let triangle = PackedTriangle {
+        triangle: [0, 1, 2],
+        welding_info: 3,
+        normal: Vec3::new(0.0, 0.0, 1.0),
+    };
+    let part = SubPart {
+        filter: HavokFilter {
+            layer: 2,
+            raw_flags_and_parts: 0,
+            group: 0,
+        },
+        vertex_count: 3,
+        material: 6,
+    };
 
     for version in [NifVersion::OBLIVION, NifVersion::FALLOUT_3] {
         let (mut nif, body) = with_body(version);
-        let shape = nif.edit::<BhkRigidBody>(body).unwrap().assign_shape::<BhkPackedNiTriStripsShape>();
+        let shape = nif
+            .edit::<BhkRigidBody>(body)
+            .unwrap()
+            .assign_shape::<BhkPackedNiTriStripsShape>();
         let mut edit = nif.edit::<BhkPackedNiTriStripsShape>(shape).unwrap();
         let data = edit.assign_packed_data();
         assert!(!edit.set_packed_data(Some(body)), "not packed data");
@@ -255,7 +422,10 @@ fn packed_mesh_by_version() {
         assert!(!d.set_triangles(&[triangle]), "no vertices yet");
         assert!(d.set_vertices(&vertices));
         assert!(d.set_triangles(&[triangle]));
-        assert!(!d.set_vertices(&vertices[..2]), "the triangle uses vertex 2");
+        assert!(
+            !d.set_vertices(&vertices[..2]),
+            "the triangle uses vertex 2"
+        );
         assert!(d.set_sub_parts(&[part]));
 
         let saved = reload(&mut nif);
@@ -264,10 +434,21 @@ fn packed_mesh_by_version() {
         let d = s.packed_data().unwrap();
         assert_eq!(d.vertices(), vertices);
         let oblivion = version == NifVersion::OBLIVION;
-        let normal = if oblivion { triangle.normal } else { Vec3::ZERO };
-        assert_eq!(d.triangles(), [PackedTriangle { normal, ..triangle }], "normals only saved up to Oblivion");
+        let normal = if oblivion {
+            triangle.normal
+        } else {
+            Vec3::ZERO
+        };
+        assert_eq!(
+            d.triangles(),
+            [PackedTriangle { normal, ..triangle }],
+            "normals only saved up to Oblivion"
+        );
         let parts = |saved: bool| if saved { vec![part] } else { vec![] };
-        assert_eq!((s.sub_parts(), d.sub_parts()), (parts(oblivion), parts(!oblivion)));
+        assert_eq!(
+            (s.sub_parts(), d.sub_parts()),
+            (parts(oblivion), parts(!oblivion))
+        );
     }
 }
 
@@ -277,9 +458,19 @@ fn strips_shape() {
     let mut nif = load("Strips_MW");
     let data: Vec<_> = nif.blocks_of::<NiTriStripsData>().indices().collect();
     let root = nif.root_node().unwrap().index();
-    let collision = nif.root_node_mut().unwrap().assign_collision::<BhkCollisionObject, _>();
-    let body = nif.edit::<BhkCollisionObject>(collision).unwrap().assign_body::<BhkRigidBody, _>().unwrap();
-    let shape = nif.edit::<BhkRigidBody>(body).unwrap().assign_shape::<BhkNiTriStripsShape>();
+    let collision = nif
+        .root_node_mut()
+        .unwrap()
+        .assign_collision::<BhkCollisionObject, _>();
+    let body = nif
+        .edit::<BhkCollisionObject>(collision)
+        .unwrap()
+        .assign_body::<BhkRigidBody, _>()
+        .unwrap();
+    let shape = nif
+        .edit::<BhkRigidBody>(body)
+        .unwrap()
+        .assign_shape::<BhkNiTriStripsShape>();
 
     let mut edit = nif.edit::<BhkNiTriStripsShape>(shape).unwrap();
     assert!(!edit.set_strips_data(&[root]), "not strips data");
@@ -296,5 +487,8 @@ fn strips_shape() {
 
     let view = nif.view::<BhkNiTriStripsShape>(shape).unwrap();
     assert_eq!(view.strips_data().indices().collect::<Vec<_>>(), data[..1]);
-    assert_eq!((view.material(), view.grow_by(), view.scale()), (4, 2, [2.0; 4]));
+    assert_eq!(
+        (view.material(), view.grow_by(), view.scale()),
+        (4, 2, [2.0; 4])
+    );
 }

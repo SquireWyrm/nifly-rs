@@ -12,7 +12,13 @@ use nifly::{
 };
 
 fn load(name: &str) -> NifFile {
-    NifFile::load(fs::read(format!("{UPSTREAM}/{name}.nif")).unwrap().as_slice(), None).unwrap()
+    NifFile::load(
+        fs::read(format!("{UPSTREAM}/{name}.nif"))
+            .unwrap()
+            .as_slice(),
+        None,
+    )
+    .unwrap()
 }
 
 fn shape(nif: &NifFile) -> Index {
@@ -20,7 +26,11 @@ fn shape(nif: &NifFile) -> Index {
 }
 
 fn property(nif: &NifFile) -> &NiTexturingProperty {
-    nif.view::<nifly::geometry::NiShape>(shape(nif)).unwrap().texturing_property().unwrap().get()
+    nif.view::<nifly::geometry::NiShape>(shape(nif))
+        .unwrap()
+        .texturing_property()
+        .unwrap()
+        .get()
 }
 
 fn property_index(nif: &NifFile) -> Index {
@@ -28,7 +38,10 @@ fn property_index(nif: &NifFile) -> Index {
 }
 
 fn slot(nif: &NifFile, index: usize) -> Option<String> {
-    let (source, path) = nif.view::<nifly::geometry::NiShape>(shape(nif)).unwrap().texture_slot(index)?;
+    let (source, path) = nif
+        .view::<nifly::geometry::NiShape>(shape(nif))
+        .unwrap()
+        .texture_slot(index)?;
     assert_eq!(source, TextureSource::TexturingProperty);
     Some(path.to_string())
 }
@@ -40,7 +53,9 @@ fn source_path(nif: &NifFile, map: TextureMap) -> Option<String> {
 
 fn set_source(nif: &mut NifFile, map: TextureMap, source: Option<Index>) -> bool {
     let property = property_index(nif);
-    nif.edit::<NiTexturingProperty>(property).unwrap().set_map_source(map, source)
+    nif.edit::<NiTexturingProperty>(property)
+        .unwrap()
+        .set_map_source(map, source)
 }
 
 #[test]
@@ -49,12 +64,19 @@ fn set_texture_slot_creates_source() {
     assert!(!property(&nif).has_map(TextureMap::Glow));
     let blocks = nif.blocks().count();
 
-    nif.edit::<nifly::geometry::NiShape>(shape(&nif)).unwrap().set_texture_slot(4, "textures\\glow.dds");
+    nif.edit::<nifly::geometry::NiShape>(shape(&nif))
+        .unwrap()
+        .set_texture_slot(4, "textures\\glow.dds");
     assert_eq!(nif.blocks().count(), blocks + 1);
-    assert_eq!(source_path(&nif, TextureMap::Glow).unwrap(), "textures\\glow.dds");
+    assert_eq!(
+        source_path(&nif, TextureMap::Glow).unwrap(),
+        "textures\\glow.dds"
+    );
 
     // Setting it again reuses the texture.
-    nif.edit::<nifly::geometry::NiShape>(shape(&nif)).unwrap().set_texture_slot(4, "textures\\glow2.dds");
+    nif.edit::<nifly::geometry::NiShape>(shape(&nif))
+        .unwrap()
+        .set_texture_slot(4, "textures\\glow2.dds");
     assert_eq!(nif.blocks().count(), blocks + 1);
 
     let saved = reload(&mut nif);
@@ -65,8 +87,12 @@ fn set_texture_slot_creates_source() {
 #[test]
 fn set_texture_slot_keeps_higher_maps() {
     let mut nif = load("TestNifFile_Skinned_OB");
-    nif.edit::<nifly::geometry::NiShape>(shape(&nif)).unwrap().set_texture_slot(4, "textures\\glow.dds");
-    nif.edit::<nifly::geometry::NiShape>(shape(&nif)).unwrap().set_texture_slot(0, "textures\\base.dds");
+    nif.edit::<nifly::geometry::NiShape>(shape(&nif))
+        .unwrap()
+        .set_texture_slot(4, "textures\\glow.dds");
+    nif.edit::<nifly::geometry::NiShape>(shape(&nif))
+        .unwrap()
+        .set_texture_slot(0, "textures\\base.dds");
     assert_eq!(property(&nif).texture_count(), 7);
 
     let saved = reload(&mut nif);
@@ -78,11 +104,21 @@ fn set_texture_slot_keeps_higher_maps() {
 fn decals_from_fallout_3() {
     // Decals are saved after the normal and parallax maps, so need a count of 9.
     let mut nif = NifFile::create(NifVersion::FALLOUT_3);
-    let vertices = [Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0)];
-    let shape = nif.create_shape("Tri", &vertices, &[[0, 1, 2]], None, None).unwrap();
-    nif.edit::<nifly::objects::NiAvObject>(shape).map(|mut e| e.add_property::<NiTexturingProperty, _>()).unwrap();
+    let vertices = [
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+    ];
+    let shape = nif
+        .create_shape("Tri", &vertices, &[[0, 1, 2]], None, None)
+        .unwrap();
+    nif.edit::<nifly::objects::NiAvObject>(shape)
+        .map(|mut e| e.add_property::<NiTexturingProperty, _>())
+        .unwrap();
 
-    nif.edit::<nifly::geometry::NiShape>(shape).unwrap().set_texture_slot(6, "textures\\decal.dds");
+    nif.edit::<nifly::geometry::NiShape>(shape)
+        .unwrap()
+        .set_texture_slot(6, "textures\\decal.dds");
     assert_eq!(property(&nif).texture_count(), 9);
     assert_eq!(slot(&reload(&mut nif), 6).unwrap(), "textures\\decal.dds");
 }
@@ -90,7 +126,9 @@ fn decals_from_fallout_3() {
 #[test]
 fn decals_before_fallout_3() {
     let mut nif = load("TestNifFile_Skinned_OB");
-    nif.edit::<nifly::geometry::NiShape>(shape(&nif)).unwrap().set_texture_slot(9, "textures\\decal3.dds");
+    nif.edit::<nifly::geometry::NiShape>(shape(&nif))
+        .unwrap()
+        .set_texture_slot(9, "textures\\decal3.dds");
     assert_eq!(property(&nif).texture_count(), 10);
     assert_eq!(slot(&reload(&mut nif), 9).unwrap(), "textures\\decal3.dds");
 }
@@ -106,8 +144,14 @@ fn set_map_source() {
     let saved = reload(&mut nif);
     let p = property(&saved);
     assert!(!p.has_map(TextureMap::Base));
-    assert_eq!(p.map_source_index(TextureMap::Detail), p.map_source_index(TextureMap::Gloss));
-    assert_eq!(source_path(&saved, TextureMap::Detail).unwrap(), "textures\\detail.dds");
+    assert_eq!(
+        p.map_source_index(TextureMap::Detail),
+        p.map_source_index(TextureMap::Gloss)
+    );
+    assert_eq!(
+        source_path(&saved, TextureMap::Detail).unwrap(),
+        "textures\\detail.dds"
+    );
     // The old base texture is dropped, being unused.
     assert_eq!(saved.blocks_of::<NiSourceTexture>().count(), 1);
 }
@@ -119,7 +163,10 @@ fn set_map_source_rejects_invalid() {
     assert!(!set_source(&mut nif, TextureMap::Base, Some(shape)));
     assert!(!set_source(&mut nif, TextureMap::Base, Some(usize::MAX)));
     assert!(nif.edit::<NiTexturingProperty>(shape).is_none());
-    assert_eq!(source_path(&nif, TextureMap::Base).unwrap(), "textures\\Cuirass.dds");
+    assert_eq!(
+        source_path(&nif, TextureMap::Base).unwrap(),
+        "textures\\Cuirass.dds"
+    );
 }
 
 #[test]

@@ -44,19 +44,34 @@ impl NiCamera {
         let mut v = [0.0; 6];
         ffi::camera_frustum(&self.0, &mut v);
         let [left, right, top, bottom, near, far] = v;
-        Frustum { left, right, top, bottom, near, far }
+        Frustum {
+            left,
+            right,
+            top,
+            bottom,
+            near,
+            far,
+        }
     }
 
     /// Sets the [frustum](Self::frustum).
     pub fn set_frustum(&mut self, f: Frustum) {
-        ffi::set_camera_frustum(self.ffi_mut(), &[f.left, f.right, f.top, f.bottom, f.near, f.far]);
+        ffi::set_camera_frustum(
+            self.ffi_mut(),
+            &[f.left, f.right, f.top, f.bottom, f.near, f.far],
+        );
     }
 
     pub fn viewport(&self) -> Viewport {
         let mut v = [0.0; 4];
         ffi::camera_viewport(&self.0, &mut v);
         let [left, right, top, bottom] = v;
-        Viewport { left, right, top, bottom }
+        Viewport {
+            left,
+            right,
+            top,
+            bottom,
+        }
     }
 
     /// Sets the [viewport](Self::viewport).
@@ -81,7 +96,11 @@ impl NiRangeLodData {
     /// The range of each level, usually one per child, in child order.
     pub fn levels(&self) -> Vec<LodRange> {
         let flat = ffi::range_lod_levels(&self.0);
-        flat.as_chunks().0.iter().map(|&[near, far]| LodRange { near, far }).collect()
+        flat.as_chunks()
+            .0
+            .iter()
+            .map(|&[near, far]| LodRange { near, far })
+            .collect()
     }
 
     /// Sets the [levels](Self::levels). Not checked against the child count.

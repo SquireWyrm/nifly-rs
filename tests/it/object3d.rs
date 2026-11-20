@@ -27,7 +27,12 @@ fn assert_matrix_close(a: Matrix3, b: Matrix3) {
 fn assert_transform_close(a: Transform, b: Transform) {
     assert_vec_close(a.translation, b.translation);
     assert_matrix_close(a.rotation, b.rotation);
-    assert!((a.scale - b.scale).abs() < EPS, "scale {} != {}", a.scale, b.scale);
+    assert!(
+        (a.scale - b.scale).abs() < EPS,
+        "scale {} != {}",
+        a.scale,
+        b.scale
+    );
 }
 
 /// 90° about Z: X -> Y, Y -> -X.
@@ -99,14 +104,23 @@ fn matrix_products() {
     let (a, b, p) = (sample().rotation, ROT_Z, v(0.3, -1.0, 2.0));
     assert_vec_close((a * b) * p, a * (b * p));
 
-    assert_eq!(Matrix3::IDENTITY * 2.0 - Matrix3::IDENTITY, Matrix3::IDENTITY);
-    assert_eq!(Matrix3::IDENTITY + Matrix3::IDENTITY, Matrix3::IDENTITY * 2.0);
+    assert_eq!(
+        Matrix3::IDENTITY * 2.0 - Matrix3::IDENTITY,
+        Matrix3::IDENTITY
+    );
+    assert_eq!(
+        Matrix3::IDENTITY + Matrix3::IDENTITY,
+        Matrix3::IDENTITY * 2.0
+    );
     assert_eq!(Matrix3::default(), Matrix3::IDENTITY);
 }
 
 #[test]
 fn matrix_transpose_determinant_inverse() {
-    assert_eq!(ROT_Z.transpose(), Matrix3::from_rows(Vec3::Y, -Vec3::X, Vec3::Z));
+    assert_eq!(
+        ROT_Z.transpose(),
+        Matrix3::from_rows(Vec3::Y, -Vec3::X, Vec3::Z)
+    );
     assert_eq!(ROT_Z.determinant(), 1.0);
     assert_eq!((Matrix3::IDENTITY * 2.0).determinant(), 8.0);
 
@@ -128,7 +142,10 @@ fn transform_apply() {
     assert_eq!(t.apply(Vec3::X), v(1.0, 2.0, 0.0));
     assert_eq!(t * Vec3::X, t.apply(Vec3::X));
     assert_eq!(t.apply_to_vector(Vec3::X), v(0.0, 2.0, 0.0));
-    assert_eq!(Transform::IDENTITY.apply(v(4.0, 5.0, 6.0)), v(4.0, 5.0, 6.0));
+    assert_eq!(
+        Transform::IDENTITY.apply(v(4.0, 5.0, 6.0)),
+        v(4.0, 5.0, 6.0)
+    );
     assert_eq!(Transform::default(), Transform::IDENTITY);
 }
 
@@ -148,7 +165,10 @@ fn transform_compose_and_inverse() {
     assert_transform_close(inv * t, Transform::IDENTITY);
     assert_vec_close(inv.apply(t.apply(p)), p);
 
-    assert_eq!(Transform::new(Vec3::ZERO, Matrix3::IDENTITY, 0.0).inverse(), None);
+    assert_eq!(
+        Transform::new(Vec3::ZERO, Matrix3::IDENTITY, 0.0).inverse(),
+        None
+    );
     let singular = Matrix3::from_rows(Vec3::X, Vec3::X, Vec3::Z);
     assert_eq!(Transform::new(Vec3::ZERO, singular, 1.0).inverse(), None);
 }
@@ -162,7 +182,10 @@ fn compose_matches_global_transform() {
 
     let global = root * node("Indirect1") * node("Indirect2");
     assert_transform_close(global, nif.node_transform_to_global("Indirect2").unwrap());
-    assert_transform_close(root * node("Indirect1"), nif.node_transform_to_global("Indirect1").unwrap());
+    assert_transform_close(
+        root * node("Indirect1"),
+        nif.node_transform_to_global("Indirect1").unwrap(),
+    );
 }
 
 #[test]

@@ -92,7 +92,10 @@ mod tests {
     fn reads_from_borrowed_slice() {
         let data = b"a\nb\n".to_vec();
         let mut slice: &[u8] = &data;
-        assert_eq!(ffi::count_lines(&mut RustReader::new(&mut slice)).unwrap(), 2);
+        assert_eq!(
+            ffi::count_lines(&mut RustReader::new(&mut slice)).unwrap(),
+            2
+        );
     }
 
     #[test]
@@ -108,6 +111,9 @@ mod tests {
         let mut r = RustReader::new(&mut f);
         let err = ffi::count_lines(&mut r).unwrap_err();
         assert!(err.what().contains("boom"));
-        assert_eq!(r.take_error().unwrap().kind(), io::ErrorKind::ConnectionReset);
+        assert_eq!(
+            r.take_error().unwrap().kind(),
+            io::ErrorKind::ConnectionReset
+        );
     }
 }

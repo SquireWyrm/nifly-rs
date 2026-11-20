@@ -238,7 +238,8 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiObjectNet, I>,
     {
         let owner = self.index() as u32;
-        index_from_ffi(C::add(self.file_mut().inner.pin_mut(), owner)).expect("the owner is an NiObjectNet")
+        index_from_ffi(C::add(self.file_mut().inner.pin_mut(), owner))
+            .expect("the owner is an NiObjectNet")
     }
 }
 

@@ -39,7 +39,11 @@ pub struct PackedGeomInstance {
 impl Default for PackedGeomInstance {
     /// A scale of 1, the identity transform and empty bounds.
     fn default() -> Self {
-        Self { grayscale_to_palette_scale: 1.0, transform: Transform::IDENTITY, bounds: BoundingSphere::default() }
+        Self {
+            grayscale_to_palette_scale: 1.0,
+            transform: Transform::IDENTITY,
+            bounds: BoundingSphere::default(),
+        }
     }
 }
 
@@ -82,13 +86,37 @@ pub struct PackedGeomTotals {
 
 impl PackedGeomTotals {
     fn from_ffi(h: types_ffi::PackedGeomHeader) -> Self {
-        let types_ffi::PackedGeomHeader { vertex_desc, vertex_count, triangle_count, flags_1, flags_2 } = h;
-        Self { vertex_desc, vertex_count, triangle_count, raw_flags_1: flags_1, raw_flags_2: flags_2 }
+        let types_ffi::PackedGeomHeader {
+            vertex_desc,
+            vertex_count,
+            triangle_count,
+            flags_1,
+            flags_2,
+        } = h;
+        Self {
+            vertex_desc,
+            vertex_count,
+            triangle_count,
+            raw_flags_1: flags_1,
+            raw_flags_2: flags_2,
+        }
     }
 
     pub(super) fn to_ffi(self) -> types_ffi::PackedGeomHeader {
-        let Self { vertex_desc, vertex_count, triangle_count, raw_flags_1: flags_1, raw_flags_2: flags_2 } = self;
-        types_ffi::PackedGeomHeader { vertex_desc, vertex_count, triangle_count, flags_1, flags_2 }
+        let Self {
+            vertex_desc,
+            vertex_count,
+            triangle_count,
+            raw_flags_1: flags_1,
+            raw_flags_2: flags_2,
+        } = self;
+        types_ffi::PackedGeomHeader {
+            vertex_desc,
+            vertex_count,
+            triangle_count,
+            flags_1,
+            flags_2,
+        }
     }
 }
 
@@ -104,11 +132,18 @@ impl BsPackedCombinedSharedGeomDataExtra {
 
     pub fn objects(&self) -> Vec<PackedGeomObject> {
         let floats = ffi::packed_shared_instances(&self.0);
-        let mut instances = floats.as_chunks::<{ PackedGeomInstance::FLOATS }>().0.iter().map(PackedGeomInstance::from_floats);
+        let mut instances = floats
+            .as_chunks::<{ PackedGeomInstance::FLOATS }>()
+            .0
+            .iter()
+            .map(PackedGeomInstance::from_floats);
         ffi::packed_shared_objects(&self.0)
             .into_iter()
             .map(|o| {
-                let lod = |i: usize| TriangleRange { count: o.lods[2 * i], offset: o.lods[2 * i + 1] };
+                let lod = |i: usize| TriangleRange {
+                    count: o.lods[2 * i],
+                    offset: o.lods[2 * i + 1],
+                };
                 PackedGeomObject {
                     filename_hash: o.filename_hash,
                     data_offset: o.data_offset,

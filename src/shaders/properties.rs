@@ -201,7 +201,8 @@ impl VertexColorFlags {
     }
 
     pub fn lighting_mode(self) -> LightingMode {
-        LightingMode::try_from(get_bits(self.0, Self::LIGHTING)).expect("1 bit is always a lighting mode")
+        LightingMode::try_from(get_bits(self.0, Self::LIGHTING))
+            .expect("1 bit is always a lighting mode")
     }
 
     /// `None` if the bits hold 3.

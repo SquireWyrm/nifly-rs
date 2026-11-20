@@ -25,7 +25,15 @@ pub struct DataChannel {
 impl Default for DataChannel {
     /// All zero, except raw flags of 2: data that never changes.
     fn default() -> Self {
-        Self { data_type: 0, unit_size: 0, total_size: 0, stride: 0, block: 0, offset: 0, raw_flags: 2 }
+        Self {
+            data_type: 0,
+            unit_size: 0,
+            total_size: 0,
+            stride: 0,
+            block: 0,
+            offset: 0,
+            raw_flags: 2,
+        }
     }
 }
 
@@ -96,7 +104,10 @@ impl AdditionalGeomData {
     }
 
     pub fn channels(&self) -> Vec<DataChannel> {
-        ffi::agd_channels(&self.0).into_iter().map(DataChannel::from_ffi).collect()
+        ffi::agd_channels(&self.0)
+            .into_iter()
+            .map(DataChannel::from_ffi)
+            .collect()
     }
 
     /// Replaces the [channels](Self::channels). They aren't checked against the blocks.
@@ -117,7 +128,9 @@ impl NiAdditionalGeometryData {
                     AdditionalDataBlock {
                         block_size: ffi::agd_block_size(d, i),
                         block_offsets: ffi::agd_block_offsets(d, i).to_vec(),
-                        data: (0..data_sizes.len()).map(|j| ffi::agd_block_data(d, i, j).to_vec()).collect(),
+                        data: (0..data_sizes.len())
+                            .map(|j| ffi::agd_block_data(d, i, j).to_vec())
+                            .collect(),
                         data_sizes,
                     }
                 })
@@ -129,7 +142,8 @@ impl NiAdditionalGeometryData {
     /// `data` and `data_sizes` lengths differ or an item of `data` isn't `block_size` bytes.
     pub fn set_blocks(&mut self, blocks: &[Option<AdditionalDataBlock>]) -> bool {
         let valid = |b: &AdditionalDataBlock| {
-            b.data.len() == b.data_sizes.len() && b.data.iter().all(|d| d.len() == b.block_size as usize)
+            b.data.len() == b.data_sizes.len()
+                && b.data.iter().all(|d| d.len() == b.block_size as usize)
         };
         if !blocks.iter().flatten().all(valid) {
             return false;

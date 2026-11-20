@@ -1,6 +1,6 @@
 //! Tests for NifFile::set_node_transform_to_parent.
 
-use crate::common::{load};
+use crate::common::load;
 use std::io::Cursor;
 
 use nifly::{
@@ -21,7 +21,11 @@ fn transform(t: Vec3, scale: f32) -> Transform {
 
 /// 90° about Z.
 fn rotated(t: Vec3, scale: f32) -> Transform {
-    Transform::new(t, Matrix3::from_rows(v(0.0, -1.0, 0.0), v(1.0, 0.0, 0.0), v(0.0, 0.0, 1.0)), scale)
+    Transform::new(
+        t,
+        Matrix3::from_rows(v(0.0, -1.0, 0.0), v(1.0, 0.0, 0.0), v(0.0, 0.0, 1.0)),
+        scale,
+    )
 }
 
 fn assert_close(a: Vec3, b: Vec3) {
@@ -47,7 +51,8 @@ fn global_follows_the_new_transform() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let identity = transform(v(0.0, 0.0, 0.0), 1.0);
     let arm = nif.add_node("Arm", identity, None).unwrap();
-    nif.add_node("Hand", transform(v(1.0, 0.0, 0.0), 1.0), Some(arm)).unwrap();
+    nif.add_node("Hand", transform(v(1.0, 0.0, 0.0), 1.0), Some(arm))
+        .unwrap();
 
     // Rotate Arm 90° about Z, scale it by 2 and move it up.
     assert!(nif.set_node_transform_to_parent("Arm", rotated(v(0.0, 0.0, 5.0), 2.0), false));
@@ -82,7 +87,10 @@ fn root_children_only() {
 
     // Indirect2 is a grandchild of the root, so it isn't found.
     assert!(!nif.set_node_transform_to_parent("Indirect2", new, true));
-    assert_eq!(nif.node_transform_to_parent("Indirect2"), Some(indirect2_before));
+    assert_eq!(
+        nif.node_transform_to_parent("Indirect2"),
+        Some(indirect2_before)
+    );
 
     // Indirect1 is a direct child of the root.
     assert!(nif.set_node_transform_to_parent("Indirect1", new, true));
@@ -100,7 +108,13 @@ fn root_children_only_skips_deeper_duplicate() {
     assert!(deep < shallow);
 
     let new = transform(v(1.0, 1.0, 1.0), 1.0);
-    let get = |nif: &NifFile, i| nif.block(i).unwrap().downcast::<nifly::nodes::NiNode>().unwrap().transform();
+    let get = |nif: &NifFile, i| {
+        nif.block(i)
+            .unwrap()
+            .downcast::<nifly::nodes::NiNode>()
+            .unwrap()
+            .transform()
+    };
 
     // Without the restriction, the first in block order (the deep one) is set.
     assert!(nif.set_node_transform_to_parent("Dup", new, false));

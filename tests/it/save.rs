@@ -32,15 +32,29 @@ fn summary(nif: &NifFile) -> Vec<String> {
     let mut out = Vec::new();
     out.extend(nif.blocks().map(|b| b.block_name().to_owned()));
     for node in nif.nodes() {
-        out.push(format!("{} {:?} {:#x}", node.name(), node.transform(), node.raw_flags()));
-        out.push(format!("global {:?}", nif.node_transform_to_global(node.name())));
+        out.push(format!(
+            "{} {:?} {:#x}",
+            node.name(),
+            node.transform(),
+            node.raw_flags()
+        ));
+        out.push(format!(
+            "global {:?}",
+            nif.node_transform_to_global(node.name())
+        ));
     }
     for shape in nif.blocks_of::<NiShape>() {
         out.push(format!("{} {:?}", shape.name(), shape.transform()));
         let bones = nif.view_of(shape).unwrap().bone_list();
-        out.push(format!("bones {bones:?} {:?}", nif.view_of(shape).unwrap().bone_ids()));
+        out.push(format!(
+            "bones {bones:?} {:?}",
+            nif.view_of(shape).unwrap().bone_ids()
+        ));
         for b in 0..bones.len() {
-            out.push(format!("weights {b} {:?}", nif.view_of(shape).unwrap().bone_weights(b)));
+            out.push(format!(
+                "weights {b} {:?}",
+                nif.view_of(shape).unwrap().bone_weights(b)
+            ));
         }
     }
     out
@@ -189,8 +203,19 @@ fn every_option_combination_round_trips() {
             for sort_blocks in [false, true] {
                 let mut nif = load(name);
                 let mut cur = Cursor::new(Vec::new());
-                nif.save(&mut cur, Some(SaveOptions { optimize, sort_blocks })).unwrap();
-                assert_eq!(cur.into_inner(), original, "{name} optimize={optimize} sort={sort_blocks}");
+                nif.save(
+                    &mut cur,
+                    Some(SaveOptions {
+                        optimize,
+                        sort_blocks,
+                    }),
+                )
+                .unwrap();
+                assert_eq!(
+                    cur.into_inner(),
+                    original,
+                    "{name} optimize={optimize} sort={sort_blocks}"
+                );
             }
         }
     }

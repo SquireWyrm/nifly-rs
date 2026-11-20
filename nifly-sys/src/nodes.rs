@@ -126,12 +126,20 @@ pub mod ffi {
         /// Adds a new `NiCamera`, with the file format's default settings, as the last child of
         /// the node at `parent_index` (`NIF_NPOS`: the root). Returns its index, or `NIF_NPOS`
         /// (changing nothing) if there's no such node.
-        fn add_camera(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
+        fn add_camera(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
 
         fn upcast_ni_av_object_palette(obj: &NiAVObjectPalette) -> &NiObject;
         fn downcast_ni_av_object_palette(obj: &NiObject) -> *const NiAVObjectPalette;
-        fn upcast_ni_default_av_object_palette(obj: &NiDefaultAVObjectPalette) -> &NiAVObjectPalette;
-        fn downcast_ni_default_av_object_palette(obj: &NiObject) -> *const NiDefaultAVObjectPalette;
+        fn upcast_ni_default_av_object_palette(
+            obj: &NiDefaultAVObjectPalette,
+        ) -> &NiAVObjectPalette;
+        fn downcast_ni_default_av_object_palette(obj: &NiObject)
+        -> *const NiDefaultAVObjectPalette;
         /// `NiDefaultAVObjectPalette::sceneRef` and the objects' `objectRef`s are block indices
         /// (`NIF_NPOS` if empty). `i` must be below the count.
         fn palette_scene(p: &NiDefaultAVObjectPalette) -> u32;
@@ -176,26 +184,52 @@ pub mod ffi {
         /// extension bytes little-endian, directory hash); transforms are flattened, 16 floats
         /// each. Getters return false or empty, and setters false, if `index` is out of range.
         fn distant_instance_count(node: &BSDistantObjectInstancedNode) -> usize;
-        fn distant_instance_resource(node: &BSDistantObjectInstancedNode, index: usize, out: &mut [u32]) -> bool;
-        fn distant_instance_transforms(node: &BSDistantObjectInstancedNode, index: usize) -> Vec<f32>;
+        fn distant_instance_resource(
+            node: &BSDistantObjectInstancedNode,
+            index: usize,
+            out: &mut [u32],
+        ) -> bool;
+        fn distant_instance_transforms(
+            node: &BSDistantObjectInstancedNode,
+            index: usize,
+        ) -> Vec<f32>;
         fn set_distant_instance(
             node: Pin<&mut BSDistantObjectInstancedNode>,
             index: usize,
             resource: &[u32],
             transforms: &[f32],
         ) -> bool;
-        fn push_distant_instance(node: Pin<&mut BSDistantObjectInstancedNode>, resource: &[u32], transforms: &[f32]);
-        fn remove_distant_instance(node: Pin<&mut BSDistantObjectInstancedNode>, index: usize) -> bool;
+        fn push_distant_instance(
+            node: Pin<&mut BSDistantObjectInstancedNode>,
+            resource: &[u32],
+            transforms: &[f32],
+        );
+        fn remove_distant_instance(
+            node: Pin<&mut BSDistantObjectInstancedNode>,
+            index: usize,
+        ) -> bool;
         /// An instance's unknown data as (unknown1, unknown2) pairs.
         fn distant_instance_unknown(node: &BSDistantObjectInstancedNode, index: usize) -> Vec<u64>;
         /// False if `index` is out of range or a second value doesn't fit in `u32`.
-        fn set_distant_instance_unknown(node: Pin<&mut BSDistantObjectInstancedNode>, index: usize, pairs: &[u64]) -> bool;
+        fn set_distant_instance_unknown(
+            node: Pin<&mut BSDistantObjectInstancedNode>,
+            index: usize,
+            pairs: &[u64],
+        ) -> bool;
         fn distant_texture_arrays_unknown(node: &BSDistantObjectInstancedNode, slot: usize) -> u8;
-        fn set_distant_texture_arrays_unknown(node: Pin<&mut BSDistantObjectInstancedNode>, slot: usize, v: u8) -> bool;
+        fn set_distant_texture_arrays_unknown(
+            node: Pin<&mut BSDistantObjectInstancedNode>,
+            slot: usize,
+            v: u8,
+        ) -> bool;
         /// Texture arrays of `slot` (0 to 2). Getters return 0 or empty if out of range; setters
         /// do nothing.
         fn distant_texture_array_count(node: &BSDistantObjectInstancedNode, slot: usize) -> usize;
-        fn distant_texture_array_len(node: &BSDistantObjectInstancedNode, slot: usize, array: usize) -> usize;
+        fn distant_texture_array_len(
+            node: &BSDistantObjectInstancedNode,
+            slot: usize,
+            array: usize,
+        ) -> usize;
         fn distant_texture_array_path(
             node: &BSDistantObjectInstancedNode,
             slot: usize,
@@ -204,7 +238,11 @@ pub mod ffi {
         ) -> &[u8];
         fn clear_distant_texture_arrays(node: Pin<&mut BSDistantObjectInstancedNode>, slot: usize);
         fn add_distant_texture_array(node: Pin<&mut BSDistantObjectInstancedNode>, slot: usize);
-        fn push_distant_texture_array_path(node: Pin<&mut BSDistantObjectInstancedNode>, slot: usize, path: &[u8]);
+        fn push_distant_texture_array_path(
+            node: Pin<&mut BSDistantObjectInstancedNode>,
+            slot: usize,
+            path: &[u8],
+        );
 
         /// `BSWeakReferenceNode` weak references, with resource IDs and matrices passed as for
         /// `BSDistantObjectInstancedNode`. Material IDs are biome form ID, directory hash and file
@@ -215,10 +253,24 @@ pub mod ffi {
         fn weak_ref_form_id(node: &BSWeakReferenceNode, index: usize) -> u32;
         fn weak_ref_transforms(node: &BSWeakReferenceNode, index: usize) -> Vec<f32>;
         fn weak_ref_material_count(node: &BSWeakReferenceNode, index: usize) -> usize;
-        fn weak_ref_material(node: &BSWeakReferenceNode, index: usize, material: usize, out: &mut [u32]) -> bool;
-        fn weak_ref_material_name(node: &BSWeakReferenceNode, index: usize, material: usize) -> &[u8];
+        fn weak_ref_material(
+            node: &BSWeakReferenceNode,
+            index: usize,
+            material: usize,
+            out: &mut [u32],
+        ) -> bool;
+        fn weak_ref_material_name(
+            node: &BSWeakReferenceNode,
+            index: usize,
+            material: usize,
+        ) -> &[u8];
         fn clear_weak_refs(node: Pin<&mut BSWeakReferenceNode>);
-        fn push_weak_ref(node: Pin<&mut BSWeakReferenceNode>, form_id: u32, resource: &[u32], transforms: &[f32]);
+        fn push_weak_ref(
+            node: Pin<&mut BSWeakReferenceNode>,
+            form_id: u32,
+            resource: &[u32],
+            transforms: &[f32],
+        );
         fn push_weak_ref_material(node: Pin<&mut BSWeakReferenceNode>, ids: &[u32], name: &[u8]);
         /// Water references. `resize_water_refs` keeps existing entries' other data.
         fn water_ref_count(node: &BSWeakReferenceNode) -> usize;
@@ -226,7 +278,8 @@ pub mod ffi {
         fn water_ref_resource(node: &BSWeakReferenceNode, index: usize, out: &mut [u32]) -> bool;
         fn water_ref_material(node: &BSWeakReferenceNode, index: usize) -> &[u8];
         fn water_ref_unknown(node: &BSWeakReferenceNode, index: usize) -> u32;
-        fn set_water_ref_unknown(node: Pin<&mut BSWeakReferenceNode>, index: usize, v: u32) -> bool;
+        fn set_water_ref_unknown(node: Pin<&mut BSWeakReferenceNode>, index: usize, v: u32)
+        -> bool;
         fn resize_water_refs(node: Pin<&mut BSWeakReferenceNode>, count: usize);
         fn set_water_ref(
             node: Pin<&mut BSWeakReferenceNode>,

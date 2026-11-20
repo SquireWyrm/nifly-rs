@@ -43,7 +43,11 @@ fn bone_ids_resolve_to_named_nodes() {
     assert_eq!(names.len(), ids.len());
 
     for (id, name) in ids.into_iter().zip(names) {
-        let bone = nif.block(id).unwrap().downcast::<NiNode>().expect("bone is a node");
+        let bone = nif
+            .block(id)
+            .unwrap()
+            .downcast::<NiNode>()
+            .expect("bone is a node");
         assert_eq!(bone.name(), name);
     }
 }
@@ -51,7 +55,10 @@ fn bone_ids_resolve_to_named_nodes() {
 #[test]
 fn skin_blocks_reached_through_shape() {
     let nif = bones();
-    let refs: Vec<_> = nif.child_blocks(limb(&nif)).map(|b| index_of(&nif, b)).collect();
+    let refs: Vec<_> = nif
+        .child_blocks(limb(&nif))
+        .map(|b| index_of(&nif, b))
+        .collect();
     assert_eq!(refs, [5, 6, 9]);
 
     // The skin instance's bones are pointers, which GetChildIndices doesn't report.
@@ -65,14 +72,24 @@ fn bone_weights_per_bone() {
     let nif = bones();
     let shape = limb(&nif);
 
-    let counts: Vec<_> = (0..BONES.len()).map(|b| nif.view_of(shape).unwrap().bone_weights(b).len()).collect();
+    let counts: Vec<_> = (0..BONES.len())
+        .map(|b| nif.view_of(shape).unwrap().bone_weights(b).len())
+        .collect();
     assert_eq!(counts, [102, 115, 87]);
 
     for b in 0..BONES.len() {
         let weights = nif.view_of(shape).unwrap().bone_weights(b);
         // Sorted by vertex, no duplicates, and every weight in (0, 1].
-        assert!(weights.windows(2).all(|w| w[0].vertex < w[1].vertex), "bone {b} not sorted");
-        assert!(weights.iter().all(|w| w.weight > 0.0 && w.weight <= 1.0 + 1e-6), "bone {b}");
+        assert!(
+            weights.windows(2).all(|w| w[0].vertex < w[1].vertex),
+            "bone {b} not sorted"
+        );
+        assert!(
+            weights
+                .iter()
+                .all(|w| w.weight > 0.0 && w.weight <= 1.0 + 1e-6),
+            "bone {b}"
+        );
     }
 }
 
@@ -90,9 +107,15 @@ fn bone_weights_sum_to_one_per_vertex() {
 
     // Every vertex (0..=163) is weighted, and each vertex's weights are normalized.
     assert_eq!(sums.len(), 164);
-    assert_eq!(sums.keys().copied().collect::<Vec<_>>(), (0..164).collect::<Vec<u16>>());
+    assert_eq!(
+        sums.keys().copied().collect::<Vec<_>>(),
+        (0..164).collect::<Vec<u16>>()
+    );
     for (vertex, sum) in sums {
-        assert!((sum - 1.0).abs() < 1e-4, "vertex {vertex} weights sum to {sum}");
+        assert!(
+            (sum - 1.0).abs() < 1e-4,
+            "vertex {vertex} weights sum to {sum}"
+        );
     }
 }
 
@@ -100,6 +123,16 @@ fn bone_weights_sum_to_one_per_vertex() {
 fn bone_weights_out_of_range() {
     let nif = bones();
     let shape = limb(&nif);
-    assert!(nif.view_of(shape).unwrap().bone_weights(BONES.len()).is_empty());
-    assert!(nif.view_of(shape).unwrap().bone_weights(usize::MAX).is_empty());
+    assert!(
+        nif.view_of(shape)
+            .unwrap()
+            .bone_weights(BONES.len())
+            .is_empty()
+    );
+    assert!(
+        nif.view_of(shape)
+            .unwrap()
+            .bone_weights(usize::MAX)
+            .is_empty()
+    );
 }

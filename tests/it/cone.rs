@@ -25,7 +25,14 @@ fn block_names(nif: &NifFile) -> Vec<String> {
 fn save(optimize: bool, sort_blocks: bool) -> (Vec<u8>, NifFile) {
     let mut nif = NifFile::load(cone_bytes().as_slice(), None).unwrap();
     let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, Some(SaveOptions { optimize, sort_blocks })).unwrap();
+    nif.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize,
+            sort_blocks,
+        }),
+    )
+    .unwrap();
     (cur.into_inner(), nif)
 }
 
@@ -45,7 +52,11 @@ fn layout_has_unreferenced_blocks() {
     assert_eq!(reachable, [0, 3]);
 
     let shape = nif.block(3).unwrap();
-    assert_eq!(nif.child_blocks(shape).count(), 0, "shape doesn't reference the shader");
+    assert_eq!(
+        nif.child_blocks(shape).count(),
+        0,
+        "shape doesn't reference the shader"
+    );
 }
 
 #[test]
@@ -64,7 +75,10 @@ fn optimize_removes_unreferenced_blocks() {
     assert_eq!(block_names(&saved), ["NiNode", "BSTriShape"]);
     assert_eq!(saved.nodes().count(), 1);
     assert_eq!(saved.root_node().unwrap().name(), "Scene Root");
-    assert_eq!(saved.root_node().unwrap().children().next().unwrap().name(), "Cone");
+    assert_eq!(
+        saved.root_node().unwrap().children().next().unwrap().name(),
+        "Cone"
+    );
 
     // Saving modifies the file in memory too.
     assert_eq!(block_names(&nif), ["NiNode", "BSTriShape"]);
@@ -95,7 +109,10 @@ fn default_options_optimize_and_sort() {
 
     let (both, _) = save(true, true);
     assert_eq!(default_bytes, both);
-    assert_eq!(block_names(&reload(&default_bytes)), ["NiNode", "BSTriShape"]);
+    assert_eq!(
+        block_names(&reload(&default_bytes)),
+        ["NiNode", "BSTriShape"]
+    );
 }
 
 #[test]

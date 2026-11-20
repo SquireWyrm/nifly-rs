@@ -63,7 +63,12 @@ impl NiParticleSystem {
     pub fn materials(&self) -> Vec<(&BStr, u32)> {
         let extra = ffi::particle_system_material_extra_data(&self.0);
         (0..ffi::particle_system_material_count(&self.0))
-            .map(|i| (ffi::particle_system_material_name(&self.0, i).as_bstr(), extra.get(i).copied().unwrap_or(0)))
+            .map(|i| {
+                (
+                    ffi::particle_system_material_name(&self.0, i).as_bstr(),
+                    extra.get(i).copied().unwrap_or(0),
+                )
+            })
             .collect()
     }
 
@@ -76,7 +81,8 @@ impl NiParticleSystem {
 
     /// The shader's name, or `None` if there's no shader.
     pub fn shader_name(&self) -> Option<&BStr> {
-        ffi::particle_system_has_shader(&self.0).then(|| ffi::particle_system_shader_name(&self.0).as_bstr())
+        ffi::particle_system_has_shader(&self.0)
+            .then(|| ffi::particle_system_shader_name(&self.0).as_bstr())
     }
 
     /// Sets the shader's name, or removes the shader with `None`.
@@ -183,8 +189,12 @@ impl Edit<'_, NiParticleSystem> {
     /// ```
     pub fn add_modifier<M: NewModifier>(&mut self, name: impl AsRef<[u8]>) -> Index {
         let system = self.index() as u32;
-        index_from_ffi(M::add(self.file_mut().inner.pin_mut(), system, name.as_ref()))
-            .expect("the block is an NiParticleSystem")
+        index_from_ffi(M::add(
+            self.file_mut().inner.pin_mut(),
+            system,
+            name.as_ref(),
+        ))
+        .expect("the block is an NiParticleSystem")
     }
 }
 
@@ -193,20 +203,34 @@ impl<T: NiType> Edit<'_, T> {
     /// child, and returns its index. The system gets new data of its type ([`NiPSysData`],
     /// [`NiAutoNormalParticlesData`], ...). An [`NiParticleSystem`] is in
     /// [world space](NiParticleSystem::world_space). Doesn't check that the file's game uses `P`.
-    pub fn add_particle_system<P: NewParticleSystem, I>(&mut self, name: impl AsRef<[u8]>, transform: Transform) -> Index
+    pub fn add_particle_system<P: NewParticleSystem, I>(
+        &mut self,
+        name: impl AsRef<[u8]>,
+        transform: Transform,
+    ) -> Index
     where
         T: IsA<NiNode, I>,
     {
         let parent = self.index() as u32;
-        index_from_ffi(P::add(self.file_mut().inner.pin_mut(), parent, name.as_ref(), transform.to_ffi()))
-            .expect("the block is a node")
+        index_from_ffi(P::add(
+            self.file_mut().inner.pin_mut(),
+            parent,
+            name.as_ref(),
+            transform.to_ffi(),
+        ))
+        .expect("the block is a node")
     }
 }
 
 /// A particle system [`Edit::add_particle_system`] can add.
 pub trait NewParticleSystem: NiType + Sealed {
     #[doc(hidden)]
-    fn add(file: Pin<&mut nifly_sys::nif_file::ffi::NifFile>, parent: u32, name: &[u8], transform: ffi::Transform) -> u32;
+    fn add(
+        file: Pin<&mut nifly_sys::nif_file::ffi::NifFile>,
+        parent: u32,
+        name: &[u8],
+        transform: ffi::Transform,
+    ) -> u32;
 }
 
 macro_rules! new_particle_system {

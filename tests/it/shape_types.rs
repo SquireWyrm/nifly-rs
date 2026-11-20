@@ -59,8 +59,12 @@ fn conversion_changes_the_type() {
     assert!(!is::<NiGeometry>(shape));
 
     let mut nif = load("Bones");
-    let options = OptimizeOptions { head_parts: true, ..Default::default() };
-    nif.optimize_for(NifVersion::SKYRIM_SE, Some(options)).unwrap();
+    let options = OptimizeOptions {
+        head_parts: true,
+        ..Default::default()
+    };
+    nif.optimize_for(NifVersion::SKYRIM_SE, Some(options))
+        .unwrap();
     let shape: &NiObject = nif.shapes().next().unwrap();
     assert!(is::<BsDynamicTriShape>(shape));
     assert!(is::<BsTriShape>(shape));

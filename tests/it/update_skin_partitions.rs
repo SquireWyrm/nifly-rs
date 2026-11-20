@@ -1,6 +1,6 @@
 //! Tests for NifFile::update_skin_partitions and NiSkinPartition's accessors.
 
-use crate::common::{load, upstream, reload};
+use crate::common::{load, reload, upstream};
 use std::collections::BTreeSet;
 
 use nifly::{
@@ -19,7 +19,13 @@ type Summary = Vec<(Vec<u16>, usize, usize)>;
 
 fn summary(part: &NiSkinPartition) -> Summary {
     (0..part.len())
-        .map(|i| (part.bones(i).unwrap().to_vec(), part.triangle_count(i).unwrap(), part.vertex_map(i).unwrap().len()))
+        .map(|i| {
+            (
+                part.bones(i).unwrap().to_vec(),
+                part.triangle_count(i).unwrap(),
+                part.vertex_map(i).unwrap().len(),
+            )
+        })
         .collect()
 }
 
@@ -30,7 +36,11 @@ fn shape_summary(nif: &NifFile, name: &str) -> Summary {
 }
 
 fn shape_index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes().indexed().find(|(_, s)| s.name() == name).unwrap().0
+    nif.shapes()
+        .indexed()
+        .find(|(_, s)| s.name() == name)
+        .unwrap()
+        .0
 }
 
 #[test]
@@ -40,13 +50,22 @@ fn rebuilds_after_weight_change() {
     assert_eq!(shape_summary(&nif, "Limb"), [(vec![0, 1, 2], 252, 164)]);
 
     // Unchanged weights give the same partition.
-    assert!(nif.edit::<nifly::geometry::NiShape>(shape).is_some_and(|mut e| e.update_skin_partitions()));
+    assert!(
+        nif.edit::<nifly::geometry::NiShape>(shape)
+            .is_some_and(|mut e| e.update_skin_partitions())
+    );
     assert_eq!(shape_summary(&nif, "Limb"), [(vec![0, 1, 2], 252, 164)]);
 
     // Once bone 2 has no weights, the partition stops using it.
-    assert!(nif.edit::<nifly::geometry::NiShape>(shape).is_some_and(|mut e| e.set_bone_weights(2, [])));
+    assert!(
+        nif.edit::<nifly::geometry::NiShape>(shape)
+            .is_some_and(|mut e| e.set_bone_weights(2, []))
+    );
     assert_eq!(shape_summary(&nif, "Limb"), [(vec![0, 1, 2], 252, 164)]);
-    assert!(nif.edit::<nifly::geometry::NiShape>(shape).is_some_and(|mut e| e.update_skin_partitions()));
+    assert!(
+        nif.edit::<nifly::geometry::NiShape>(shape)
+            .is_some_and(|mut e| e.update_skin_partitions())
+    );
     assert_eq!(shape_summary(&nif, "Limb"), [(vec![0, 1], 252, 164)]);
 
     let saved = reload(&mut nif);
@@ -62,7 +81,10 @@ fn converts_strips_to_triangles() {
     // Strip partitions count their degenerate triangles too.
     assert_eq!(shape_summary(&nif, "Cuirass")[0].1, 2851);
 
-    assert!(nif.edit::<nifly::geometry::NiShape>(shape).is_some_and(|mut e| e.update_skin_partitions()));
+    assert!(
+        nif.edit::<nifly::geometry::NiShape>(shape)
+            .is_some_and(|mut e| e.update_skin_partitions())
+    );
     let cuirass = nif.block_of::<NiShape>(shape).unwrap();
     assert!(nif.view_of(cuirass).unwrap().is_sse_compatible());
     let after = shape_summary(&nif, "Cuirass");
@@ -81,7 +103,11 @@ fn dismembered_bs_tri_shapes() {
     let names = ["cylinder_1", "cylinder_2"];
     let before: Vec<Summary> = names.iter().map(|n| shape_summary(&nif, n)).collect();
     for name in names {
-        assert!(nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name)).is_some_and(|mut e| e.update_skin_partitions()), "{name}");
+        assert!(
+            nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name))
+                .is_some_and(|mut e| e.update_skin_partitions()),
+            "{name}"
+        );
     }
     let after: Vec<Summary> = names.iter().map(|n| shape_summary(&nif, n)).collect();
     assert_eq!(after, before);
@@ -99,7 +125,11 @@ fn false_changes_nothing() {
     for name in ["cylinder_1", "cylinder_2"] {
         let before = shape_summary(&nif, name);
         assert_eq!(before[0].0, [0, 1]);
-        assert!(!nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name)).is_some_and(|mut e| e.update_skin_partitions()), "{name}");
+        assert!(
+            !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name))
+                .is_some_and(|mut e| e.update_skin_partitions()),
+            "{name}"
+        );
         assert_eq!(shape_summary(&nif, name), before);
     }
 
@@ -113,7 +143,11 @@ fn false_changes_nothing() {
         let shapes: Vec<Index> = nif.shapes().indices().collect();
         assert!(!shapes.is_empty());
         for shape in shapes {
-            assert!(!nif.edit::<nifly::geometry::NiShape>(shape).is_some_and(|mut e| e.update_skin_partitions()), "{file} {shape}");
+            assert!(
+                !nif.edit::<nifly::geometry::NiShape>(shape)
+                    .is_some_and(|mut e| e.update_skin_partitions()),
+                "{file} {shape}"
+            );
         }
     }
 
@@ -121,7 +155,11 @@ fn false_changes_nothing() {
     let mut nif = load("Bones");
     let count = nif.blocks().count();
     for index in [0, count, usize::MAX] {
-        assert!(!nif.edit::<nifly::geometry::NiShape>(index).is_some_and(|mut e| e.update_skin_partitions()), "{index}");
+        assert!(
+            !nif.edit::<nifly::geometry::NiShape>(index)
+                .is_some_and(|mut e| e.update_skin_partitions()),
+            "{index}"
+        );
     }
 }
 
@@ -142,5 +180,10 @@ fn partition_accessors() {
     let map = part.vertex_map(0).unwrap();
     assert_eq!(map.iter().collect::<BTreeSet<_>>().len(), map.len());
     let bone_count = nif.view_of(shape).unwrap().bone_list().len();
-    assert!(part.bones(0).unwrap().iter().all(|b| usize::from(*b) < bone_count));
+    assert!(
+        part.bones(0)
+            .unwrap()
+            .iter()
+            .all(|b| usize::from(*b) < bone_count)
+    );
 }

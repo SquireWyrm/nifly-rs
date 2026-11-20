@@ -29,8 +29,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let nif = NifFile::load(fs::File::open(&path)?, None)?;
 
     // Block index by address, so references can be printed as indices.
-    let index: HashMap<*const NiObject, usize> =
-        nif.blocks().enumerate().map(|(i, b)| (ptr::from_ref(b), i)).collect();
+    let index: HashMap<*const NiObject, usize> = nif
+        .blocks()
+        .enumerate()
+        .map(|(i, b)| (ptr::from_ref(b), i))
+        .collect();
     let idx = |b: &NiObject| index[&ptr::from_ref(b)];
 
     println!("{path}");
@@ -69,8 +72,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let reachable: HashSet<_> = nif.tree().map(idx).collect();
-    println!("\nTree order from root: {:?}", nif.tree().map(idx).collect::<Vec<_>>());
-    let unreachable: Vec<_> = (0..index.len()).filter(|i| !reachable.contains(i)).collect();
+    println!(
+        "\nTree order from root: {:?}",
+        nif.tree().map(idx).collect::<Vec<_>>()
+    );
+    let unreachable: Vec<_> = (0..index.len())
+        .filter(|i| !reachable.contains(i))
+        .collect();
     if unreachable.is_empty() {
         println!("All blocks reachable from root.");
     } else {
@@ -82,7 +90,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn print_tree(nif: &NifFile, idx: &dyn Fn(&NiObject) -> usize, obj: &NiAvObject, depth: usize) {
     let pad = depth * 2;
-    println!("{:pad$}[{}] {} \"{}\"", "", idx(obj), obj.block_name(), obj.name());
+    println!(
+        "{:pad$}[{}] {} \"{}\"",
+        "",
+        idx(obj),
+        obj.block_name(),
+        obj.name()
+    );
     println!("{:pad$}    flags:  {:#x}", "", obj.raw_flags());
     println!("{:pad$}    local:  {}", "", fmt_transform(&obj.transform()));
 
@@ -104,7 +118,13 @@ fn print_tree(nif: &NifFile, idx: &dyn Fn(&NiObject) -> usize, obj: &NiAvObject,
             ),
             None => println!("{:pad$}    shader: (none)", ""),
         }
-        for (slot, path) in nif.view_of(shape).unwrap().texture_paths().iter().enumerate() {
+        for (slot, path) in nif
+            .view_of(shape)
+            .unwrap()
+            .texture_paths()
+            .iter()
+            .enumerate()
+        {
             if !path.is_empty() {
                 println!("{:pad$}    texture {slot}: {path}", "");
             }
@@ -116,13 +136,21 @@ fn print_tree(nif: &NifFile, idx: &dyn Fn(&NiObject) -> usize, obj: &NiAvObject,
         } else {
             println!("{:pad$}    bones:  {bones:?}", "");
             println!("{:pad$}    bone blocks: {bone_ids:?}", "");
-            let counts: Vec<_> = (0..bones.len()).map(|b| nif.view_of(shape).unwrap().bone_weights(b).len()).collect();
+            let counts: Vec<_> = (0..bones.len())
+                .map(|b| nif.view_of(shape).unwrap().bone_weights(b).len())
+                .collect();
             println!("{:pad$}    weighted vertices per bone: {counts:?}", "");
         }
     }
 
     for extra in nif.view_of(obj).unwrap().extra_data() {
-        println!("{:pad$}    extra:  [{}] {}{}", "", idx(extra), extra.block_name(), fmt_extra(extra));
+        println!(
+            "{:pad$}    extra:  [{}] {}{}",
+            "",
+            idx(extra),
+            extra.block_name(),
+            fmt_extra(extra)
+        );
     }
 
     if let Some(node) = obj.downcast::<NiNode>() {

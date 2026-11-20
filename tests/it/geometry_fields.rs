@@ -38,7 +38,11 @@ fn arrays() {
     let saved = reload(&mut nif);
     let block = data(&saved, index);
     assert_eq!(block.vertices(), vertices);
-    assert_eq!((block.tangents(), block.bitangents()), (vec![], vec![]), "not saved without normals");
+    assert_eq!(
+        (block.tangents(), block.bitangents()),
+        (vec![], vec![]),
+        "not saved without normals"
+    );
     assert_eq!(block.vertex_colors(), colors);
     assert!(!block.has_normals() && block.normals().is_empty());
 
@@ -49,7 +53,10 @@ fn arrays() {
     block.set_has_vertex_colors(false);
     let saved = reload(&mut nif);
     let block = data(&saved, index);
-    assert_eq!((block.normals(), block.tangents()), (tangents.clone(), tangents));
+    assert_eq!(
+        (block.normals(), block.tangents()),
+        (tangents.clone(), tangents)
+    );
     assert!(block.vertex_colors().is_empty());
 }
 
@@ -68,21 +75,34 @@ fn uv_sets_and_data_flags() {
 
     let mut nif = saved;
     let flags = data(&nif, index).data_raw_flags() & !0xF03F | 3;
-    nif.edit::<NiGeometryData>(index).unwrap().set_data_raw_flags(flags);
+    nif.edit::<NiGeometryData>(index)
+        .unwrap()
+        .set_data_raw_flags(flags);
     let block = data(&nif, index);
     assert_eq!(block.uv_sets().len(), 3);
     assert_eq!(block.uv_sets()[2], vec![[0.0, 0.0]; n]);
     assert!(!block.has_tangents() && block.tangents().is_empty());
     // Saving drops the tangents' extra data block, moving the data.
     let saved = reload(&mut nif);
-    assert_eq!(data(&saved, first::<NiGeometryData>(&saved)).data_raw_flags(), flags);
+    assert_eq!(
+        data(&saved, first::<NiGeometryData>(&saved)).data_raw_flags(),
+        flags
+    );
 
     // Fallout 3 on stores one set at most.
     let mut nif = load("Bones");
     let index = first::<NiGeometryData>(&nif);
     let n = data(&nif, index).vertex_count();
-    assert!(!nif.edit::<NiGeometryData>(index).unwrap().set_uv_sets(&[vec![[0.0, 0.0]; n], vec![[0.0, 0.0]; n]]));
-    assert!(nif.edit::<NiGeometryData>(index).unwrap().set_uv_sets::<Vec<[f32; 2]>, _>(&[]));
+    assert!(
+        !nif.edit::<NiGeometryData>(index)
+            .unwrap()
+            .set_uv_sets(&[vec![[0.0, 0.0]; n], vec![[0.0, 0.0]; n]])
+    );
+    assert!(
+        nif.edit::<NiGeometryData>(index)
+            .unwrap()
+            .set_uv_sets::<Vec<[f32; 2]>, _>(&[])
+    );
     let saved = reload(&mut nif);
     assert!(!data(&saved, index).has_uvs() && data(&saved, index).uv_sets().is_empty());
 }
@@ -99,7 +119,12 @@ fn scalar_fields() {
     let saved = reload(&mut nif);
     let block = data(&saved, index);
     assert_eq!(
-        (block.geometry_group_id(), block.keep_raw_flags(), block.compress_raw_flags(), block.material_crc()),
+        (
+            block.geometry_group_id(),
+            block.keep_raw_flags(),
+            block.compress_raw_flags(),
+            block.material_crc()
+        ),
         (-3, 1, 2, 0xDEAD)
     );
 }
@@ -113,7 +138,13 @@ fn match_groups() {
     assert!(!block.set_match_groups(&[vec![0, n]]));
     assert!(block.set_match_groups(&[vec![0, 1], vec![2]]));
     let saved = reload(&mut nif);
-    assert_eq!(saved.block_of::<NiTriShapeData>(index).unwrap().match_groups(), [vec![0, 1], vec![2]]);
+    assert_eq!(
+        saved
+            .block_of::<NiTriShapeData>(index)
+            .unwrap()
+            .match_groups(),
+        [vec![0, 1], vec![2]]
+    );
 }
 
 #[test]
@@ -140,8 +171,17 @@ fn materials() {
     block.set_default_material_update_flag(1);
     let saved = reload(&mut nif);
     let block = saved.block_of::<NiGeometry>(shape).unwrap();
-    assert_eq!(block.materials(), [("First".into(), 5), ("Second".into(), 6)]);
-    assert_eq!((block.active_material(), block.default_material_update_flag()), (1, 1));
+    assert_eq!(
+        block.materials(),
+        [("First".into(), 5), ("Second".into(), 6)]
+    );
+    assert_eq!(
+        (
+            block.active_material(),
+            block.default_material_update_flag()
+        ),
+        (1, 1)
+    );
 }
 
 #[test]
@@ -153,8 +193,20 @@ fn shader_name() {
     block.set_shader_implementation(7);
     let mut saved = reload(&mut nif);
     let block = saved.block_of::<NiGeometry>(shape).unwrap();
-    assert_eq!((block.shader_name(), block.shader_implementation()), (Some("Shader".into()), 7));
+    assert_eq!(
+        (block.shader_name(), block.shader_implementation()),
+        (Some("Shader".into()), 7)
+    );
 
-    saved.block_of_mut::<NiGeometry>(shape).unwrap().set_shader_name(None::<&str>);
-    assert_eq!(reload(&mut saved).block_of::<NiGeometry>(shape).unwrap().shader_name(), None);
+    saved
+        .block_of_mut::<NiGeometry>(shape)
+        .unwrap()
+        .set_shader_name(None::<&str>);
+    assert_eq!(
+        reload(&mut saved)
+            .block_of::<NiGeometry>(shape)
+            .unwrap()
+            .shader_name(),
+        None
+    );
 }

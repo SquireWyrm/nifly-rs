@@ -58,8 +58,18 @@ pub mod ffi {
         ) -> u32;
         /// A `BSXFlags` block, always named "BSX".
         fn assign_bsx_flags(file: Pin<&mut NifFile>, target: u32, flags: u32) -> u32;
-        fn assign_binary_extra_data(file: Pin<&mut NifFile>, target: u32, name: &[u8], bytes: &[u8]) -> u32;
-        fn assign_floats_extra_data(file: Pin<&mut NifFile>, target: u32, name: &[u8], values: &[f32]) -> u32;
+        fn assign_binary_extra_data(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            bytes: &[u8],
+        ) -> u32;
+        fn assign_floats_extra_data(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            values: &[f32],
+        ) -> u32;
         /// The strings are `bytes` split into `lengths`.
         fn assign_strings_extra_data(
             file: Pin<&mut NifFile>,
@@ -83,7 +93,13 @@ pub mod ffi {
         /// chain would loop back to `data`.
         fn set_extra_data_next(file: Pin<&mut NifFile>, data: u32, next: u32) -> bool;
         /// A `SkinAttach`; the bone names are `bytes` split into `lengths`.
-        fn assign_skin_attach(file: Pin<&mut NifFile>, target: u32, name: &[u8], bytes: &[u8], lengths: &[usize]) -> u32;
+        fn assign_skin_attach(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            bytes: &[u8],
+            lengths: &[usize],
+        ) -> u32;
         /// A `BSFurnitureMarkerNode` if `node`, otherwise a `BSFurnitureMarker`.
         fn assign_furniture_marker(
             file: Pin<&mut NifFile>,
@@ -110,15 +126,52 @@ pub mod ffi {
             bytes: &[u8],
             lengths: &[usize],
         ) -> u32;
-        fn assign_inv_marker(file: Pin<&mut NifFile>, target: u32, name: &[u8], marker: InvMarkerFfi) -> u32;
-        fn assign_bs_bound(file: Pin<&mut NifFile>, target: u32, name: &[u8], center: Vec3, half_extents: Vec3) -> u32;
-        fn assign_color_extra_data(file: Pin<&mut NifFile>, target: u32, name: &[u8], color: Float4) -> u32;
-        fn assign_vector_extra_data(file: Pin<&mut NifFile>, target: u32, name: &[u8], vector: Float4) -> u32;
+        fn assign_inv_marker(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            marker: InvMarkerFfi,
+        ) -> u32;
+        fn assign_bs_bound(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            center: Vec3,
+            half_extents: Vec3,
+        ) -> u32;
+        fn assign_color_extra_data(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            color: Float4,
+        ) -> u32;
+        fn assign_vector_extra_data(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            vector: Float4,
+        ) -> u32;
         /// `u32::MAX` also for more than 65535 weights.
-        fn assign_vert_weights_extra_data(file: Pin<&mut NifFile>, target: u32, name: &[u8], weights: &[f32]) -> u32;
-        fn assign_eye_center_extra_data(file: Pin<&mut NifFile>, target: u32, name: &[u8], values: &[f32]) -> u32;
-        fn assign_position_data(file: Pin<&mut NifFile>, target: u32, name: &[u8], values: &[f32]) -> u32;
-        fn assign_w_array(file: Pin<&mut NifFile>, target: u32, name: &[u8], values: &[u32]) -> u32;
+        fn assign_vert_weights_extra_data(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            weights: &[f32],
+        ) -> u32;
+        fn assign_eye_center_extra_data(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            values: &[f32],
+        ) -> u32;
+        fn assign_position_data(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            values: &[f32],
+        ) -> u32;
+        fn assign_w_array(file: Pin<&mut NifFile>, target: u32, name: &[u8], values: &[u32])
+        -> u32;
         /// Block i takes the next `block_lengths[i]` points and normals. `u32::MAX` also for
         /// more than 65535 blocks or points in a block, or lengths that don't add up.
         fn assign_decal_placement_vector_extra_data(
@@ -130,7 +183,12 @@ pub mod ffi {
             points: &[Vec3],
             normals: &[Vec3],
         ) -> u32;
-        fn assign_distant_object_extra_data(file: Pin<&mut NifFile>, target: u32, name: &[u8], flags: u32) -> u32;
+        fn assign_distant_object_extra_data(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            flags: u32,
+        ) -> u32;
         fn assign_distant_object_large_ref_extra_data(
             file: Pin<&mut NifFile>,
             target: u32,

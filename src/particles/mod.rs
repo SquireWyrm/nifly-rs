@@ -99,12 +99,15 @@ use nifly_sys::{
 
 use crate::{
     animation::{
-        group_from_ffi, group_to_ffi, key_from_ffi, key_to_ffi, same, vec3, vec3_to_ffi, HasInterpolator, Key,
-        KeyGroup, NewAnimationData, NewController, NiColorData, NiInterpolator, NiPSysModifierCtlr, NiTimeController,
+        HasInterpolator, Key, KeyGroup, NewAnimationData, NewController, NiColorData,
+        NiInterpolator, NiPSysModifierCtlr, NiTimeController, group_from_ffi, group_to_ffi,
+        key_from_ffi, key_to_ffi, same, vec3, vec3_to_ffi,
     },
     effects::Plane,
-    file::{index_from_ffi, Index},
-    geometry::{NiAutoNormalParticles, NiGeometryData, NiParticleMeshes, NiParticles, NiRotatingParticles},
+    file::{Index, index_from_ffi},
+    geometry::{
+        NiAutoNormalParticles, NiGeometryData, NiParticleMeshes, NiParticles, NiRotatingParticles,
+    },
     handle::{Edit, View},
     iter::{BlockIter, RefIndices},
     nodes::{BsMasterParticleSystem, NiNode},
@@ -397,11 +400,11 @@ impl ParticleInfo {
 }
 
 mod data;
-mod system;
 mod modifiers;
-mod refs;
 mod old;
+mod refs;
+mod system;
 
-pub use self::system::*;
-pub use self::refs::*;
 pub use self::old::*;
+pub use self::refs::*;
+pub use self::system::*;

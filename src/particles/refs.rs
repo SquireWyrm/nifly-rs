@@ -188,7 +188,8 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiPSysColliderManager, I>,
     {
         let manager = self.index() as u32;
-        index_from_ffi(C::add(self.file_mut().inner.pin_mut(), manager)).expect("the block is an NiPSysColliderManager")
+        index_from_ffi(C::add(self.file_mut().inner.pin_mut(), manager))
+            .expect("the block is an NiPSysColliderManager")
     }
 
     /// Like [`View::next_collider`], for editing.

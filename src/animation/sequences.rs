@@ -375,7 +375,8 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiControllerManager, I>,
     {
         let owner = self.index() as u32;
-        let added = ffi::add_manager_sequence(self.file_mut().inner.pin_mut(), owner, name.as_ref());
+        let added =
+            ffi::add_manager_sequence(self.file_mut().inner.pin_mut(), owner, name.as_ref());
         index_from_ffi(added).expect("the owner is an NiControllerManager")
     }
 

@@ -43,18 +43,29 @@ pub struct GeometrySegment {
 
 impl GeometrySegment {
     fn from_ffi(s: ffi::GeometrySegment) -> Self {
-        Self { raw_flags: s.flags, index: s.index, triangle_count: s.triangle_count }
+        Self {
+            raw_flags: s.flags,
+            index: s.index,
+            triangle_count: s.triangle_count,
+        }
     }
 
     fn to_ffi(self) -> ffi::GeometrySegment {
-        ffi::GeometrySegment { flags: self.raw_flags, index: self.index, triangle_count: self.triangle_count }
+        ffi::GeometrySegment {
+            flags: self.raw_flags,
+            index: self.index,
+            triangle_count: self.triangle_count,
+        }
     }
 }
 
 impl BsSubIndexTriShape {
     /// The segments Skyrim SE stores. Other versions store [`View::segments`] instead.
     pub fn sse_segments(&self) -> Vec<GeometrySegment> {
-        ffi::sub_index_tri_shape_sse_segments(&self.0).into_iter().map(GeometrySegment::from_ffi).collect()
+        ffi::sub_index_tri_shape_sse_segments(&self.0)
+            .into_iter()
+            .map(GeometrySegment::from_ffi)
+            .collect()
     }
 
     /// Replaces the [Skyrim SE segments](Self::sse_segments). Returns `false`, changing
@@ -156,7 +167,10 @@ impl BsTriShape {
         Some(ParticleData {
             vertices: vec3s(ffi::bs_tri_shape_particle_vectors(&self.0, false)),
             normals: vec3s(ffi::bs_tri_shape_particle_vectors(&self.0, true)),
-            triangles: ffi::bs_tri_shape_particle_triangles(&self.0).as_chunks::<3>().0.to_vec(),
+            triangles: ffi::bs_tri_shape_particle_triangles(&self.0)
+                .as_chunks::<3>()
+                .0
+                .to_vec(),
         })
     }
 
@@ -169,7 +183,13 @@ impl BsTriShape {
         };
         let vertices: Vec<_> = data.vertices.iter().map(|v| v.to_ffi()).collect();
         let normals: Vec<_> = data.normals.iter().map(|v| v.to_ffi()).collect();
-        ffi::set_bs_tri_shape_particle_data(self.ffi_mut(), true, &vertices, &normals, data.triangles.as_flattened())
+        ffi::set_bs_tri_shape_particle_data(
+            self.ffi_mut(),
+            true,
+            &vertices,
+            &normals,
+            data.triangles.as_flattened(),
+        )
     }
 }
 
@@ -181,7 +201,12 @@ impl<T: NiType> Edit<'_, T> {
     {
         let sse = self.view().file().version().stream == 100;
         let index = self.index();
-        (self.file_mut().block_of_mut::<BsTriShape>(index).expect("the block is a BSTriShape"), sse)
+        (
+            self.file_mut()
+                .block_of_mut::<BsTriShape>(index)
+                .expect("the block is a BSTriShape"),
+            sse,
+        )
     }
 
     /// Sets the [vertex flags](BsTriShape::vertex_flags). Newly added colors start white;
@@ -208,7 +233,10 @@ impl<T: NiType> Edit<'_, T> {
         if extra.iter().any(|e| e.as_ref().len() != per) {
             return false;
         }
-        let flat: Vec<f32> = extra.iter().flat_map(|e| e.as_ref().iter().copied()).collect();
+        let flat: Vec<f32> = extra
+            .iter()
+            .flat_map(|e| e.as_ref().iter().copied())
+            .collect();
         let (shape, sse) = self.bs_tri_shape();
         ffi::set_bs_tri_shape_extra_floats(shape.ffi_mut(), &flat, per, sse)
     }

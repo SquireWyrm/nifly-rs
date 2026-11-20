@@ -1,6 +1,6 @@
 //! Tests for NiMaterialProperty's accessors and setters, and NifFile::block_of_mut.
 
-use crate::common::{upstream, reload};
+use crate::common::{reload, upstream};
 
 use nifly::{
     file::{Index, NifFile},
@@ -10,7 +10,10 @@ use nifly::{
 };
 
 fn material(nif: &NifFile) -> (Index, &NiMaterialProperty) {
-    nif.blocks_of::<NiMaterialProperty>().indexed().next().unwrap()
+    nif.blocks_of::<NiMaterialProperty>()
+        .indexed()
+        .next()
+        .unwrap()
 }
 
 #[test]
@@ -65,7 +68,14 @@ fn setters_round_trip() {
     // Visible through the shared borrow, and through the shape.
     check(material(&nif).1, 3.0);
     let shape = nif.shapes().next().unwrap();
-    check(nif.view_of(shape).unwrap().material_property().unwrap().get(), 3.0);
+    check(
+        nif.view_of(shape)
+            .unwrap()
+            .material_property()
+            .unwrap()
+            .get(),
+        3.0,
+    );
 
     // Oblivion files don't store the emissive multiple.
     let saved = reload(&mut nif);

@@ -14,17 +14,29 @@ pub struct HavokFilter {
 
 impl Default for HavokFilter {
     fn default() -> Self {
-        Self { layer: 1, raw_flags_and_parts: 0, group: 0 }
+        Self {
+            layer: 1,
+            raw_flags_and_parts: 0,
+            group: 0,
+        }
     }
 }
 
 impl HavokFilter {
     pub(super) fn from_ffi(f: ffi::HavokFilterFfi) -> Self {
-        Self { layer: f.layer, raw_flags_and_parts: f.flags_and_parts, group: f.group }
+        Self {
+            layer: f.layer,
+            raw_flags_and_parts: f.flags_and_parts,
+            group: f.group,
+        }
     }
 
     pub(super) fn to_ffi(self) -> ffi::HavokFilterFfi {
-        ffi::HavokFilterFfi { layer: self.layer, flags_and_parts: self.raw_flags_and_parts, group: self.group }
+        ffi::HavokFilterFfi {
+            layer: self.layer,
+            flags_and_parts: self.raw_flags_and_parts,
+            group: self.group,
+        }
     }
 }
 
@@ -38,11 +50,19 @@ pub struct CInfoProperty {
 
 impl CInfoProperty {
     pub(super) fn from_ffi(p: ffi::CInfoPropertyFfi) -> Self {
-        Self { data: p.data, size: p.size, capacity_and_raw_flags: p.capacity_and_flags }
+        Self {
+            data: p.data,
+            size: p.size,
+            capacity_and_raw_flags: p.capacity_and_flags,
+        }
     }
 
     pub(super) fn to_ffi(self) -> ffi::CInfoPropertyFfi {
-        ffi::CInfoPropertyFfi { data: self.data, size: self.size, capacity_and_flags: self.capacity_and_raw_flags }
+        ffi::CInfoPropertyFfi {
+            data: self.data,
+            size: self.size,
+            capacity_and_flags: self.capacity_and_raw_flags,
+        }
     }
 }
 

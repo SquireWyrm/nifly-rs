@@ -20,7 +20,10 @@ fn load_from_borrowed_file_and_reuse_it() {
     file.seek(SeekFrom::Start(0)).unwrap();
     let mut bytes = Vec::new();
     file.read_to_end(&mut bytes).unwrap();
-    assert_eq!(bytes.len() as u64, fs::metadata("assets/Cube.nif").unwrap().len());
+    assert_eq!(
+        bytes.len() as u64,
+        fs::metadata("assets/Cube.nif").unwrap().len()
+    );
 }
 
 #[test]
@@ -35,7 +38,10 @@ fn reader_error_returns_original_io_error() {
     struct Failing;
     impl Read for Failing {
         fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
-            Err(io::Error::new(io::ErrorKind::ConnectionReset, "connection reset"))
+            Err(io::Error::new(
+                io::ErrorKind::ConnectionReset,
+                "connection reset",
+            ))
         }
     }
 
@@ -65,7 +71,12 @@ fn reader_error_mid_file_returns_io_error() {
     }
 
     let bytes = fs::read("assets/Suzanne.nif").unwrap();
-    match NifFile::load(FailAfter { data: &bytes[..200] }, None) {
+    match NifFile::load(
+        FailAfter {
+            data: &bytes[..200],
+        },
+        None,
+    ) {
         Err(Error::Io(e)) => assert_eq!(e.kind(), io::ErrorKind::TimedOut),
         Err(other) => panic!("expected Error::Io, got {other:?}"),
         Ok(_) => panic!("expected Error::Io, got Ok"),

@@ -23,13 +23,19 @@ impl<'a> View<'a, BsTreeNode> {
     /// The nodes in the first bone list (the trunk bones of Skyrim trees). Skips empty refs and
     /// refs that don't resolve to a node.
     pub fn bones_1(&self) -> BlockIter<'a, NiNode, RefIndices> {
-        BlockIter::new(self.file(), RefIndices::new(ffi::tree_node_bones(&self.get().0, 1)))
+        BlockIter::new(
+            self.file(),
+            RefIndices::new(ffi::tree_node_bones(&self.get().0, 1)),
+        )
     }
 
     /// Like [`bones_1`](Self::bones_1), for the second bone list (the branch bones of Skyrim
     /// trees).
     pub fn bones_2(&self) -> BlockIter<'a, NiNode, RefIndices> {
-        BlockIter::new(self.file(), RefIndices::new(ffi::tree_node_bones(&self.get().0, 2)))
+        BlockIter::new(
+            self.file(),
+            RefIndices::new(ffi::tree_node_bones(&self.get().0, 2)),
+        )
     }
 }
 
@@ -46,7 +52,11 @@ impl Edit<'_, BsTreeNode> {
     }
 
     fn set_bones(&mut self, list: u8, bones: &[Index]) -> bool {
-        let Some(bones) = bones.iter().map(|&b| block_index_to_ffi(b)).collect::<Option<Vec<_>>>() else {
+        let Some(bones) = bones
+            .iter()
+            .map(|&b| block_index_to_ffi(b))
+            .collect::<Option<Vec<_>>>()
+        else {
             return false;
         };
         let node = self.index() as u32;
@@ -87,10 +97,17 @@ impl Edit<'_, BsMultiBoundNode> {
         let node = self.index() as u32;
         let file = self.file_mut().inner.pin_mut();
         let index = match shape {
-            MultiBoundShape::Aabb { center, half_extent } => {
+            MultiBoundShape::Aabb {
+                center,
+                half_extent,
+            } => {
                 nif_ffi::assign_multi_bound_aabb(file, node, center.to_ffi(), half_extent.to_ffi())
             }
-            MultiBoundShape::Obb { center, size, rotation } => nif_ffi::assign_multi_bound_obb(
+            MultiBoundShape::Obb {
+                center,
+                size,
+                rotation,
+            } => nif_ffi::assign_multi_bound_obb(
                 file,
                 node,
                 center.to_ffi(),
@@ -171,7 +188,8 @@ impl Edit<'_, NiLodNode> {
     /// ```
     pub fn assign_lod_data<T: NewLodData>(&mut self) -> Index {
         let node = self.index() as u32;
-        index_from_ffi(T::assign(self.file_mut().inner.pin_mut(), node)).expect("the block is an NiLodNode")
+        index_from_ffi(T::assign(self.file_mut().inner.pin_mut(), node))
+            .expect("the block is an NiLodNode")
     }
 
     /// Clears the node's LOD data. It stays in the file until saving drops it, if nothing else
@@ -206,7 +224,9 @@ impl Edit<'_, NiCamera> {
     /// Sets the scene to the [`NiAvObject`] at block index `scene`, or none if `None`. Returns
     /// `false`, changing nothing, if that block isn't an `NiAvObject`.
     pub fn set_scene(&mut self, scene: Option<Index>) -> bool {
-        let Some(scene) = optional_index_to_ffi(scene) else { return false };
+        let Some(scene) = optional_index_to_ffi(scene) else {
+            return false;
+        };
         let camera = self.index() as u32;
         ffi::set_camera_scene(self.file_mut().inner.pin_mut(), camera, scene)
     }
@@ -218,11 +238,21 @@ impl Edit<'_, NiCamera> {
 pub trait NewNode: NiType {
     /// Adds the node and returns its index (`u32::MAX` on failure).
     #[doc(hidden)]
-    fn add(file: Pin<&mut nif_ffi::NifFile>, name: &[u8], transform: nif_ffi::Transform, parent: u32) -> u32;
+    fn add(
+        file: Pin<&mut nif_ffi::NifFile>,
+        name: &[u8],
+        transform: nif_ffi::Transform,
+        parent: u32,
+    ) -> u32;
 }
 
 impl NewNode for NiNode {
-    fn add(file: Pin<&mut nif_ffi::NifFile>, name: &[u8], transform: nif_ffi::Transform, parent: u32) -> u32 {
+    fn add(
+        file: Pin<&mut nif_ffi::NifFile>,
+        name: &[u8],
+        transform: nif_ffi::Transform,
+        parent: u32,
+    ) -> u32 {
         nif_ffi::add_node(file, name, transform, parent)
     }
 }
@@ -304,7 +334,9 @@ impl Edit<'_, NiDefaultAvObjectPalette> {
     /// Sets the scene to the [`NiAvObject`] at block index `scene`, or none if `None`. Returns
     /// `false`, changing nothing, if that block isn't an `NiAvObject`.
     pub fn set_scene(&mut self, scene: Option<Index>) -> bool {
-        let Some(scene) = optional_index_to_ffi(scene) else { return false };
+        let Some(scene) = optional_index_to_ffi(scene) else {
+            return false;
+        };
         let palette = self.index() as u32;
         ffi::set_palette_scene(self.file_mut().inner.pin_mut(), palette, scene)
     }
@@ -312,15 +344,26 @@ impl Edit<'_, NiDefaultAvObjectPalette> {
     /// Replaces the entries with `objects`: names and the block indices of the
     /// [`NiAvObject`]s they refer to, or `None` for empty entries. Names aren't checked against
     /// the objects. Returns `false`, changing nothing, if a block isn't an `NiAvObject`.
-    pub fn set_objects<N: AsRef<[u8]>>(&mut self, objects: impl IntoIterator<Item = (N, Option<Index>)>) -> bool {
+    pub fn set_objects<N: AsRef<[u8]>>(
+        &mut self,
+        objects: impl IntoIterator<Item = (N, Option<Index>)>,
+    ) -> bool {
         let (mut names, mut indices) = (Vec::new(), Vec::new());
         for (name, index) in objects {
-            let Some(index) = optional_index_to_ffi(index) else { return false };
+            let Some(index) = optional_index_to_ffi(index) else {
+                return false;
+            };
             names.push(name);
             indices.push(index);
         }
         let (bytes, lengths) = joined(names);
         let palette = self.index() as u32;
-        ffi::set_palette_objects(self.file_mut().inner.pin_mut(), palette, &bytes, &lengths, &indices)
+        ffi::set_palette_objects(
+            self.file_mut().inner.pin_mut(),
+            palette,
+            &bytes,
+            &lengths,
+            &indices,
+        )
     }
 }

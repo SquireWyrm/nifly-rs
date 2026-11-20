@@ -76,7 +76,13 @@ pub struct SpringDamperMotor {
 
 impl Default for SpringDamperMotor {
     fn default() -> Self {
-        Self { min_force: -1_000_000.0, max_force: 1_000_000.0, spring_constant: 0.0, spring_damping: 0.0, enabled: false }
+        Self {
+            min_force: -1_000_000.0,
+            max_force: 1_000_000.0,
+            spring_constant: 0.0,
+            spring_damping: 0.0,
+            enabled: false,
+        }
     }
 }
 
@@ -130,14 +136,16 @@ impl Motor {
             Self::None => {}
             Self::Position(p) => {
                 m.motor_type = 1;
-                (m.min_force, m.max_force, m.tau, m.damping) = (p.min_force, p.max_force, p.tau, p.damping);
+                (m.min_force, m.max_force, m.tau, m.damping) =
+                    (p.min_force, p.max_force, p.tau, p.damping);
                 m.proportional_recovery_velocity = p.proportional_recovery_velocity;
                 m.constant_recovery_velocity = p.constant_recovery_velocity;
                 m.enabled = p.enabled;
             }
             Self::Velocity(v) => {
                 m.motor_type = 2;
-                (m.min_force, m.max_force, m.tau, m.velocity_target) = (v.min_force, v.max_force, v.tau, v.velocity_target);
+                (m.min_force, m.max_force, m.tau, m.velocity_target) =
+                    (v.min_force, v.max_force, v.tau, v.velocity_target);
                 m.use_velocity_target = v.use_velocity_target_from_constraint_targets;
                 m.enabled = v.enabled;
             }
@@ -154,7 +162,12 @@ impl Motor {
 
 /// Builds a `DescriptorFfi` from vectors, floats and a motor.
 fn descriptor_ffi(vectors: &[[f32; 4]], floats: &[f32], motor: Motor) -> ffi::DescriptorFfi {
-    let mut d = ffi::DescriptorFfi { constraint_type: 0, vectors: [0.0; 32], floats: [0.0; 6], motor: motor.to_ffi() };
+    let mut d = ffi::DescriptorFfi {
+        constraint_type: 0,
+        vectors: [0.0; 32],
+        floats: [0.0; 6],
+        motor: motor.to_ffi(),
+    };
     d.vectors[..vectors.len() * 4].copy_from_slice(vectors.as_flattened());
     d.floats[..floats.len()].copy_from_slice(floats);
     d
@@ -174,7 +187,10 @@ pub struct BallAndSocketDescriptor {
 
 impl BallAndSocketDescriptor {
     pub(super) fn from_ffi(d: &ffi::DescriptorFfi) -> Self {
-        Self { translation_a: vector(d, 0), translation_b: vector(d, 1) }
+        Self {
+            translation_a: vector(d, 0),
+            translation_b: vector(d, 1),
+        }
     }
 
     pub(super) fn to_ffi(self) -> ffi::DescriptorFfi {
@@ -193,7 +209,11 @@ pub struct StiffSpringDescriptor {
 
 impl StiffSpringDescriptor {
     pub(super) fn from_ffi(d: &ffi::DescriptorFfi) -> Self {
-        Self { pivot_a: vector(d, 0), pivot_b: vector(d, 1), length: d.floats[0] }
+        Self {
+            pivot_a: vector(d, 0),
+            pivot_b: vector(d, 1),
+            length: d.floats[0],
+        }
     }
 
     pub(super) fn to_ffi(self) -> ffi::DescriptorFfi {
@@ -296,7 +316,11 @@ impl LimitedHingeDescriptor {
             self.axle_in_b2,
             self.pivot_b,
         ];
-        descriptor_ffi(&v, &[self.min_angle, self.max_angle, self.max_friction], self.motor)
+        descriptor_ffi(
+            &v,
+            &[self.min_angle, self.max_angle, self.max_friction],
+            self.motor,
+        )
     }
 }
 
@@ -417,7 +441,11 @@ impl PrismaticDescriptor {
             self.plane_b,
             self.pivot_b,
         ];
-        descriptor_ffi(&v, &[self.min_distance, self.max_distance, self.friction], self.motor)
+        descriptor_ffi(
+            &v,
+            &[self.min_distance, self.max_distance, self.friction],
+            self.motor,
+        )
     }
 }
 

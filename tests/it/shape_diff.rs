@@ -13,7 +13,13 @@ fn vertex_diff() {
     let nif = load("Cube");
     let s = first(&nif);
     let mut target = nif.view_of(s).unwrap().vertices().unwrap();
-    assert!(nif.view_of(s).unwrap().vertex_diff(&target).unwrap().is_empty());
+    assert!(
+        nif.view_of(s)
+            .unwrap()
+            .vertex_diff(&target)
+            .unwrap()
+            .is_empty()
+    );
 
     target[2] += Vec3::new(1.0, 0.0, -0.5);
     target[9].y += 0.25;
@@ -31,7 +37,12 @@ fn vertex_diff() {
     for (i, d) in diff {
         moved[i] += d;
     }
-    assert!(moved.iter().zip(&target).all(|(a, b)| a.distance(*b) < 1e-4));
+    assert!(
+        moved
+            .iter()
+            .zip(&target)
+            .all(|(a, b)| a.distance(*b) < 1e-4)
+    );
 }
 
 #[test]
@@ -57,7 +68,12 @@ fn none_without_data_or_matching_length() {
     let vertices = nif.view_of(s).unwrap().vertices().unwrap();
     let uvs = nif.view_of(s).unwrap().uvs().unwrap();
     assert_eq!(nif.view_of(s).unwrap().vertex_diff(&vertices[1..]), None);
-    assert_eq!(nif.view_of(s).unwrap().vertex_diff(&[vertices.clone(), vertices].concat()), None);
+    assert_eq!(
+        nif.view_of(s)
+            .unwrap()
+            .vertex_diff(&[vertices.clone(), vertices].concat()),
+        None
+    );
     assert_eq!(nif.view_of(s).unwrap().uv_diff(&uvs[1..]), None);
     assert_eq!(nif.view_of(s).unwrap().uv_diff(&[]), None);
 

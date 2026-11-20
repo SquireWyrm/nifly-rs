@@ -4,8 +4,8 @@ use std::io::Cursor;
 
 use nifly::{
     extra_data::{
-        BsPackedCombinedSharedGeomDataExtra, ExtraPackedSharedGeom, PackedGeomInstance, PackedGeomObject,
-        PackedGeomTotals, TriangleRange,
+        BsPackedCombinedSharedGeomDataExtra, ExtraPackedSharedGeom, PackedGeomInstance,
+        PackedGeomObject, PackedGeomTotals, TriangleRange,
     },
     file::{Index, NifFile, NifVersion, SaveOptions},
     geometry::NiShape,
@@ -16,7 +16,14 @@ use nifly::{
 
 fn save(nif: &mut NifFile) -> Vec<u8> {
     let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, Some(SaveOptions { optimize: false, sort_blocks: false })).unwrap();
+    nif.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize: false,
+            sort_blocks: false,
+        }),
+    )
+    .unwrap();
     cur.into_inner()
 }
 
@@ -29,7 +36,11 @@ fn object() -> PackedGeomObject {
         grayscale_to_palette_scale: 0.5 + i,
         transform: Transform::new(
             Vec3::new(10.0 * i, 20.0, -30.0),
-            Matrix3::from_rows(Vec3::new(0.0, 1.0, 0.0), Vec3::new(-1.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0)),
+            Matrix3::from_rows(
+                Vec3::new(0.0, 1.0, 0.0),
+                Vec3::new(-1.0, 0.0, 0.0),
+                Vec3::new(0.0, 0.0, 1.0),
+            ),
             1.5,
         ),
         bounds: BoundingSphere::new(Vec3::new(1.0, 2.0, i), 64.0),
@@ -40,9 +51,18 @@ fn object() -> PackedGeomObject {
         vertex_count: 100,
         lod_levels: 3,
         lods: [
-            TriangleRange { count: 50, offset: 0 },
-            TriangleRange { count: 20, offset: 50 },
-            TriangleRange { count: 5, offset: 70 },
+            TriangleRange {
+                count: 50,
+                offset: 0,
+            },
+            TriangleRange {
+                count: 20,
+                offset: 50,
+            },
+            TriangleRange {
+                count: 5,
+                offset: 70,
+            },
         ],
         vertex_desc: 0x0043_B000_0005_4408,
         instances: vec![instance(0.0), instance(1.0)],
@@ -53,19 +73,36 @@ fn object() -> PackedGeomObject {
 fn with_objects(objects: &[PackedGeomObject]) -> (NifFile, Index) {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
     let root = nif.root_node().unwrap().index();
-    let block = nif.edit::<NiAvObject>(root).unwrap().assign_extra_data(ExtraPackedSharedGeom("", PackedGeomTotals::default(), objects)).unwrap();
+    let block = nif
+        .edit::<NiAvObject>(root)
+        .unwrap()
+        .assign_extra_data(ExtraPackedSharedGeom(
+            "",
+            PackedGeomTotals::default(),
+            objects,
+        ))
+        .unwrap();
     (nif, block)
 }
 
 #[test]
 fn objects_survive_save() {
     let (mut nif, block) = with_objects(&[object(), PackedGeomObject::default()]);
-    let totals =
-        PackedGeomTotals { vertex_desc: 0x0001_2345_6789_ABCD, vertex_count: 100, triangle_count: 75, raw_flags_1: 1, raw_flags_2: 2 };
-    nif.block_of_mut::<BsPackedCombinedSharedGeomDataExtra>(block).unwrap().set_totals(totals);
+    let totals = PackedGeomTotals {
+        vertex_desc: 0x0001_2345_6789_ABCD,
+        vertex_count: 100,
+        triangle_count: 75,
+        raw_flags_1: 1,
+        raw_flags_2: 2,
+    };
+    nif.block_of_mut::<BsPackedCombinedSharedGeomDataExtra>(block)
+        .unwrap()
+        .set_totals(totals);
 
     let saved = reload(&mut nif);
-    let b = saved.block_of::<BsPackedCombinedSharedGeomDataExtra>(block).unwrap();
+    let b = saved
+        .block_of::<BsPackedCombinedSharedGeomDataExtra>(block)
+        .unwrap();
     assert_eq!(b.objects(), [object(), PackedGeomObject::default()]);
     assert_eq!(b.totals(), totals);
     // The file still ends with the right blocks after it.
@@ -84,14 +121,26 @@ fn objects_store_no_geometry() {
 #[test]
 fn set_objects() {
     let (mut nif, block) = with_objects(&[]);
-    let b = nif.block_of_mut::<BsPackedCombinedSharedGeomDataExtra>(block).unwrap();
+    let b = nif
+        .block_of_mut::<BsPackedCombinedSharedGeomDataExtra>(block)
+        .unwrap();
     assert!(b.objects().is_empty());
     b.set_objects(&[object(), object()]);
     assert_eq!(b.objects().len(), 2);
-    b.set_objects(&[PackedGeomObject { instances: vec![], ..object() }]);
-    assert_eq!(reload(&mut nif).block_of::<BsPackedCombinedSharedGeomDataExtra>(block).unwrap().objects(), [
-        PackedGeomObject { instances: vec![], ..object() }
-    ]);
+    b.set_objects(&[PackedGeomObject {
+        instances: vec![],
+        ..object()
+    }]);
+    assert_eq!(
+        reload(&mut nif)
+            .block_of::<BsPackedCombinedSharedGeomDataExtra>(block)
+            .unwrap()
+            .objects(),
+        [PackedGeomObject {
+            instances: vec![],
+            ..object()
+        }]
+    );
 }
 
 #[test]
@@ -102,7 +151,10 @@ fn copies_keep_the_layout() {
     let count = nif.blocks().count();
     let saved = reload(&mut nif);
     assert_eq!(saved.blocks().count(), count);
-    let objects: Vec<_> = saved.blocks_of::<BsPackedCombinedSharedGeomDataExtra>().map(|b| b.objects()).collect();
+    let objects: Vec<_> = saved
+        .blocks_of::<BsPackedCombinedSharedGeomDataExtra>()
+        .map(|b| b.objects())
+        .collect();
     assert_eq!(objects, [vec![object()], vec![object()]], "{block} {copy}");
 }
 
@@ -112,12 +164,22 @@ fn needs_an_object_target() {
     assert!(nif.edit::<NiAvObject>(block).is_none());
     // A shape works too.
     let mut nif = NifFile::load(
-        std::fs::read("nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_FO4.nif").unwrap().as_slice(),
+        std::fs::read("nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_FO4.nif")
+            .unwrap()
+            .as_slice(),
         None,
     )
     .unwrap();
     let shape = nif.shapes().indices().next().unwrap();
-    let block = nif.edit::<NiShape>(shape).unwrap().into_upcast::<NiAvObject, _>().assign_extra_data(ExtraPackedSharedGeom("P", PackedGeomTotals::default(), [object()]));
+    let block = nif
+        .edit::<NiShape>(shape)
+        .unwrap()
+        .into_upcast::<NiAvObject, _>()
+        .assign_extra_data(ExtraPackedSharedGeom(
+            "P",
+            PackedGeomTotals::default(),
+            [object()],
+        ));
     assert!(block.is_some());
 }
 
@@ -125,10 +187,21 @@ fn needs_an_object_target() {
 fn totals_at_creation() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
     let root = nif.root_node().unwrap().index();
-    let totals = PackedGeomTotals { vertex_desc: 7, vertex_count: 3, triangle_count: 1, raw_flags_1: 4, raw_flags_2: 5 };
-    let block =
-        nif.edit::<NiAvObject>(root).unwrap().assign_extra_data(ExtraPackedSharedGeom("", totals, [object()])).unwrap();
+    let totals = PackedGeomTotals {
+        vertex_desc: 7,
+        vertex_count: 3,
+        triangle_count: 1,
+        raw_flags_1: 4,
+        raw_flags_2: 5,
+    };
+    let block = nif
+        .edit::<NiAvObject>(root)
+        .unwrap()
+        .assign_extra_data(ExtraPackedSharedGeom("", totals, [object()]))
+        .unwrap();
     let saved = reload(&mut nif);
-    let b = saved.block_of::<BsPackedCombinedSharedGeomDataExtra>(block).unwrap();
+    let b = saved
+        .block_of::<BsPackedCombinedSharedGeomDataExtra>(block)
+        .unwrap();
     assert_eq!((b.totals(), b.objects()), (totals, vec![object()]));
 }

@@ -1,6 +1,6 @@
 //! Tests for names and paths returned as bstr types.
 
-use crate::common::{load};
+use crate::common::load;
 
 use nifly::{
     bstr::{BStr, BString, ByteSlice},
@@ -13,7 +13,9 @@ use nifly::{
 fn non_utf8_names_are_kept() {
     let mut nif = load("Cube");
     let shape = nif.shapes().indices().next().unwrap();
-    nif.block_of_mut::<nifly::objects::NiObjectNet>(shape).unwrap().set_name(b"Caf\xe9");
+    nif.block_of_mut::<nifly::objects::NiObjectNet>(shape)
+        .unwrap()
+        .set_name(b"Caf\xe9");
 
     let name = nif.shapes().next().unwrap().name();
     assert_eq!(name, b"Caf\xe9");
@@ -26,8 +28,15 @@ fn non_utf8_names_are_kept() {
 fn bone_list_keeps_raw_bytes() {
     // Bone names come from the bone nodes, so a non-UTF-8 node name must come back unchanged.
     let mut nif = load("Bones");
-    let bone = nif.blocks_of::<NiNode>().indexed().find(|(_, n)| n.name() == "Bone1").unwrap().0;
-    nif.block_of_mut::<nifly::objects::NiObjectNet>(bone).unwrap().set_name(b"Kn\xe9e");
+    let bone = nif
+        .blocks_of::<NiNode>()
+        .indexed()
+        .find(|(_, n)| n.name() == "Bone1")
+        .unwrap()
+        .0;
+    nif.block_of_mut::<nifly::objects::NiObjectNet>(bone)
+        .unwrap()
+        .set_name(b"Kn\xe9e");
 
     let shape = nif.shapes().next().unwrap();
     let bones = nif.view_of(shape).unwrap().bone_list();
@@ -47,14 +56,19 @@ fn parameters_accept_every_byte_string_type() {
     assert!(nif.find_block_by_name::<NiShape>(owned.clone()).is_some());
     assert!(nif.find_block_by_name::<NiShape>(b"Cube").is_some());
     assert!(nif.find_block_by_name::<NiShape>(&bytes).is_some());
-    assert!(nif.find_block_by_name::<NiShape>(BStr::new("Cube")).is_some());
+    assert!(
+        nif.find_block_by_name::<NiShape>(BStr::new("Cube"))
+            .is_some()
+    );
     assert!(nif.find_block_by_name::<NiShape>(&bstring).is_some());
 
     // A name returned by one method can be passed straight to another.
     let mut nif = load("Cube");
     let name = nif.shapes().next().unwrap().name().to_owned();
     let shape = nif.shapes().indices().next().unwrap();
-    nif.block_of_mut::<nifly::objects::NiObjectNet>(shape).unwrap().set_name(&name);
+    nif.block_of_mut::<nifly::objects::NiObjectNet>(shape)
+        .unwrap()
+        .set_name(&name);
 }
 
 #[test]

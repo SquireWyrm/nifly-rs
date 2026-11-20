@@ -59,7 +59,7 @@ use nifly_sys::{
 };
 
 use crate::{
-    file::{block_index_to_ffi, index_from_ffi, optional_index_to_ffi, Index, NifFile},
+    file::{Index, NifFile, block_index_to_ffi, index_from_ffi, optional_index_to_ffi},
     handle::{Edit, View},
     iter::{BlockIter, RefIndices},
     object3d::{BoundingSphere, Matrix3, Transform, Vec3},
@@ -202,7 +202,8 @@ impl NifFile {
     /// Returns the root node: block 0 if it's a node, otherwise the first node block.
     /// Returns `None` if the file has no node blocks.
     pub fn root_node(&self) -> Option<View<'_, NiNode>> {
-        self.view::<NiNode>(0).or_else(|| self.nodes().views().next())
+        self.view::<NiNode>(0)
+            .or_else(|| self.nodes().views().next())
     }
 
     /// Like [`root_node`](Self::root_node), for editing.
@@ -224,7 +225,11 @@ impl NifFile {
     /// a game, the copy is saved in this file's version, so fields it doesn't store are dropped,
     /// and unknown blocks are copied as they are.
     pub fn clone_node_from(&mut self, node: View<'_, NiNode>) -> Option<Index> {
-        index_from_ffi(nif_ffi::clone_node_from(self.inner.pin_mut(), &node.file().inner, node.get().as_ffi()))
+        index_from_ffi(nif_ffi::clone_node_from(
+            self.inner.pin_mut(),
+            &node.file().inner,
+            node.get().as_ffi(),
+        ))
     }
 
     /// Adds a new `NiNode` named `name` with the given transform to its parent, as the last child
@@ -259,7 +264,12 @@ impl NifFile {
             },
         };
 
-        match nif_ffi::add_node(self.inner.pin_mut(), name.as_ref(), transform.to_ffi(), parent_index) {
+        match nif_ffi::add_node(
+            self.inner.pin_mut(),
+            name.as_ref(),
+            transform.to_ffi(),
+            parent_index,
+        ) {
             u32::MAX => None,
             index => Some(index as Index),
         }
@@ -284,7 +294,12 @@ impl NifFile {
             None => u32::MAX,
             Some(index) => block_index_to_ffi(index)?,
         };
-        index_from_ffi(T::add(self.inner.pin_mut(), name.as_ref(), transform.to_ffi(), parent_index))
+        index_from_ffi(T::add(
+            self.inner.pin_mut(),
+            name.as_ref(),
+            transform.to_ffi(),
+            parent_index,
+        ))
     }
 
     /// Like [`add_node`](Self::add_node), but adds an [`NiCamera`]. It has a perspective frustum
@@ -296,12 +311,22 @@ impl NifFile {
     /// let camera = nif.add_camera("Camera", Transform::default(), None).unwrap();
     /// nif.block_of_mut::<NiCamera>(camera).unwrap().set_orthographic(true);
     /// ```
-    pub fn add_camera(&mut self, name: impl AsRef<[u8]>, transform: Transform, parent: Option<Index>) -> Option<Index> {
+    pub fn add_camera(
+        &mut self,
+        name: impl AsRef<[u8]>,
+        transform: Transform,
+        parent: Option<Index>,
+    ) -> Option<Index> {
         let parent_index = match parent {
             None => u32::MAX,
             Some(index) => block_index_to_ffi(index)?,
         };
-        index_from_ffi(ffi::add_camera(self.inner.pin_mut(), name.as_ref(), transform.to_ffi(), parent_index))
+        index_from_ffi(ffi::add_camera(
+            self.inner.pin_mut(),
+            name.as_ref(),
+            transform.to_ffi(),
+            parent_index,
+        ))
     }
 
     /// Deletes the first node (in block order) named `name`. Returns whether a node had that
@@ -396,7 +421,10 @@ impl<'a, T: NiType> View<'a, T> {
         T: IsA<NiNode, I>,
     {
         let node: &NiNode = self.get().upcast_ref();
-        BlockIter::new(self.file(), RefIndices::new(ffi::child_ref_indices(node.as_ffi())))
+        BlockIter::new(
+            self.file(),
+            RefIndices::new(ffi::child_ref_indices(node.as_ffi())),
+        )
     }
 
     /// The node's direct children that are a `U` or a subclass of `U`.
@@ -422,7 +450,10 @@ impl<'a, T: NiType> View<'a, T> {
         T: IsA<NiAvObject, I>,
     {
         let index = self.index() as u32;
-        self.resolve(index_from_ffi(nif_ffi::parent_node_index(&self.file().inner, index)))
+        self.resolve(index_from_ffi(nif_ffi::parent_node_index(
+            &self.file().inner,
+            index,
+        )))
     }
 }
 
@@ -496,7 +527,8 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiNode, I>,
     {
         let node = self.index() as u32;
-        index_from_ffi(nif_ffi::clone_node(self.file_mut().inner.pin_mut(), node)).expect("the block is a node")
+        index_from_ffi(nif_ffi::clone_node(self.file_mut().inner.pin_mut(), node))
+            .expect("the block is a node")
     }
 
     /// Adds a new `NiNode` named `name` with the given transform to its parent as the node's
@@ -520,13 +552,22 @@ impl<T: NiType> Edit<'_, T> {
 
     /// Like [`add_child`](Self::add_child), but adds an `N` with default settings. Doesn't check
     /// that the file's game uses `N`.
-    pub fn add_child_of<N: NewNode, I>(&mut self, name: impl AsRef<[u8]>, transform: Transform) -> Index
+    pub fn add_child_of<N: NewNode, I>(
+        &mut self,
+        name: impl AsRef<[u8]>,
+        transform: Transform,
+    ) -> Index
     where
         T: IsA<NiNode, I>,
     {
         let parent = self.index() as u32;
-        index_from_ffi(N::add(self.file_mut().inner.pin_mut(), name.as_ref(), transform.to_ffi(), parent))
-            .expect("the block is a node")
+        index_from_ffi(N::add(
+            self.file_mut().inner.pin_mut(),
+            name.as_ref(),
+            transform.to_ffi(),
+            parent,
+        ))
+        .expect("the block is a node")
     }
 }
 

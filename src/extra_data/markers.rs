@@ -5,7 +5,8 @@ use super::*;
 impl SkinAttach {
     /// The bone names, as stored.
     pub fn bones(&self) -> impl ExactSizeIterator<Item = &BStr> {
-        (0..ffi::skin_attach_bone_count(&self.0)).map(|i| ffi::skin_attach_bone(&self.0, i).as_bstr())
+        (0..ffi::skin_attach_bone_count(&self.0))
+            .map(|i| ffi::skin_attach_bone(&self.0, i).as_bstr())
     }
 
     pub fn set_bones<S: AsRef<[u8]>>(&mut self, bones: impl IntoIterator<Item = S>) {
@@ -16,7 +17,10 @@ impl SkinAttach {
 
 impl BsFurnitureMarker {
     pub fn positions(&self) -> Vec<FurniturePosition> {
-        ffi::furniture_positions(&self.0).into_iter().map(FurniturePosition::from_ffi).collect()
+        ffi::furniture_positions(&self.0)
+            .into_iter()
+            .map(FurniturePosition::from_ffi)
+            .collect()
     }
 
     /// Replaces the [positions](Self::positions). Which fields are saved depends on the file
@@ -56,7 +60,8 @@ impl BsConnectPointChildren {
 
     /// The names of the parent's connect points this model attaches to.
     pub fn targets(&self) -> impl ExactSizeIterator<Item = &BStr> {
-        (0..ffi::connect_point_children_len(&self.0)).map(|i| ffi::connect_point_child(&self.0, i).as_bstr())
+        (0..ffi::connect_point_children_len(&self.0))
+            .map(|i| ffi::connect_point_child(&self.0, i).as_bstr())
     }
 
     pub fn set_skinned(&mut self, skinned: bool) {
@@ -81,12 +86,20 @@ impl BsInvMarker {
     }
 
     pub fn set_rotation(&mut self, [rotation_x, rotation_y, rotation_z]: [u16; 3]) {
-        let marker = types_ffi::InvMarkerFfi { rotation_x, rotation_y, rotation_z, ..ffi::inv_marker(&self.0) };
+        let marker = types_ffi::InvMarkerFfi {
+            rotation_x,
+            rotation_y,
+            rotation_z,
+            ..ffi::inv_marker(&self.0)
+        };
         ffi::set_inv_marker(self.ffi_mut(), marker);
     }
 
     pub fn set_zoom(&mut self, zoom: f32) {
-        let marker = types_ffi::InvMarkerFfi { zoom, ..ffi::inv_marker(&self.0) };
+        let marker = types_ffi::InvMarkerFfi {
+            zoom,
+            ..ffi::inv_marker(&self.0)
+        };
         ffi::set_inv_marker(self.ffi_mut(), marker);
     }
 }
@@ -207,7 +220,10 @@ impl BsDecalPlacementVectorExtraData {
                 points
                     .into_iter()
                     .zip(normals)
-                    .map(|(p, n)| DecalPoint { position: Vec3::from_ffi(p), normal: Vec3::from_ffi(n) })
+                    .map(|(p, n)| DecalPoint {
+                        position: Vec3::from_ffi(p),
+                        normal: Vec3::from_ffi(n),
+                    })
                     .collect()
             })
             .collect()
@@ -216,7 +232,10 @@ impl BsDecalPlacementVectorExtraData {
     /// Replaces the [blocks](Self::blocks). Its float value is set with
     /// [`NiFloatExtraData::set_value`]. Returns `false`, changing nothing, for more than 65535
     /// blocks or points in a block, as the counts are stored in 16 bits.
-    pub fn set_blocks<B: AsRef<[DecalPoint]>>(&mut self, blocks: impl IntoIterator<Item = B>) -> bool {
+    pub fn set_blocks<B: AsRef<[DecalPoint]>>(
+        &mut self,
+        blocks: impl IntoIterator<Item = B>,
+    ) -> bool {
         let (lengths, points, normals) = decal_ffi(blocks);
         ffi::set_decal_blocks(self.ffi_mut(), &lengths, &points, &normals)
     }
@@ -225,7 +244,10 @@ impl BsDecalPlacementVectorExtraData {
 impl NiTextKeyExtraData {
     pub fn text_keys(&self) -> Vec<TextKey> {
         (0..ffi::text_key_count(&self.0))
-            .map(|i| TextKey { time: ffi::text_key_time(&self.0, i), text: ffi::text_key_text(&self.0, i).into() })
+            .map(|i| TextKey {
+                time: ffi::text_key_time(&self.0, i),
+                text: ffi::text_key_text(&self.0, i).into(),
+            })
             .collect()
     }
 
@@ -246,7 +268,10 @@ pub struct TextKey {
 impl BsBoneLodExtraData {
     pub fn bone_lods(&self) -> Vec<BoneLod> {
         (0..ffi::bone_lod_count(&self.0))
-            .map(|i| BoneLod { distance: ffi::bone_lod_distance(&self.0, i), bone: ffi::bone_lod_bone(&self.0, i).into() })
+            .map(|i| BoneLod {
+                distance: ffi::bone_lod_distance(&self.0, i),
+                bone: ffi::bone_lod_bone(&self.0, i).into(),
+            })
             .collect()
     }
 

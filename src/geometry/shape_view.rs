@@ -27,7 +27,6 @@ impl<'a> View<'a, NiShape> {
         unsafe { ptr.as_ref() }.map(NiGeometryData::from_ffi)
     }
 
-
     /// Check if the shape is compatible with Skyrim SE: it isn't an `NiTriStrips`, and its skin
     /// partition (if any) has no triangle strips.
     pub fn is_sse_compatible(&self) -> bool {
@@ -85,7 +84,8 @@ impl<'a> View<'a, NiShape> {
     /// [`vertices`](Self::vertices).
     pub fn bitangents(&self) -> Option<Vec<Vec3>> {
         let (file, shape) = (self.file(), self.get());
-        file.vertex_array(shape, nif_ffi::shape_bitangents).map(vec3s)
+        file.vertex_array(shape, nif_ffi::shape_bitangents)
+            .map(vec3s)
     }
 
     /// The eye data of a [`BsTriShape`], one value per vertex, or `None` if it isn't one or
@@ -107,7 +107,10 @@ impl<'a> View<'a, NiShape> {
         let vertices = self.vertices()?;
         (vertices.len() == target.len()).then(|| {
             let diffs = vertices.iter().zip(target).map(|(&v, &t)| t - v);
-            diffs.enumerate().filter(|(_, d)| !nearly_zero(&[d.x, d.y, d.z])).collect()
+            diffs
+                .enumerate()
+                .filter(|(_, d)| !nearly_zero(&[d.x, d.y, d.z]))
+                .collect()
         })
     }
 
@@ -117,7 +120,10 @@ impl<'a> View<'a, NiShape> {
     pub fn uv_diff(&self, target: &[[f32; 2]]) -> Option<Vec<(usize, [f32; 2])>> {
         let uvs = self.uvs()?;
         (uvs.len() == target.len()).then(|| {
-            let diffs = uvs.iter().zip(target).map(|(uv, t)| [t[0] - uv[0], t[1] - uv[1]]);
+            let diffs = uvs
+                .iter()
+                .zip(target)
+                .map(|(uv, t)| [t[0] - uv[0], t[1] - uv[1]]);
             diffs.enumerate().filter(|(_, d)| !nearly_zero(d)).collect()
         })
     }
@@ -157,8 +163,16 @@ impl<'a> View<'a, NiShape> {
     /// [`BsSubIndexTriShape::sse_segments`]; there this finds none.
     pub fn segments(&self) -> Option<ShapeSegments> {
         let shape = self.get();
-        let (mut ssf, mut segs, mut subs, mut extra, mut parts) = (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
-        if !nif_ffi::shape_segments(shape.as_ffi(), &mut ssf, &mut segs, &mut subs, &mut extra, &mut parts) {
+        let (mut ssf, mut segs, mut subs, mut extra, mut parts) =
+            (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+        if !nif_ffi::shape_segments(
+            shape.as_ffi(),
+            &mut ssf,
+            &mut segs,
+            &mut subs,
+            &mut extra,
+            &mut parts,
+        ) {
             return None;
         }
 
@@ -167,11 +181,21 @@ impl<'a> View<'a, NiShape> {
         let mut segments = Vec::with_capacity(segs.len());
         let (mut subs, mut extra) = (subs.into_iter(), extra.into_iter());
         for (segment, seg) in segs.iter().enumerate() {
-            by_part.push(SegmentIndex { segment, subsegment: None });
+            by_part.push(SegmentIndex {
+                segment,
+                subsegment: None,
+            });
             let subsegments = (0..seg.subsegments as usize)
                 .map(|subsegment| {
-                    by_part.push(SegmentIndex { segment, subsegment: Some(subsegment) });
-                    let sub = subs.next().unwrap_or(nif_ffi::SubsegmentFfi { user_slot: 0, material: 0, extra_len: 0 });
+                    by_part.push(SegmentIndex {
+                        segment,
+                        subsegment: Some(subsegment),
+                    });
+                    let sub = subs.next().unwrap_or(nif_ffi::SubsegmentFfi {
+                        user_slot: 0,
+                        material: 0,
+                        extra_len: 0,
+                    });
                     Subsegment {
                         user_slot: (sub.user_slot >= 30).then_some(sub.user_slot),
                         material: sub.material,
@@ -181,7 +205,18 @@ impl<'a> View<'a, NiShape> {
                 .collect();
             segments.push(Segment { subsegments });
         }
-        let triangles = parts.iter().map(|&p| usize::try_from(p).ok().and_then(|p| by_part.get(p).copied())).collect();
-        Some(ShapeSegments { ssf_file: BString::from(ssf), segments, triangles })
+        let triangles = parts
+            .iter()
+            .map(|&p| {
+                usize::try_from(p)
+                    .ok()
+                    .and_then(|p| by_part.get(p).copied())
+            })
+            .collect();
+        Some(ShapeSegments {
+            ssf_file: BString::from(ssf),
+            segments,
+            triangles,
+        })
     }
 }

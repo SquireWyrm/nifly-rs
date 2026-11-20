@@ -23,7 +23,7 @@ pub enum Error {
     /// Reading or writing failed on malformed or out-of-range data, such as a list longer than
     /// the data holds or a mesh too large to write.
     #[error("encountered c++ exception: {0}")]
-    Exception(#[from] cxx::Exception)
+    Exception(#[from] cxx::Exception),
 }
 
 /// Why data couldn't be loaded.

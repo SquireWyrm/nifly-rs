@@ -20,7 +20,11 @@ fn shader(nif: &NifFile) -> &BsLightingShaderProperty {
 }
 
 fn shader_mut(nif: &mut NifFile) -> &mut BsLightingShaderProperty {
-    let index = nif.blocks_of::<BsLightingShaderProperty>().indices().next().unwrap();
+    let index = nif
+        .blocks_of::<BsLightingShaderProperty>()
+        .indices()
+        .next()
+        .unwrap();
     nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap()
 }
 
@@ -28,7 +32,8 @@ fn shader_mut(nif: &mut NifFile) -> &mut BsLightingShaderProperty {
 fn fallout_76() -> NifFile {
     let mut nif = NifFile::create(NifVersion::FALLOUT_76);
     let vertices = [Vec3::ZERO, Vec3::X, Vec3::Y];
-    nif.create_shape("Tri", &vertices, &[[0, 1, 2]], None, None).unwrap();
+    nif.create_shape("Tri", &vertices, &[[0, 1, 2]], None, None)
+        .unwrap();
     assert_eq!(shader(&nif).name(), "");
     nif
 }
@@ -106,15 +111,25 @@ fn type_fields_round_trip() {
     shader_mut(&mut nif).set_shader_type(LightingShaderType::EnvironmentMap);
     shader_mut(&mut nif).set_environment_map_scale(2.5);
     assert_eq!(shader(&reload(&mut nif)).environment_map_scale(), 2.5);
-    let nif = set(LightingShaderType::SkinTint, &|s| s.set_skin_tint_color([0.5, 0.25, 0.125]));
+    let nif = set(LightingShaderType::SkinTint, &|s| {
+        s.set_skin_tint_color([0.5, 0.25, 0.125])
+    });
     assert_eq!(shader(&nif).skin_tint_color(), [0.5, 0.25, 0.125]);
-    let nif = set(LightingShaderType::HairTint, &|s| s.set_hair_tint_color([0.1, 0.2, 0.3]));
+    let nif = set(LightingShaderType::HairTint, &|s| {
+        s.set_hair_tint_color([0.1, 0.2, 0.3])
+    });
     assert_eq!(shader(&nif).hair_tint_color(), [0.1, 0.2, 0.3]);
     let nif = set(LightingShaderType::ParallaxOcclusion, &|s| {
         s.set_parallax_max_passes(8.0);
         s.set_parallax_scale(0.25);
     });
-    assert_eq!((shader(&nif).parallax_max_passes(), shader(&nif).parallax_scale()), (8.0, 0.25));
+    assert_eq!(
+        (
+            shader(&nif).parallax_max_passes(),
+            shader(&nif).parallax_scale()
+        ),
+        (8.0, 0.25)
+    );
     let nif = set(LightingShaderType::MultiLayerParallax, &|s| {
         s.set_parallax_inner_layer_thickness(0.5);
         s.set_parallax_refraction_scale(0.75);
@@ -126,7 +141,9 @@ fn type_fields_round_trip() {
     assert_eq!(s.parallax_refraction_scale(), 0.75);
     assert_eq!(s.parallax_inner_layer_texture_scale(), [2.0, 4.0]);
     assert_eq!(s.parallax_envmap_strength(), 0.125);
-    let nif = set(LightingShaderType::MultiIndexSnow, &|s| s.set_sparkle_parameters([1.0, 2.0, 3.0, 4.0]));
+    let nif = set(LightingShaderType::MultiIndexSnow, &|s| {
+        s.set_sparkle_parameters([1.0, 2.0, 3.0, 4.0])
+    });
     assert_eq!(shader(&nif).sparkle_parameters(), [1.0, 2.0, 3.0, 4.0]);
     let nif = set(LightingShaderType::Eye, &|s| {
         s.set_eye_cubemap_scale(1.5);
@@ -139,7 +156,9 @@ fn type_fields_round_trip() {
     assert_eq!(s.eye_right_reflection_center(), Vec3::new(1.0, 2.0, 3.0));
 
     // Another type's fields aren't saved.
-    let nif = set(LightingShaderType::Default, &|s| s.set_skin_tint_color([0.0; 3]));
+    let nif = set(LightingShaderType::Default, &|s| {
+        s.set_skin_tint_color([0.0; 3])
+    });
     assert_eq!(shader(&nif).skin_tint_color(), [1.0; 3]);
 }
 
@@ -183,7 +202,13 @@ fn fallout_4_fields_round_trip() {
     // Back lighting is only saved while rim lighting is f32::MAX.
     shader_mut(&mut saved).set_rimlight_power_2(3.0);
     let saved = reload(&mut saved);
-    assert_eq!((shader(&saved).rimlight_power_2(), shader(&saved).backlight_power()), (3.0, 0.0));
+    assert_eq!(
+        (
+            shader(&saved).rimlight_power_2(),
+            shader(&saved).backlight_power()
+        ),
+        (3.0, 0.0)
+    );
 
     // Skin tint alpha, from Fallout 4 on.
     let mut nif = load(&format!("{UPSTREAM}/TestNifFile_Static_FO4.nif"));
@@ -234,14 +259,20 @@ fn shader_types_by_version() {
     // Every type saves in Skyrim.
     let mut nif = load("assets/Cube.nif");
     shader_mut(&mut nif).set_shader_type(LightingShaderType::Parallax);
-    assert_eq!(shader(&reload(&mut nif)).shader_type(), Some(LightingShaderType::Parallax));
+    assert_eq!(
+        shader(&reload(&mut nif)).shader_type(),
+        Some(LightingShaderType::Parallax)
+    );
 
     // Fallout 76 saves the types before Parallax.
     let mut nif = fallout_76();
     shader_mut(&mut nif).set_shader_type(LightingShaderType::EnvironmentMap);
     shader_mut(&mut nif).set_environment_map_scale(2.0);
     let saved = reload(&mut nif);
-    assert_eq!(shader(&saved).shader_type(), Some(LightingShaderType::EnvironmentMap));
+    assert_eq!(
+        shader(&saved).shader_type(),
+        Some(LightingShaderType::EnvironmentMap)
+    );
     assert_eq!(shader(&saved).environment_map_scale(), 2.0);
 
     // Later ones are saved as the next type, with the previous type's fields. The file being
@@ -252,7 +283,11 @@ fn shader_types_by_version() {
         (LightingShaderType::Eye, LightingShaderType::Cloud),
     ] {
         shader_mut(&mut nif).set_shader_type(set);
-        assert_eq!(shader(&reload(&mut nif)).shader_type(), Some(stored), "{set:?}");
+        assert_eq!(
+            shader(&reload(&mut nif)).shader_type(),
+            Some(stored),
+            "{set:?}"
+        );
         assert_eq!(shader(&nif).shader_type(), Some(set));
     }
     // HairTint writes SkinTint's fields where ParallaxOcclusion's are read.
@@ -260,12 +295,18 @@ fn shader_types_by_version() {
     let mut out = Cursor::new(Vec::new());
     nif.save(&mut out, None).unwrap();
     assert!(NifFile::load(out.into_inner().as_slice(), None).is_err());
-    assert_eq!(shader(&nif).shader_type(), Some(LightingShaderType::HairTint));
+    assert_eq!(
+        shader(&nif).shader_type(),
+        Some(LightingShaderType::HairTint)
+    );
 
     // A named shader saves none of its fields, so it isn't affected.
     let mut nif = load(&format!("{UPSTREAM}/TestNifFile_FO76.nif"));
     shader_mut(&mut nif).set_shader_type(LightingShaderType::Eye);
-    assert_eq!(shader(&reload(&mut nif)).shader_type(), Some(LightingShaderType::Default));
+    assert_eq!(
+        shader(&reload(&mut nif)).shader_type(),
+        Some(LightingShaderType::Default)
+    );
 }
 
 #[test]
@@ -279,12 +320,18 @@ fn fallout_76_reads_face_tint() {
         nif.save(&mut out, None).unwrap();
         out.into_inner()
     };
-    let (a, mut b) = (bytes(LightingShaderType::Default), bytes(LightingShaderType::GlowMap));
+    let (a, mut b) = (
+        bytes(LightingShaderType::Default),
+        bytes(LightingShaderType::GlowMap),
+    );
     let diff: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).collect();
     assert_eq!((a.len(), diff.len()), (b.len(), 1));
     b[diff[0]] = 3;
     let nif = NifFile::load(b.as_slice(), None).unwrap();
-    assert_eq!(shader(&nif).shader_type(), Some(LightingShaderType::FaceTint));
+    assert_eq!(
+        shader(&nif).shader_type(),
+        Some(LightingShaderType::FaceTint)
+    );
 }
 
 #[test]

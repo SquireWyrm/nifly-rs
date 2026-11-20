@@ -87,13 +87,21 @@ impl NiGeometryData {
 
     /// The vertex colors as RGBA, or none.
     pub fn vertex_colors(&self) -> Vec<[f32; 4]> {
-        ffi::geometry_data_colors(&self.0).as_chunks::<4>().0.to_vec()
+        ffi::geometry_data_colors(&self.0)
+            .as_chunks::<4>()
+            .0
+            .to_vec()
     }
 
     /// The texture coordinate sets.
     pub fn uv_sets(&self) -> Vec<Vec<[f32; 2]>> {
         (0..ffi::geometry_data_uv_set_count(&self.0))
-            .map(|i| ffi::geometry_data_uv_set(&self.0, i).as_chunks::<2>().0.to_vec())
+            .map(|i| {
+                ffi::geometry_data_uv_set(&self.0, i)
+                    .as_chunks::<2>()
+                    .0
+                    .to_vec()
+            })
             .collect()
     }
 
@@ -211,7 +219,9 @@ impl NiTriShapeData {
 impl NiTriStripsData {
     /// The triangle strips, as vertex indices.
     pub fn strips(&self) -> Vec<Vec<u16>> {
-        (0..ffi::tri_strips_data_strip_count(&self.0)).map(|i| ffi::tri_strips_data_strip(&self.0, i).to_vec()).collect()
+        (0..ffi::tri_strips_data_strip_count(&self.0))
+            .map(|i| ffi::tri_strips_data_strip(&self.0, i).to_vec())
+            .collect()
     }
 
     /// Replaces the strips, updating the triangle count. Returns `false`, changing nothing, if
@@ -230,7 +240,12 @@ impl NiGeometry {
     pub fn materials(&self) -> Vec<(&BStr, u32)> {
         let extra = ffi::geometry_material_extra_data(&self.0);
         (0..ffi::geometry_material_count(&self.0))
-            .map(|i| (ffi::geometry_material_name(&self.0, i).as_bstr(), extra.get(i).copied().unwrap_or(0)))
+            .map(|i| {
+                (
+                    ffi::geometry_material_name(&self.0, i).as_bstr(),
+                    extra.get(i).copied().unwrap_or(0),
+                )
+            })
             .collect()
     }
 

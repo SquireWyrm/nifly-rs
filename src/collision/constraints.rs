@@ -127,7 +127,10 @@ impl<'a, T: NiType> View<'a, T> {
     where
         T: WrapsConstraint,
     {
-        [self.follow(RefKind::WrappedEntityA), self.follow(RefKind::WrappedEntityB)]
+        [
+            self.follow(RefKind::WrappedEntityA),
+            self.follow(RefKind::WrappedEntityB),
+        ]
     }
 
     /// The rigid bodies along the chain. Skips empty refs.
@@ -143,7 +146,9 @@ impl<T: NiType> Edit<'_, T> {
     /// Whether each of `entities` is empty or a [`BhkEntity`] in this file.
     fn entities_ok(&self, entities: [Option<Index>; 2]) -> bool {
         let file = self.view().file();
-        entities.iter().all(|e| e.is_none_or(|e| file.block_of::<BhkEntity>(e).is_some()))
+        entities
+            .iter()
+            .all(|e| e.is_none_or(|e| file.block_of::<BhkEntity>(e).is_some()))
     }
 
     /// Sets the two entities the constraint connects, `None` emptying a slot. Returns `false`,
@@ -185,7 +190,8 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<BhkRigidBody, I>,
     {
         let body = self.index() as u32;
-        index_from_ffi(C::add(self.file_mut().inner.pin_mut(), body)).expect("the block is a rigid body")
+        index_from_ffi(C::add(self.file_mut().inner.pin_mut(), body))
+            .expect("the block is a rigid body")
     }
 }
 

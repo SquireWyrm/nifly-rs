@@ -49,7 +49,7 @@
 
 use std::pin::Pin;
 
-use bitflags::{bitflags, Flags};
+use bitflags::{Flags, bitflags};
 use bstr::{BStr, BString, ByteSlice};
 use int_enum::IntEnum;
 use nifly_sys::{
@@ -59,10 +59,10 @@ use nifly_sys::{
 };
 
 use crate::{
-    file::{block_index_to_ffi, index_from_ffi, Index, NifFile},
+    file::{Index, NifFile, block_index_to_ffi, index_from_ffi},
+    geometry::{NiShape, TextureSource},
     handle::{Edit, View},
     iter::{BlockIter, RefIndices},
-    geometry::{NiShape, TextureSource},
     object3d::Vec3,
     objects::{IsA, NiAvObject, NiObject, NiObjectNet, NiType, Sealed},
 };
@@ -354,7 +354,6 @@ impl BsShaderProperty {
 ///
 /// A shape's shader, material, texture set and texture paths.
 impl NifFile {
-
     /// Normalizes every texture path in the file's texture sets, effect shaders and texturing
     /// properties. Loading already does this. Each path is:
     ///
@@ -371,8 +370,11 @@ impl NifFile {
     /// returns its index. Attach it with [`Edit::set_map_source`] or
     /// [`Edit::set_source_texture`]; saving drops it if nothing refers to it.
     pub fn add_source_texture(&mut self, path: impl AsRef<[u8]>) -> Index {
-        index_from_ffi(nif_ffi::add_source_texture(self.inner.pin_mut(), path.as_ref()))
-            .expect("a new block has an index")
+        index_from_ffi(nif_ffi::add_source_texture(
+            self.inner.pin_mut(),
+            path.as_ref(),
+        ))
+        .expect("a new block has an index")
     }
 }
 
@@ -412,20 +414,20 @@ macro_rules! texture_paths {
     )*};
 }
 
+mod effect;
 mod flags;
 mod handles;
-mod material;
-mod texturing;
-mod lighting;
-mod effect;
-mod textures;
-mod properties;
 mod legacy;
+mod lighting;
+mod material;
+mod properties;
+mod textures;
+mod texturing;
 
 pub use self::flags::*;
-pub use self::material::*;
-pub use self::texturing::*;
-pub use self::lighting::*;
-pub use self::textures::*;
-pub use self::properties::*;
 pub use self::legacy::*;
+pub use self::lighting::*;
+pub use self::material::*;
+pub use self::properties::*;
+pub use self::textures::*;
+pub use self::texturing::*;

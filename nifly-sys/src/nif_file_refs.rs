@@ -268,6 +268,11 @@ pub mod ffi {
         fn block_ref_list(file: &NifFile, owner: u32, list: RefList) -> Vec<u32>;
         /// Replaces the `list` refs of the block at `owner`. Returns false, changing nothing, if a
         /// target has the wrong type, a child would make a cycle, or the chain repeats a block.
-        fn set_block_ref_list(file: Pin<&mut NifFile>, owner: u32, list: RefList, targets: &[u32]) -> bool;
+        fn set_block_ref_list(
+            file: Pin<&mut NifFile>,
+            owner: u32,
+            list: RefList,
+            targets: &[u32],
+        ) -> bool;
     }
 }

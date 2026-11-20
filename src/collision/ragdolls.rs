@@ -13,7 +13,11 @@ pub struct BoneTransform {
 
 impl Default for BoneTransform {
     fn default() -> Self {
-        Self { translation: Vec3::ZERO, rotation: [0.0, 0.0, 0.0, 1.0], scale: Vec3::new(1.0, 1.0, 1.0) }
+        Self {
+            translation: Vec3::ZERO,
+            rotation: [0.0, 0.0, 0.0, 1.0],
+            scale: Vec3::new(1.0, 1.0, 1.0),
+        }
     }
 }
 
@@ -55,7 +59,10 @@ impl BhkPoseArray {
                 scale: t.scale.to_ffi(),
             })
             .collect();
-        assert!(ffi::set_pose_array_poses(self.ffi_mut(), &transforms, &lengths), "lengths add up");
+        assert!(
+            ffi::set_pose_array_poses(self.ffi_mut(), &transforms, &lengths),
+            "lengths add up"
+        );
     }
 }
 
@@ -125,7 +132,10 @@ impl BhkRagdollTemplateData {
                 entity_b: u32::MAX,
             })
             .collect();
-        assert!(ffi::set_template_data_constraints(self.ffi_mut(), &constraints), "known types");
+        assert!(
+            ffi::set_template_data_constraints(self.ffi_mut(), &constraints),
+            "known types"
+        );
     }
 }
 

@@ -1,6 +1,6 @@
 //! Tests for NifFile::pretty_sort_blocks, NifFile::sort_blocks and BlockSorter.
 
-use crate::common::{load};
+use crate::common::load;
 use std::io::Cursor;
 
 use nifly::file::{NifFile, SaveOptions};
@@ -8,7 +8,10 @@ use nifly::file::{NifFile, SaveOptions};
 /// The file as it is in memory: no optimizing or sorting on save.
 fn raw(nif: &mut NifFile) -> Vec<u8> {
     let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions { optimize: false, sort_blocks: false };
+    let options = SaveOptions {
+        optimize: false,
+        sort_blocks: false,
+    };
     nif.save(&mut cur, Some(options)).unwrap();
     cur.into_inner()
 }
@@ -21,11 +24,21 @@ fn types(nif: &NifFile) -> Vec<&str> {
 fn pretty_sort_matches_save() {
     let mut a = load("Cone");
     a.pretty_sort_blocks();
-    assert_eq!(types(&a), ["NiNode", "BSTriShape", "NiNode", "BSLightingShaderProperty"]);
+    assert_eq!(
+        types(&a),
+        ["NiNode", "BSTriShape", "NiNode", "BSLightingShaderProperty"]
+    );
 
     let mut b = load("Cone");
     let mut cur = Cursor::new(Vec::new());
-    b.save(&mut cur, Some(SaveOptions { optimize: false, sort_blocks: true })).unwrap();
+    b.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize: false,
+            sort_blocks: true,
+        }),
+    )
+    .unwrap();
     assert_eq!(raw(&mut a), cur.into_inner());
 }
 
@@ -77,7 +90,9 @@ fn visit_order_decides_block_order() {
         ]
     );
     // Refs were remapped: the shape is still the root's child and keeps its shader.
-    let root = nif.find_block_by_name::<nifly::nodes::NiNode>("Suzanne").unwrap();
+    let root = nif
+        .find_block_by_name::<nifly::nodes::NiNode>("Suzanne")
+        .unwrap();
     let child = nif.view_of(root).unwrap().children().next().unwrap();
     assert_eq!(child.name(), "Suzanne:6");
     assert_eq!(nif.block_index(child), Some(0));
@@ -90,7 +105,10 @@ fn unvisited_blocks_keep_their_order_after_visited_ones() {
     let mut sorter = nif.sort_blocks().unwrap();
     assert!(sorter.visit(3));
     sorter.apply();
-    assert_eq!(types(&nif), ["BSTriShape", "NiNode", "NiNode", "BSLightingShaderProperty"]);
+    assert_eq!(
+        types(&nif),
+        ["BSTriShape", "NiNode", "NiNode", "BSLightingShaderProperty"]
+    );
     // The real root is now block 1, but it's still the shape's parent.
     let shape = nif.shapes().next().unwrap();
     let parent = nif.view_of(shape).and_then(|v| v.parent()).unwrap();
@@ -137,9 +155,19 @@ fn sorted_file_round_trips() {
     sorter.apply();
 
     let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, Some(SaveOptions { optimize: false, sort_blocks: false })).unwrap();
+    nif.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize: false,
+            sort_blocks: false,
+        }),
+    )
+    .unwrap();
     let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
     assert_eq!(saved.blocks().next().unwrap().block_name(), "NiTriShape");
     let shape = saved.shapes().next().unwrap();
-    assert_eq!(saved.view_of(shape).unwrap().bone_list(), ["Bone1", "Bone2", "Bone3"]);
+    assert_eq!(
+        saved.view_of(shape).unwrap().bone_list(),
+        ["Bone1", "Bone2", "Bone3"]
+    );
 }

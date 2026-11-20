@@ -15,10 +15,7 @@
 
 use std::{fs::File, ptr};
 
-use nifly::{
-    file::NifFile,
-    objects::NiObject,
-};
+use nifly::{file::NifFile, objects::NiObject};
 
 const BLOCK_NAMES: [&str; 10] = [
     "BSFadeNode",
@@ -53,7 +50,18 @@ fn indices<'a>(nif: &NifFile, objs: impl Iterator<Item = &'a NiObject>) -> Vec<u
 #[test]
 fn child_blocks_of_every_block() {
     let nif = suzanne();
-    let expected: [&[usize]; 10] = [&[1, 6, 7], &[], &[], &[2], &[3], &[4], &[5], &[8], &[9], &[]];
+    let expected: [&[usize]; 10] = [
+        &[1, 6, 7],
+        &[],
+        &[],
+        &[2],
+        &[3],
+        &[4],
+        &[5],
+        &[8],
+        &[9],
+        &[],
+    ];
 
     for (i, refs) in expected.iter().enumerate() {
         let actual = indices(&nif, nif.child_blocks(block(&nif, i)));
@@ -82,14 +90,27 @@ fn parent_node_only_follows_child_refs() {
     let root = nif.root_node().unwrap();
 
     let shape = block(&nif, 7);
-    let shape = nif.view_of(shape).and_then(|v| v.cast::<nifly::objects::NiAvObject>()).unwrap();
+    let shape = nif
+        .view_of(shape)
+        .and_then(|v| v.cast::<nifly::objects::NiAvObject>())
+        .unwrap();
     assert_eq!(shape.parent().unwrap().index(), root.index());
     assert!(root.parent().is_none());
 
     // Extra data and collision are referenced by the root, but not as children,
     // so nifly's GetParentNode doesn't find a parent for them.
-    assert!(nif.view_of(block(&nif, 1)).and_then(|v| v.cast::<nifly::objects::NiAvObject>()).and_then(|v| v.parent()).is_none());
-    assert!(nif.view_of(block(&nif, 6)).and_then(|v| v.cast::<nifly::objects::NiAvObject>()).and_then(|v| v.parent()).is_none());
+    assert!(
+        nif.view_of(block(&nif, 1))
+            .and_then(|v| v.cast::<nifly::objects::NiAvObject>())
+            .and_then(|v| v.parent())
+            .is_none()
+    );
+    assert!(
+        nif.view_of(block(&nif, 6))
+            .and_then(|v| v.cast::<nifly::objects::NiAvObject>())
+            .and_then(|v| v.parent())
+            .is_none()
+    );
 }
 
 #[test]

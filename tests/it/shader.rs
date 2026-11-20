@@ -1,16 +1,22 @@
 //! Tests for NifFile::shader and the shader types.
 
-use crate::common::{load};
+use crate::common::load;
 
 use nifly::{
     file::{NifFile, NifVersion},
-    shaders::{BsEffectShaderProperty, BsLightingShaderProperty, BsShaderProperty, NiMaterialProperty, NiProperty, NiShader},
+    shaders::{
+        BsEffectShaderProperty, BsLightingShaderProperty, BsShaderProperty, NiMaterialProperty,
+        NiProperty, NiShader,
+    },
 };
 
 /// Block index and type of the first shape's shader.
 fn shader_of(nif: &NifFile) -> Option<(usize, &str)> {
     let shape = nif.shapes().next().unwrap();
-    nif.view_of(shape).unwrap().shader().map(|s| (s.index(), s.get().block_name()))
+    nif.view_of(shape)
+        .unwrap()
+        .shader()
+        .map(|s| (s.index(), s.get().block_name()))
 }
 
 #[test]
@@ -57,7 +63,10 @@ fn shader_hierarchy() {
 #[test]
 fn shader_types_in_blocks_of() {
     let nif = load("Suzanne");
-    let types: Vec<_> = nif.blocks_of::<NiProperty>().map(|p| p.block_name()).collect();
+    let types: Vec<_> = nif
+        .blocks_of::<NiProperty>()
+        .map(|p| p.block_name())
+        .collect();
     assert_eq!(types, ["BSLightingShaderProperty"]);
     assert_eq!(nif.blocks_of::<BsLightingShaderProperty>().count(), 1);
 }

@@ -8,13 +8,19 @@ use nifly::{
     objects::NiType,
     shaders::{
         DepthTest, FogFunction, LightingMode, NiDitherProperty, NiFogProperty, NiMaterialProperty,
-        NiSpecularProperty, NiStencilProperty, NiVertexColorProperty, NiWireframeProperty, NiZBufferProperty,
-        VertexColorFlags, VertexColorMode, ZBufferFlags,
+        NiSpecularProperty, NiStencilProperty, NiVertexColorProperty, NiWireframeProperty,
+        NiZBufferProperty, VertexColorFlags, VertexColorMode, ZBufferFlags,
     },
 };
 
 fn load(name: &str) -> NifFile {
-    NifFile::load(fs::read(format!("{UPSTREAM}/{name}.nif")).unwrap().as_slice(), None).unwrap()
+    NifFile::load(
+        fs::read(format!("{UPSTREAM}/{name}.nif"))
+            .unwrap()
+            .as_slice(),
+        None,
+    )
+    .unwrap()
 }
 
 fn root_index(nif: &NifFile) -> Index {
@@ -26,7 +32,10 @@ fn first<T: NiType>(nif: &NifFile) -> &T {
 }
 
 fn add<T: nifly::shaders::NewProperty>(nif: &mut NifFile, target: Index) -> &mut T {
-    let i = nif.edit::<nifly::objects::NiAvObject>(target).map(|mut e| e.add_property::<T, _>()).unwrap();
+    let i = nif
+        .edit::<nifly::objects::NiAvObject>(target)
+        .map(|mut e| e.add_property::<T, _>())
+        .unwrap();
     nif.block_of_mut::<T>(i).unwrap()
 }
 
@@ -35,7 +44,10 @@ fn reads_morrowind() {
     let nif = load("TestNifFile_TextureEffect_MW");
     let v = first::<NiVertexColorProperty>(&nif);
     assert_eq!(v.vertex_mode(), Some(VertexColorMode::Ignore));
-    assert_eq!(v.lighting_mode(), Some(LightingMode::EmissiveAmbientDiffuse));
+    assert_eq!(
+        v.lighting_mode(),
+        Some(LightingMode::EmissiveAmbientDiffuse)
+    );
 
     let nif = load("TestNifFile_Morph_MW");
     let flags = first::<NiZBufferProperty>(&nif).flags();
@@ -66,22 +78,49 @@ fn oblivion_round_trip() {
     let saved = reload(&mut nif);
     let shape = saved.shapes().next().unwrap();
     assert_eq!(saved.child_blocks(shape).count(), before + 6);
-    assert!(saved.child_blocks_of::<NiSpecularProperty>(shape).next().unwrap().enabled());
-    assert!(saved.child_blocks_of::<NiDitherProperty>(shape).next().unwrap().enabled());
-    assert!(saved.child_blocks_of::<NiWireframeProperty>(shape).next().unwrap().enabled());
+    assert!(
+        saved
+            .child_blocks_of::<NiSpecularProperty>(shape)
+            .next()
+            .unwrap()
+            .enabled()
+    );
+    assert!(
+        saved
+            .child_blocks_of::<NiDitherProperty>(shape)
+            .next()
+            .unwrap()
+            .enabled()
+    );
+    assert!(
+        saved
+            .child_blocks_of::<NiWireframeProperty>(shape)
+            .next()
+            .unwrap()
+            .enabled()
+    );
 
-    let fog = saved.child_blocks_of::<NiFogProperty>(shape).next().unwrap();
+    let fog = saved
+        .child_blocks_of::<NiFogProperty>(shape)
+        .next()
+        .unwrap();
     assert!(fog.enabled());
     assert_eq!(fog.function(), Some(FogFunction::RangeSquared));
     assert_eq!(fog.raw_flags(), 0b011);
     assert_eq!(fog.depth(), 2.5);
     assert_eq!(fog.color(), [0.25, 0.5, 0.75]);
 
-    let vc = saved.child_blocks_of::<NiVertexColorProperty>(shape).next().unwrap();
+    let vc = saved
+        .child_blocks_of::<NiVertexColorProperty>(shape)
+        .next()
+        .unwrap();
     assert_eq!(vc.vertex_mode(), Some(VertexColorMode::Emissive));
     assert_eq!(vc.lighting_mode(), Some(LightingMode::Emissive));
 
-    let z = saved.child_blocks_of::<NiZBufferProperty>(shape).next().unwrap();
+    let z = saved
+        .child_blocks_of::<NiZBufferProperty>(shape)
+        .next()
+        .unwrap();
     assert!(z.flags().testing() && !z.flags().writing());
     assert_eq!(z.function(), Some(DepthTest::Greater));
 }
@@ -99,7 +138,10 @@ fn fallout_3_saves_packed_flags_only() {
     // Not saved from Fallout 3 on.
     vc.set_vertex_mode(VertexColorMode::Emissive);
 
-    let flags = ZBufferFlags::from_bits(0).with_testing(true).with_writing(true).with_function(DepthTest::Less);
+    let flags = ZBufferFlags::from_bits(0)
+        .with_testing(true)
+        .with_writing(true)
+        .with_function(DepthTest::Less);
     let z = add::<NiZBufferProperty>(&mut nif, root);
     z.set_flags(flags);
     // Not saved from Fallout 3 on.
@@ -107,8 +149,14 @@ fn fallout_3_saves_packed_flags_only() {
 
     let saved = reload(&mut nif);
     let vc = first::<NiVertexColorProperty>(&saved);
-    assert_eq!(vc.flags().vertex_mode(), Some(VertexColorMode::AmbientDiffuse));
-    assert_eq!(vc.flags().lighting_mode(), LightingMode::EmissiveAmbientDiffuse);
+    assert_eq!(
+        vc.flags().vertex_mode(),
+        Some(VertexColorMode::AmbientDiffuse)
+    );
+    assert_eq!(
+        vc.flags().lighting_mode(),
+        LightingMode::EmissiveAmbientDiffuse
+    );
     assert_eq!(vc.vertex_mode(), Some(VertexColorMode::Ignore));
 
     let z = first::<NiZBufferProperty>(&saved);
@@ -124,7 +172,10 @@ fn morrowind_has_no_z_function() {
     add::<NiZBufferProperty>(&mut nif, root).set_function(DepthTest::Never);
     let saved = reload(&mut nif);
     let root = saved.root_node().unwrap();
-    let z = saved.child_blocks_of::<NiZBufferProperty>(&root).next().unwrap();
+    let z = saved
+        .child_blocks_of::<NiZBufferProperty>(&root)
+        .next()
+        .unwrap();
     assert_eq!(z.function(), Some(DepthTest::LessOrEqual));
 }
 
@@ -132,7 +183,11 @@ fn morrowind_has_no_z_function() {
 fn skyrim_saves_no_property_list() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
     let root = root_index(&nif);
-    assert!(nif.edit::<nifly::objects::NiAvObject>(root).map(|mut e| e.add_property::<NiFogProperty, _>()).is_some());
+    assert!(
+        nif.edit::<nifly::objects::NiAvObject>(root)
+            .map(|mut e| e.add_property::<NiFogProperty, _>())
+            .is_some()
+    );
     let root = nif.root_node().unwrap();
     assert_eq!(nif.child_blocks_of::<NiFogProperty>(&root).count(), 1);
 
@@ -145,16 +200,29 @@ fn skyrim_saves_no_property_list() {
 fn adds_material_and_stencil() {
     let mut nif = load("TestNifFile_Skinned_OB");
     let shape = nif.shapes().indices().next().unwrap();
-    assert!(nif.view::<nifly::geometry::NiShape>(shape).unwrap().stencil_property().is_none());
+    assert!(
+        nif.view::<nifly::geometry::NiShape>(shape)
+            .unwrap()
+            .stencil_property()
+            .is_none()
+    );
     let materials = nif.blocks_of::<NiMaterialProperty>().count();
 
-    let stencil = nif.edit::<nifly::objects::NiAvObject>(shape).map(|mut e| e.add_property::<NiStencilProperty, _>()).unwrap();
-    nif.edit::<nifly::objects::NiAvObject>(shape).map(|mut e| e.add_property::<NiMaterialProperty, _>()).unwrap();
+    let stencil = nif
+        .edit::<nifly::objects::NiAvObject>(shape)
+        .map(|mut e| e.add_property::<NiStencilProperty, _>())
+        .unwrap();
+    nif.edit::<nifly::objects::NiAvObject>(shape)
+        .map(|mut e| e.add_property::<NiMaterialProperty, _>())
+        .unwrap();
 
     let saved = reload(&mut nif);
     let shape = saved.shapes().next().unwrap();
     assert!(saved.view_of(shape).unwrap().stencil_property().is_some());
-    assert_eq!(saved.blocks_of::<NiMaterialProperty>().count(), materials + 1);
+    assert_eq!(
+        saved.blocks_of::<NiMaterialProperty>().count(),
+        materials + 1
+    );
     assert!(stencil > 0);
 }
 
@@ -164,10 +232,24 @@ fn invalid_target_changes_nothing() {
     let blocks = nif.blocks().count();
     // Geometry data isn't a shape or node.
     let shape = nif.shapes().next().unwrap();
-    let data = nif.block_index(nif.view_of(shape).unwrap().geometry_data().unwrap()).unwrap();
+    let data = nif
+        .block_index(nif.view_of(shape).unwrap().geometry_data().unwrap())
+        .unwrap();
 
-    assert_eq!(nif.edit::<nifly::objects::NiAvObject>(data).map(|mut e| e.add_property::<NiFogProperty, _>()), None);
-    assert_eq!(nif.edit::<nifly::objects::NiAvObject>(blocks).map(|mut e| e.add_property::<NiFogProperty, _>()), None);
-    assert_eq!(nif.edit::<nifly::objects::NiAvObject>(usize::MAX).map(|mut e| e.add_property::<NiFogProperty, _>()), None);
+    assert_eq!(
+        nif.edit::<nifly::objects::NiAvObject>(data)
+            .map(|mut e| e.add_property::<NiFogProperty, _>()),
+        None
+    );
+    assert_eq!(
+        nif.edit::<nifly::objects::NiAvObject>(blocks)
+            .map(|mut e| e.add_property::<NiFogProperty, _>()),
+        None
+    );
+    assert_eq!(
+        nif.edit::<nifly::objects::NiAvObject>(usize::MAX)
+            .map(|mut e| e.add_property::<NiFogProperty, _>()),
+        None
+    );
     assert_eq!(nif.blocks().count(), blocks);
 }

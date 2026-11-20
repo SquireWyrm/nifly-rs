@@ -3,13 +3,13 @@
 //! No test file has these shapes, so each test saves a quad made by `create_shape` and patches
 //! the saved bytes into the wanted block types.
 
-use crate::common::{save};
+use crate::common::save;
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
     geometry::{
-        BsLodTriShape, BsMeshLodTriShape, BsSegmentedTriShape, GeometrySegment, NiLinesData, NiScreenElementsData,
-        NiShape, ScreenPolygon,
+        BsLodTriShape, BsMeshLodTriShape, BsSegmentedTriShape, GeometrySegment, NiLinesData,
+        NiScreenElementsData, NiShape, ScreenPolygon,
     },
     object3d::Vec3,
 };
@@ -66,10 +66,14 @@ fn retype(bytes: &[u8], changes: &[Retype]) -> Vec<u8> {
     }
     let types_end = pos;
     let indices_pos = pos;
-    let mut type_indices: Vec<u16> = (0..num_blocks).map(|i| u16_at(indices_pos + 2 * i)).collect();
+    let mut type_indices: Vec<u16> = (0..num_blocks)
+        .map(|i| u16_at(indices_pos + 2 * i))
+        .collect();
     pos += 2 * num_blocks;
     let sizes_pos = pos;
-    let mut sizes: Vec<usize> = (0..num_blocks).map(|i| u32_at(sizes_pos + 4 * i) as usize).collect();
+    let mut sizes: Vec<usize> = (0..num_blocks)
+        .map(|i| u32_at(sizes_pos + 4 * i) as usize)
+        .collect();
     pos += 4 * num_blocks;
     let strings_start = pos;
     let num_strings = u32_at(pos);
@@ -113,13 +117,21 @@ fn retype(bytes: &[u8], changes: &[Retype]) -> Vec<u8> {
 
 /// Saves a file with the quad and loads it back with `changes`, which get the shape's and its
 /// data's block indices as saved. Returns the file and the shape's index.
-fn patched(version: NifVersion, changes: impl FnOnce(Index, Option<Index>) -> Vec<Retype>) -> (NifFile, Index) {
+fn patched(
+    version: NifVersion,
+    changes: impl FnOnce(Index, Option<Index>) -> Vec<Retype>,
+) -> (NifFile, Index) {
     let mut nif = NifFile::create(version);
-    nif.create_shape("Quad", &VERTICES, &TRIANGLES, None, None).unwrap();
+    nif.create_shape("Quad", &VERTICES, &TRIANGLES, None, None)
+        .unwrap();
     // Saving sorts the blocks, so look them up afterwards.
     let bytes = save(&mut nif);
     let shape = nif.shapes().indices().next().unwrap();
-    let data = nif.view_of(nif.block_of::<NiShape>(shape).unwrap()).unwrap().geometry_data().map(|d| nif.block_index(d).unwrap());
+    let data = nif
+        .view_of(nif.block_of::<NiShape>(shape).unwrap())
+        .unwrap()
+        .geometry_data()
+        .map(|d| nif.block_index(d).unwrap());
     let bytes = retype(&bytes, &changes(shape, data));
     (NifFile::load(bytes.as_slice(), None).unwrap(), shape)
 }
@@ -127,50 +139,125 @@ fn patched(version: NifVersion, changes: impl FnOnce(Index, Option<Index>) -> Ve
 #[test]
 fn lod_tri_shape() {
     let (mut nif, shape) = patched(NifVersion::SKYRIM, |shape, _| {
-        vec![Retype { block: shape, name: "BSLODTriShape", cut: 0, append: u32s(&[1, 1, 0]) }]
+        vec![Retype {
+            block: shape,
+            name: "BSLODTriShape",
+            cut: 0,
+            append: u32s(&[1, 1, 0]),
+        }]
     });
-    assert_eq!(nif.block_of::<BsLodTriShape>(shape).unwrap().lod_sizes(), [1, 1, 0]);
+    assert_eq!(
+        nif.block_of::<BsLodTriShape>(shape).unwrap().lod_sizes(),
+        [1, 1, 0]
+    );
 
-    nif.block_of_mut::<BsLodTriShape>(shape).unwrap().set_lod_sizes([2, 0, 0]);
+    nif.block_of_mut::<BsLodTriShape>(shape)
+        .unwrap()
+        .set_lod_sizes([2, 0, 0]);
     let saved = reload(&mut nif);
-    assert_eq!(saved.block_of::<BsLodTriShape>(shape).unwrap().lod_sizes(), [2, 0, 0]);
+    assert_eq!(
+        saved.block_of::<BsLodTriShape>(shape).unwrap().lod_sizes(),
+        [2, 0, 0]
+    );
 }
 
 #[test]
 fn mesh_lod_tri_shape() {
     let (mut nif, shape) = patched(NifVersion::SKYRIM_SE, |shape, _| {
-        vec![Retype { block: shape, name: "BSMeshLODTriShape", cut: 0, append: u32s(&[2, 0, 0]) }]
+        vec![Retype {
+            block: shape,
+            name: "BSMeshLODTriShape",
+            cut: 0,
+            append: u32s(&[2, 0, 0]),
+        }]
     });
-    assert_eq!(nif.block_of::<BsMeshLodTriShape>(shape).unwrap().lod_sizes(), [2, 0, 0]);
+    assert_eq!(
+        nif.block_of::<BsMeshLodTriShape>(shape)
+            .unwrap()
+            .lod_sizes(),
+        [2, 0, 0]
+    );
 
-    nif.block_of_mut::<BsMeshLodTriShape>(shape).unwrap().set_lod_sizes([1, 1, 0]);
+    nif.block_of_mut::<BsMeshLodTriShape>(shape)
+        .unwrap()
+        .set_lod_sizes([1, 1, 0]);
     let saved = reload(&mut nif);
-    assert_eq!(saved.block_of::<BsMeshLodTriShape>(shape).unwrap().lod_sizes(), [1, 1, 0]);
+    assert_eq!(
+        saved
+            .block_of::<BsMeshLodTriShape>(shape)
+            .unwrap()
+            .lod_sizes(),
+        [1, 1, 0]
+    );
 
     // Deleting vertices resets them.
-    assert!(nif.edit::<nifly::geometry::NiShape>(shape).is_some_and(|mut e| e.delete_vertices(&[1])));
-    assert_eq!(nif.block_of::<BsMeshLodTriShape>(shape).unwrap().lod_sizes(), [0, 0, 1]);
+    assert!(
+        nif.edit::<nifly::geometry::NiShape>(shape)
+            .is_some_and(|mut e| e.delete_vertices(&[1]))
+    );
+    assert_eq!(
+        nif.block_of::<BsMeshLodTriShape>(shape)
+            .unwrap()
+            .lod_sizes(),
+        [0, 0, 1]
+    );
 }
 
 #[test]
 fn segmented_tri_shape() {
     let (mut nif, shape) = patched(NifVersion::SKYRIM, |shape, _| {
-        vec![Retype { block: shape, name: "BSSegmentedTriShape", cut: 0, append: u32s(&[0]) }]
+        vec![Retype {
+            block: shape,
+            name: "BSSegmentedTriShape",
+            cut: 0,
+            append: u32s(&[0]),
+        }]
     });
-    assert!(nif.block_of::<BsSegmentedTriShape>(shape).unwrap().segments().is_empty());
+    assert!(
+        nif.block_of::<BsSegmentedTriShape>(shape)
+            .unwrap()
+            .segments()
+            .is_empty()
+    );
 
     let segments = [
-        GeometrySegment { raw_flags: 1, index: 0, triangle_count: 1 },
-        GeometrySegment { raw_flags: 0, index: 3, triangle_count: 1 },
+        GeometrySegment {
+            raw_flags: 1,
+            index: 0,
+            triangle_count: 1,
+        },
+        GeometrySegment {
+            raw_flags: 0,
+            index: 3,
+            triangle_count: 1,
+        },
     ];
-    assert!(nif.block_of_mut::<BsSegmentedTriShape>(shape).unwrap().set_segments(&segments));
+    assert!(
+        nif.block_of_mut::<BsSegmentedTriShape>(shape)
+            .unwrap()
+            .set_segments(&segments)
+    );
     let saved = reload(&mut nif);
-    assert_eq!(saved.block_of::<BsSegmentedTriShape>(shape).unwrap().segments(), segments);
+    assert_eq!(
+        saved
+            .block_of::<BsSegmentedTriShape>(shape)
+            .unwrap()
+            .segments(),
+        segments
+    );
 
     // Past the last triangle.
     let s = nif.block_of_mut::<BsSegmentedTriShape>(shape).unwrap();
-    assert!(!s.set_segments(&[GeometrySegment { raw_flags: 0, index: 3, triangle_count: 2 }]));
-    assert!(!s.set_segments(&[GeometrySegment { raw_flags: 0, index: u32::MAX, triangle_count: u32::MAX }]));
+    assert!(!s.set_segments(&[GeometrySegment {
+        raw_flags: 0,
+        index: 3,
+        triangle_count: 2
+    }]));
+    assert!(!s.set_segments(&[GeometrySegment {
+        raw_flags: 0,
+        index: u32::MAX,
+        triangle_count: u32::MAX
+    }]));
     assert_eq!(s.segments(), segments);
 }
 
@@ -178,43 +265,93 @@ fn segmented_tri_shape() {
 fn lines_data() {
     let (mut nif, _) = patched(NifVersion::SKYRIM, |shape, data| {
         vec![
-            Retype { block: shape, name: "NiLines", cut: 0, append: Vec::new() },
-            Retype { block: data.unwrap(), name: "NiLinesData", cut: TRI_SHAPE_DATA_TAIL, append: vec![1, 1, 1, 0] },
+            Retype {
+                block: shape,
+                name: "NiLines",
+                cut: 0,
+                append: Vec::new(),
+            },
+            Retype {
+                block: data.unwrap(),
+                name: "NiLinesData",
+                cut: TRI_SHAPE_DATA_TAIL,
+                append: vec![1, 1, 1, 0],
+            },
         ]
     });
     let index = nif.blocks_of::<NiLinesData>().indices().next().unwrap();
-    assert_eq!(nif.block_of::<NiLinesData>(index).unwrap().line_flags(), [true, true, true, false]);
+    assert_eq!(
+        nif.block_of::<NiLinesData>(index).unwrap().line_flags(),
+        [true, true, true, false]
+    );
 
     let data = nif.block_of_mut::<NiLinesData>(index).unwrap();
     assert!(data.set_line_flags(&[false, true, false, true]));
     assert!(!data.set_line_flags(&[true]));
     let saved = reload(&mut nif);
-    assert_eq!(saved.block_of::<NiLinesData>(index).unwrap().line_flags(), [false, true, false, true]);
+    assert_eq!(
+        saved.block_of::<NiLinesData>(index).unwrap().line_flags(),
+        [false, true, false, true]
+    );
 }
 
 #[test]
 fn screen_elements_data() {
-    let polygon = ScreenPolygon { vertex_count: 4, vertex_offset: 0, triangle_count: 2, triangle_offset: 0 };
+    let polygon = ScreenPolygon {
+        vertex_count: 4,
+        vertex_offset: 0,
+        triangle_count: 2,
+        triangle_offset: 0,
+    };
     let mut tail = u16s(&[1, 4, 0, 2, 0, 0]); // max polygons, the polygon, its index
     tail.extend(u16s(&[1, 1, 4, 1, 6, 1])); // grow-bys, polygon count, max vertices and indices
     let (mut nif, _) = patched(NifVersion::SKYRIM, |shape, data| {
         vec![
-            Retype { block: shape, name: "NiScreenElements", cut: 0, append: Vec::new() },
-            Retype { block: data.unwrap(), name: "NiScreenElementsData", cut: 0, append: tail },
+            Retype {
+                block: shape,
+                name: "NiScreenElements",
+                cut: 0,
+                append: Vec::new(),
+            },
+            Retype {
+                block: data.unwrap(),
+                name: "NiScreenElementsData",
+                cut: 0,
+                append: tail,
+            },
         ]
     });
-    let index = nif.blocks_of::<NiScreenElementsData>().indices().next().unwrap();
+    let index = nif
+        .blocks_of::<NiScreenElementsData>()
+        .indices()
+        .next()
+        .unwrap();
     let data = nif.block_of::<NiScreenElementsData>(index).unwrap();
     assert_eq!(data.polygons(), [polygon]);
     assert_eq!(data.polygon_indices(), [0]);
     assert_eq!(data.polygon_count(), 1);
     assert_eq!(
-        [data.polygon_grow_by(), data.max_vertices(), data.vertices_grow_by(), data.max_indices(), data.indices_grow_by()],
+        [
+            data.polygon_grow_by(),
+            data.max_vertices(),
+            data.vertices_grow_by(),
+            data.max_indices(),
+            data.indices_grow_by()
+        ],
         [1, 4, 1, 6, 1]
     );
 
-    let half = ScreenPolygon { vertex_count: 3, vertex_offset: 0, triangle_count: 1, triangle_offset: 0 };
-    let other = ScreenPolygon { vertex_offset: 1, triangle_offset: 1, ..half };
+    let half = ScreenPolygon {
+        vertex_count: 3,
+        vertex_offset: 0,
+        triangle_count: 1,
+        triangle_offset: 0,
+    };
+    let other = ScreenPolygon {
+        vertex_offset: 1,
+        triangle_offset: 1,
+        ..half
+    };
     let data = nif.block_of_mut::<NiScreenElementsData>(index).unwrap();
     assert!(data.set_polygons(&[half, other], &[0, 1]));
     assert!(data.set_polygon_count(2));

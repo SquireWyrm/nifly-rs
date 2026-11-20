@@ -81,7 +81,9 @@ impl BsMultiBoundObb {
     pub fn rotation(&self) -> Matrix3 {
         let mut rows = [Vec3::ZERO.to_ffi(); 3];
         ffi::multi_bound_obb_rotation(&self.0, &mut rows);
-        Matrix3 { rows: rows.map(Vec3::from_ffi) }
+        Matrix3 {
+            rows: rows.map(Vec3::from_ffi),
+        }
     }
 
     /// Sets the [rotation](Self::rotation).
@@ -136,11 +138,19 @@ pub struct DistantObjectUnknown {
 
 impl ResourceId {
     fn to_ffi(self) -> [u32; 3] {
-        [self.file_hash, u32::from_le_bytes(self.extension), self.dir_hash]
+        [
+            self.file_hash,
+            u32::from_le_bytes(self.extension),
+            self.dir_hash,
+        ]
     }
 
     fn from_ffi(r: [u32; 3]) -> Self {
-        Self { file_hash: r[0], extension: r[1].to_le_bytes(), dir_hash: r[2] }
+        Self {
+            file_hash: r[0],
+            extension: r[1].to_le_bytes(),
+            dir_hash: r[2],
+        }
     }
 }
 
@@ -149,7 +159,11 @@ fn matrices_to_ffi(matrices: &[[[f32; 4]; 4]]) -> Vec<f32> {
 }
 
 fn matrices_from_ffi(flat: &[f32]) -> Vec<[[f32; 4]; 4]> {
-    flat.as_chunks::<16>().0.iter().map(|m| *m.as_chunks::<4>().0.as_array().unwrap()).collect()
+    flat.as_chunks::<16>()
+        .0
+        .iter()
+        .map(|m| *m.as_chunks::<4>().0.as_array().unwrap())
+        .collect()
 }
 
 impl DistantObjectInstance {
@@ -158,7 +172,10 @@ impl DistantObjectInstance {
     }
 
     fn unknown_ffi(&self) -> Vec<u64> {
-        self.unknown.iter().flat_map(|u| [u.unknown_1, u64::from(u.unknown_2)]).collect()
+        self.unknown
+            .iter()
+            .flat_map(|u| [u.unknown_1, u64::from(u.unknown_2)])
+            .collect()
     }
 }
 
@@ -176,9 +193,16 @@ impl BsDistantObjectInstancedNode {
             .as_chunks::<2>()
             .0
             .iter()
-            .map(|&[unknown_1, unknown_2]| DistantObjectUnknown { unknown_1, unknown_2: unknown_2 as u32 })
+            .map(|&[unknown_1, unknown_2]| DistantObjectUnknown {
+                unknown_1,
+                unknown_2: unknown_2 as u32,
+            })
             .collect();
-        Some(DistantObjectInstance { resource: ResourceId::from_ffi(r), unknown, transforms })
+        Some(DistantObjectInstance {
+            resource: ResourceId::from_ffi(r),
+            unknown,
+            transforms,
+        })
     }
 
     /// Replaces instance `index`. Returns `false` if `index` is out of range.
@@ -230,7 +254,11 @@ impl BsDistantObjectInstancedNode {
 
     /// Replaces the [texture arrays](Self::texture_arrays) of slot `slot`. Returns `false`,
     /// changing nothing, if `slot` is out of range.
-    pub fn set_texture_arrays<A, P>(&mut self, slot: usize, arrays: impl IntoIterator<Item = A>) -> bool
+    pub fn set_texture_arrays<A, P>(
+        &mut self,
+        slot: usize,
+        arrays: impl IntoIterator<Item = A>,
+    ) -> bool
     where
         A: IntoIterator<Item = P>,
         P: AsRef<[u8]>,
@@ -292,7 +320,12 @@ impl BsWeakReferenceNode {
                         let mut ids = [0; 3];
                         ffi::weak_ref_material(&self.0, i, m, &mut ids);
                         let name = ffi::weak_ref_material_name(&self.0, i, m).into();
-                        WeakReferenceMaterial { biome_form_id: ids[0], dir_hash: ids[1], file_hash: ids[2], name }
+                        WeakReferenceMaterial {
+                            biome_form_id: ids[0],
+                            dir_hash: ids[1],
+                            file_hash: ids[2],
+                            name,
+                        }
                     })
                     .collect();
                 WeakReference {
@@ -308,7 +341,11 @@ impl BsWeakReferenceNode {
     /// Replaces the [weak references](Self::weak_references). Returns `false`, changing nothing,
     /// if a material name contains a zero byte.
     pub fn set_weak_references(&mut self, references: &[WeakReference]) -> bool {
-        if references.iter().flat_map(|r| &r.materials).any(|m| m.name.contains(&0)) {
+        if references
+            .iter()
+            .flat_map(|r| &r.materials)
+            .any(|m| m.name.contains(&0))
+        {
             return false;
         }
         ffi::clear_weak_refs(self.ffi_mut());
@@ -344,7 +381,13 @@ impl BsWeakReferenceNode {
         ffi::resize_water_refs(self.ffi_mut(), references.len());
         for (i, r) in references.iter().enumerate() {
             let transform = matrices_to_ffi(&[r.transform]);
-            ffi::set_water_ref(self.ffi_mut(), i, &transform, &r.resource.to_ffi(), &r.material);
+            ffi::set_water_ref(
+                self.ffi_mut(),
+                i,
+                &transform,
+                &r.resource.to_ffi(),
+                &r.material,
+            );
             ffi::set_water_ref_unknown(self.ffi_mut(), i, r.unknown);
         }
     }
@@ -361,7 +404,11 @@ pub enum MultiBoundShape {
     /// A [`BsMultiBoundAabb`].
     Aabb { center: Vec3, half_extent: Vec3 },
     /// A [`BsMultiBoundObb`].
-    Obb { center: Vec3, size: Vec3, rotation: Matrix3 },
+    Obb {
+        center: Vec3,
+        size: Vec3,
+        rotation: Matrix3,
+    },
     /// A [`BsMultiBoundSphere`].
     Sphere { center: Vec3, radius: f32 },
 }

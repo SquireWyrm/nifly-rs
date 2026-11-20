@@ -9,16 +9,27 @@ use nifly::{
 };
 
 fn load(name: &str) -> NifFile {
-    NifFile::load(fs::read(format!("{UPSTREAM}/{name}.nif")).unwrap().as_slice(), None).unwrap()
+    NifFile::load(
+        fs::read(format!("{UPSTREAM}/{name}.nif"))
+            .unwrap()
+            .as_slice(),
+        None,
+    )
+    .unwrap()
 }
 
 /// The first effect shader with (or without) a name.
 fn index(nif: &NifFile, named: bool) -> Index {
-    nif.blocks_of::<BsEffectShaderProperty>().indexed().find(|(_, s)| s.name().is_empty() != named).unwrap().0
+    nif.blocks_of::<BsEffectShaderProperty>()
+        .indexed()
+        .find(|(_, s)| s.name().is_empty() != named)
+        .unwrap()
+        .0
 }
 
 fn shader(nif: &NifFile, named: bool) -> &BsEffectShaderProperty {
-    nif.block_of::<BsEffectShaderProperty>(index(nif, named)).unwrap()
+    nif.block_of::<BsEffectShaderProperty>(index(nif, named))
+        .unwrap()
 }
 
 fn shader_mut(nif: &mut NifFile, named: bool) -> &mut BsEffectShaderProperty {
@@ -60,16 +71,30 @@ fn skyrim_fields_round_trip() {
 
     let saved = reload(&mut nif);
     let s = shader(&saved, false);
-    assert_eq!((s.source_texture(), s.greyscale_texture()), ("textures\\a.dds".into(), "textures\\b.dds".into()));
     assert_eq!(
-        (s.falloff_start_angle(), s.falloff_stop_angle(), s.falloff_start_opacity(), s.falloff_stop_opacity()),
+        (s.source_texture(), s.greyscale_texture()),
+        ("textures\\a.dds".into(), "textures\\b.dds".into())
+    );
+    assert_eq!(
+        (
+            s.falloff_start_angle(),
+            s.falloff_stop_angle(),
+            s.falloff_start_opacity(),
+            s.falloff_stop_opacity()
+        ),
         (0.25, 0.5, 0.75, 0.125)
     );
-    assert_eq!((s.base_color(), s.base_color_scale()), ([0.5, 0.25, 0.125, 1.0], 2.0));
+    assert_eq!(
+        (s.base_color(), s.base_color_scale()),
+        ([0.5, 0.25, 0.125, 1.0], 2.0)
+    );
     assert_eq!(s.soft_falloff_depth(), 10.0);
     assert_eq!(s.texture_clamp_mode(), Some(ClampMode::ClampUWrapV));
     assert_eq!((s.lighting_influence(), s.env_map_min_lod()), (128, 3));
-    assert_eq!((s.env_map_texture(), s.env_map_scale(), s.lum_emittance()), ("".into(), 1.0, 100.0));
+    assert_eq!(
+        (s.env_map_texture(), s.env_map_scale(), s.lum_emittance()),
+        ("".into(), 1.0, 100.0)
+    );
 }
 
 #[test]
@@ -80,7 +105,14 @@ fn clamp_bytes_are_independent() {
     s.set_env_map_min_lod(9);
     s.set_texture_clamp_mode(ClampMode::ClampBoth);
     s.set_lighting_influence(8);
-    assert_eq!((s.texture_clamp_mode(), s.lighting_influence(), s.env_map_min_lod()), (Some(ClampMode::ClampBoth), 8, 9));
+    assert_eq!(
+        (
+            s.texture_clamp_mode(),
+            s.lighting_influence(),
+            s.env_map_min_lod()
+        ),
+        (Some(ClampMode::ClampBoth), 8, 9)
+    );
 }
 
 #[test]
@@ -101,7 +133,10 @@ fn fallout_4_fields_round_trip() {
     assert_eq!(s.normal_texture(), "textures\\n.dds");
     assert_eq!(s.env_mask_texture(), "textures\\mask.dds");
     assert_eq!(s.env_map_scale(), 0.5);
-    assert_eq!((s.reflectance_texture(), s.refraction_power()), ("".into(), 0.0));
+    assert_eq!(
+        (s.reflectance_texture(), s.refraction_power()),
+        ("".into(), 0.0)
+    );
 }
 
 #[test]

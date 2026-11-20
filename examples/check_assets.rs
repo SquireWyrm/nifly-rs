@@ -100,13 +100,28 @@ impl Stats {
             self.passed += 1;
         }
         // Count each kind once per file.
-        for kind in report.failures.iter().map(|(k, _)| *k).collect::<HashSet<_>>() {
+        for kind in report
+            .failures
+            .iter()
+            .map(|(k, _)| *k)
+            .collect::<HashSet<_>>()
+        {
             *self.failure_kinds.entry(kind).or_default() += 1;
         }
-        for kind in report.warnings.iter().map(|(k, _)| *k).collect::<HashSet<_>>() {
+        for kind in report
+            .warnings
+            .iter()
+            .map(|(k, _)| *k)
+            .collect::<HashSet<_>>()
+        {
             *self.warning_kinds.entry(kind).or_default() += 1;
         }
-        for kind in report.changes.iter().map(|(k, _)| k).collect::<HashSet<_>>() {
+        for kind in report
+            .changes
+            .iter()
+            .map(|(k, _)| k)
+            .collect::<HashSet<_>>()
+        {
             *self.change_kinds.entry(kind.clone()).or_default() += 1;
         }
         if let Some(v) = report.version {
@@ -122,7 +137,9 @@ fn main() {
         match arg.as_str() {
             "-v" | "--verbose" => verbose = true,
             "-h" | "--help" => {
-                println!("usage: check_assets [paths...] [--verbose]   (default path: external_assets)");
+                println!(
+                    "usage: check_assets [paths...] [--verbose]   (default path: external_assets)"
+                );
                 return;
             }
             _ => roots.push(PathBuf::from(arg)),
@@ -275,7 +292,10 @@ fn version_name(v: NifVersion) -> String {
         (NifVersion::STARFIELD, "Starfield"),
     ];
     let [a, b, c, d] = v.file_parts();
-    let game = presets.iter().find(|(p, _)| *p == v).map_or("", |(_, name)| name);
+    let game = presets
+        .iter()
+        .find(|(p, _)| *p == v)
+        .map_or("", |(_, name)| name);
     format!("{a}.{b}.{c}.{d} user {} stream {} {game}", v.user, v.stream)
 }
 
@@ -339,7 +359,10 @@ fn check_blocks(nif: &NifFile, r: &mut Report) {
     let count = nif.blocks().count();
     for (i, block) in nif.blocks().enumerate() {
         if nif.block_index(block) != Some(i) {
-            r.fail("block_index", format!("block {i} reports {:?}", nif.block_index(block)));
+            r.fail(
+                "block_index",
+                format!("block {i} reports {:?}", nif.block_index(block)),
+            );
         }
         if !nif.contains(block) {
             r.fail("contains", format!("block {i} not contained"));
@@ -383,15 +406,24 @@ fn check_nodes(nif: &NifFile, r: &mut Report) {
         if node.child_count() > resolved {
             r.warn(
                 "empty child refs",
-                format!("block {index}: {} refs, {resolved} children", node.child_count()),
+                format!(
+                    "block {index}: {} refs, {resolved} children",
+                    node.child_count()
+                ),
             );
         }
 
         for child in node.children().views() {
             match child.parent() {
-                None => r.fail("parent_node", format!("child of block {index} has no parent")),
+                None => r.fail(
+                    "parent_node",
+                    format!("child of block {index} has no parent"),
+                ),
                 Some(parent) if parent.index() != index => {
-                    r.warn("shared children", format!("a child of block {index} has another parent first"));
+                    r.warn(
+                        "shared children",
+                        format!("a child of block {index} has another parent first"),
+                    );
                 }
                 Some(_) => {}
             }
@@ -432,7 +464,8 @@ fn check_shapes(nif: &NifFile, r: &mut Report) {
         // texture_slot agrees with texture_paths for texture set slots.
         let paths = nif.view_of(shape).unwrap().texture_paths();
         for (slot, path) in paths.iter().enumerate() {
-            if let Some((TextureSource::TextureSet, slot_path)) = nif.view_of(shape).unwrap().texture_slot(slot)
+            if let Some((TextureSource::TextureSet, slot_path)) =
+                nif.view_of(shape).unwrap().texture_slot(slot)
                 && slot_path != *path
             {
                 r.fail("texture_slot", format!("shape {index} slot {slot}"));
@@ -444,12 +477,18 @@ fn check_shapes(nif: &NifFile, r: &mut Report) {
         let ids = nif.view_of(shape).unwrap().bone_ids();
         if !is_starfield {
             if bones.len() != ids.len() {
-                r.warn("bone list/ids", format!("shape {index}: {} names, {} ids", bones.len(), ids.len()));
+                r.warn(
+                    "bone list/ids",
+                    format!("shape {index}: {} names, {} ids", bones.len(), ids.len()),
+                );
             } else {
                 for (name, id) in bones.iter().zip(&ids) {
                     match nif.block(*id).and_then(|b| b.downcast::<NiNode>()) {
                         Some(bone) if bone.name() == *name => {}
-                        _ => r.warn("bone list/ids", format!("shape {index}: {name} isn't block {id}")),
+                        _ => r.warn(
+                            "bone list/ids",
+                            format!("shape {index}: {name} isn't block {id}"),
+                        ),
                     }
                 }
             }
@@ -460,23 +499,35 @@ fn check_shapes(nif: &NifFile, r: &mut Report) {
         for b in 0..bones.len() {
             let weights = nif.view_of(shape).unwrap().bone_weights(b);
             if !weights.windows(2).all(|w| w[0].vertex < w[1].vertex) {
-                r.fail("bone weights", format!("shape {index} bone {b} not sorted by vertex"));
+                r.fail(
+                    "bone weights",
+                    format!("shape {index} bone {b} not sorted by vertex"),
+                );
             }
             for w in &weights {
                 if !(w.weight > 0.0 && w.weight <= 1.001) {
-                    r.warn("weight out of range", format!("shape {index} bone {b}: {}", w.weight));
+                    r.warn(
+                        "weight out of range",
+                        format!("shape {index} bone {b}: {}", w.weight),
+                    );
                 }
                 *sums.entry(w.vertex).or_default() += w.weight;
             }
         }
         let unnormalized = sums.values().filter(|&&s| (s - 1.0).abs() > 0.02).count();
         if unnormalized > 0 {
-            r.warn("unnormalized weights", format!("shape {index}: {unnormalized} vertices"));
+            r.warn(
+                "unnormalized weights",
+                format!("shape {index}: {unnormalized} vertices"),
+            );
         }
     }
 
     if nif.is_all_sse_compatible() != all_sse {
-        r.fail("is_all_sse_compatible", "disagrees with checking each shape");
+        r.fail(
+            "is_all_sse_compatible",
+            "disagrees with checking each shape",
+        );
     }
 }
 
@@ -489,7 +540,9 @@ fn check_round_trip(original: &[u8], options: LoadOptions, r: &mut Report) {
     };
 
     // Without optimizing or sorting, everything the bindings can read survives a round trip.
-    let Ok(mut fresh) = load(original) else { return };
+    let Ok(mut fresh) = load(original) else {
+        return;
+    };
     let before = summary(&fresh);
     let first = match save(&mut fresh, KEEP_EVERYTHING) {
         Ok(bytes) => bytes,
@@ -509,13 +562,17 @@ fn check_round_trip(original: &[u8], options: LoadOptions, r: &mut Report) {
         r.fail("round trip", diff);
     }
     match save(&mut reloaded, KEEP_EVERYTHING) {
-        Ok(second) if second != first => r.fail("save not stable", "second save differs from the first"),
+        Ok(second) if second != first => {
+            r.fail("save not stable", "second save differs from the first")
+        }
         Ok(_) => {}
         Err(e) => r.fail("save", e),
     }
 
     // With the default options, the output reloads and saving it again changes nothing.
-    let Ok(mut fresh) = load(original) else { return };
+    let Ok(mut fresh) = load(original) else {
+        return;
+    };
     let optimized = match save(&mut fresh, SaveOptions::default()) {
         Ok(bytes) => bytes,
         Err(e) => return r.fail("save (default)", e),
@@ -527,7 +584,10 @@ fn check_round_trip(original: &[u8], options: LoadOptions, r: &mut Report) {
             }
             match save(&mut nif, SaveOptions::default()) {
                 Ok(again) if again != optimized => {
-                    r.fail("save not stable (default)", "second save differs from the first");
+                    r.fail(
+                        "save not stable (default)",
+                        "second save differs from the first",
+                    );
                 }
                 Ok(_) => {}
                 Err(e) => r.fail("save (default)", e),
@@ -551,23 +611,42 @@ fn summary(nif: &NifFile) -> Vec<String> {
             nif.view_of(node).unwrap().children().count()
         ));
         for extra in nif.view_of(node).unwrap().extra_data() {
-            out.push(format!("  extra {} {}", extra.block_name(), extra_name(extra)));
+            out.push(format!(
+                "  extra {} {}",
+                extra.block_name(),
+                extra_name(extra)
+            ));
         }
     }
     for shape in nif.blocks_of::<NiShape>() {
-        out.push(format!("shape {:?} {:?} {:#x}", shape.name(), shape.transform(), shape.raw_flags()));
-        out.push(format!("  textures {:?}", nif.view_of(shape).unwrap().texture_paths()));
+        out.push(format!(
+            "shape {:?} {:?} {:#x}",
+            shape.name(),
+            shape.transform(),
+            shape.raw_flags()
+        ));
+        out.push(format!(
+            "  textures {:?}",
+            nif.view_of(shape).unwrap().texture_paths()
+        ));
         let bones = nif.view_of(shape).unwrap().bone_list();
-        out.push(format!("  bones {bones:?} {:?}", nif.view_of(shape).unwrap().bone_ids()));
+        out.push(format!(
+            "  bones {bones:?} {:?}",
+            nif.view_of(shape).unwrap().bone_ids()
+        ));
         for b in 0..bones.len() {
-            out.push(format!("  weights {b} {:?}", nif.view_of(shape).unwrap().bone_weights(b)));
+            out.push(format!(
+                "  weights {b} {:?}",
+                nif.view_of(shape).unwrap().bone_weights(b)
+            ));
         }
     }
     out
 }
 
 fn extra_name(obj: &NiObject) -> String {
-    obj.downcast::<NiExtraData>().map_or(String::new(), |e| format!("{:?}", e.name()))
+    obj.downcast::<NiExtraData>()
+        .map_or(String::new(), |e| format!("{:?}", e.name()))
 }
 
 fn first_difference(before: &[String], after: &[String]) -> Option<String> {
@@ -581,7 +660,11 @@ fn first_difference(before: &[String], after: &[String]) -> Option<String> {
                 s[start..end].to_owned()
             };
             let head: String = a.chars().take(40).collect();
-            return Some(format!("line {i} ({head}...): ...{}... -> ...{}...", window(a), window(b)));
+            return Some(format!(
+                "line {i} ({head}...): ...{}... -> ...{}...",
+                window(a),
+                window(b)
+            ));
         }
     }
     (before.len() != after.len())
@@ -612,7 +695,9 @@ fn global_via_parents(nif: &NifFile, node: &NiNode) -> Transform {
 fn transform_floats(t: &Transform) -> [f32; 13] {
     let [r0, r1, r2] = t.rotation.rows;
     let tr = t.translation;
-    [tr.x, tr.y, tr.z, r0.x, r0.y, r0.z, r1.x, r1.y, r1.z, r2.x, r2.y, r2.z, t.scale]
+    [
+        tr.x, tr.y, tr.z, r0.x, r0.y, r0.z, r1.x, r1.y, r1.z, r2.x, r2.y, r2.z, t.scale,
+    ]
 }
 
 fn has_nan(t: &Transform) -> bool {
@@ -622,7 +707,9 @@ fn has_nan(t: &Transform) -> bool {
 /// Exact equality, but NaN equals NaN (some game files have NaN rotations).
 fn transforms_identical(a: &Transform, b: &Transform) -> bool {
     let (a, b) = (transform_floats(a), transform_floats(b));
-    a.iter().zip(&b).all(|(x, y)| x == y || (x.is_nan() && y.is_nan()))
+    a.iter()
+        .zip(&b)
+        .all(|(x, y)| x == y || (x.is_nan() && y.is_nan()))
 }
 
 /// Approximate equality, where NaN equals NaN.
@@ -655,7 +742,9 @@ impl Layout<'_> {
     fn type_of(&self, block: usize) -> String {
         // The high bit of a type index is a flag, not part of the index.
         let index = usize::from(self.type_indices[block] & 0x7FFF);
-        self.block_types.get(index).map_or("?".into(), |t| String::from_utf8_lossy(t).into_owned())
+        self.block_types
+            .get(index)
+            .map_or("?".into(), |t| String::from_utf8_lossy(t).into_owned())
     }
 }
 
@@ -697,7 +786,10 @@ fn parse_layout(bytes: &[u8]) -> Option<Layout<'_>> {
     if !bytes.starts_with(b"Gamebryo File Format") {
         return None;
     }
-    let mut r = Reader { bytes, pos: bytes.iter().position(|&b| b == b'\n')? + 1 };
+    let mut r = Reader {
+        bytes,
+        pos: bytes.iter().position(|&b| b == b'\n')? + 1,
+    };
     if r.u32()? != 0x14020007 {
         return None;
     }
@@ -723,12 +815,20 @@ fn parse_layout(bytes: &[u8]) -> Option<Layout<'_>> {
     let export_info = &bytes[export_start..r.pos];
 
     let num_types = r.u16()?;
-    let block_types = (0..num_types).map(|_| r.sized_string()).collect::<Option<Vec<_>>>()?;
-    let type_indices = (0..num_blocks).map(|_| r.u16()).collect::<Option<Vec<_>>>()?;
-    let sizes = (0..num_blocks).map(|_| r.u32()).collect::<Option<Vec<_>>>()?;
+    let block_types = (0..num_types)
+        .map(|_| r.sized_string())
+        .collect::<Option<Vec<_>>>()?;
+    let type_indices = (0..num_blocks)
+        .map(|_| r.u16())
+        .collect::<Option<Vec<_>>>()?;
+    let sizes = (0..num_blocks)
+        .map(|_| r.u32())
+        .collect::<Option<Vec<_>>>()?;
     let num_strings = r.u32()?;
     let _max_string_length = r.u32()?;
-    let strings = (0..num_strings).map(|_| r.sized_string()).collect::<Option<Vec<_>>>()?;
+    let strings = (0..num_strings)
+        .map(|_| r.sized_string())
+        .collect::<Option<Vec<_>>>()?;
     let num_groups = usize::try_from(r.u32()?).ok()?;
     let groups = r.take(num_groups.checked_mul(4)?)?;
 
@@ -760,8 +860,15 @@ fn parse_layout(bytes: &[u8]) -> Option<Layout<'_>> {
 fn describe_changes(original: &[u8], saved: &[u8]) -> Vec<(String, String)> {
     let size = format!("{} -> {} bytes", original.len(), saved.len());
     let (Some(a), Some(b)) = (parse_layout(original), parse_layout(saved)) else {
-        let at = original.iter().zip(saved).take_while(|(x, y)| x == y).count();
-        return vec![("unparsed layout".into(), format!("{size}, first difference at byte {at}"))];
+        let at = original
+            .iter()
+            .zip(saved)
+            .take_while(|(x, y)| x == y)
+            .count();
+        return vec![(
+            "unparsed layout".into(),
+            format!("{size}, first difference at byte {at}"),
+        )];
     };
 
     let mut changes = Vec::new();
@@ -769,34 +876,62 @@ fn describe_changes(original: &[u8], saved: &[u8]) -> Vec<(String, String)> {
     let examples = |items: &[&[u8]]| {
         let shown: Vec<_> = items.iter().take(5).map(|s| lossy(s)).collect();
         let more = items.len().saturating_sub(5);
-        if more > 0 { format!("{shown:?} and {more} more") } else { format!("{shown:?}") }
+        if more > 0 {
+            format!("{shown:?} and {more} more")
+        } else {
+            format!("{shown:?}")
+        }
     };
 
     if a.export_info != b.export_info {
         changes.push(("header: export info".into(), size.clone()));
     }
     if a.block_types != b.block_types {
-        let (sa, sb): (HashSet<_>, HashSet<_>) =
-            (a.block_types.iter().collect(), b.block_types.iter().collect());
-        let kind = if sa == sb { "header: block types reordered" } else { "header: block types changed" };
+        let (sa, sb): (HashSet<_>, HashSet<_>) = (
+            a.block_types.iter().collect(),
+            b.block_types.iter().collect(),
+        );
+        let kind = if sa == sb {
+            "header: block types reordered"
+        } else {
+            "header: block types changed"
+        };
         changes.push((kind.into(), String::new()));
     }
 
     if a.strings != b.strings {
-        let (sa, sb): (HashSet<&[u8]>, HashSet<&[u8]>) =
-            (a.strings.iter().copied().collect(), b.strings.iter().copied().collect());
-        let mut removed: Vec<_> = a.strings.iter().copied().filter(|s| !sb.contains(s)).collect();
-        let mut added: Vec<_> = b.strings.iter().copied().filter(|s| !sa.contains(s)).collect();
+        let (sa, sb): (HashSet<&[u8]>, HashSet<&[u8]>) = (
+            a.strings.iter().copied().collect(),
+            b.strings.iter().copied().collect(),
+        );
+        let mut removed: Vec<_> = a
+            .strings
+            .iter()
+            .copied()
+            .filter(|s| !sb.contains(s))
+            .collect();
+        let mut added: Vec<_> = b
+            .strings
+            .iter()
+            .copied()
+            .filter(|s| !sa.contains(s))
+            .collect();
         removed.dedup();
         added.dedup();
         let duplicates_removed = a.strings.len() - sa.len() > b.strings.len() - sb.len();
 
         if removed.is_empty() && added.is_empty() && !duplicates_removed {
-            changes.push(("header: strings reordered".into(), format!("{} strings", a.strings.len())));
+            changes.push((
+                "header: strings reordered".into(),
+                format!("{} strings", a.strings.len()),
+            ));
         }
         if duplicates_removed {
             let dropped = (a.strings.len() - sa.len()) - (b.strings.len() - sb.len());
-            changes.push(("header: duplicate strings removed".into(), format!("{dropped}")));
+            changes.push((
+                "header: duplicate strings removed".into(),
+                format!("{dropped}"),
+            ));
         }
         if !removed.is_empty() {
             changes.push(("header: unused strings removed".into(), examples(&removed)));
@@ -810,7 +945,10 @@ fn describe_changes(original: &[u8], saved: &[u8]) -> Vec<(String, String)> {
     }
 
     if a.blocks.len() != b.blocks.len() {
-        changes.push(("block count".into(), format!("{} -> {}", a.blocks.len(), b.blocks.len())));
+        changes.push((
+            "block count".into(),
+            format!("{} -> {}", a.blocks.len(), b.blocks.len()),
+        ));
     } else {
         // Group differing blocks by what explains the difference, then by type.
         let mut renumbered: BTreeMap<String, usize> = BTreeMap::new();
@@ -844,16 +982,31 @@ fn describe_changes(original: &[u8], saved: &[u8]) -> Vec<(String, String)> {
             }
         }
         if !none_to_empty.is_empty() {
-            let types: Vec<_> = none_to_empty.iter().map(|(t, n)| format!("{t} x{n}")).collect();
-            changes.push(("block data: missing strings written as \"\"".into(), types.join(", ")));
+            let types: Vec<_> = none_to_empty
+                .iter()
+                .map(|(t, n)| format!("{t} x{n}"))
+                .collect();
+            changes.push((
+                "block data: missing strings written as \"\"".into(),
+                types.join(", "),
+            ));
         }
         if !empty_refs.is_empty() {
-            let types: Vec<_> = empty_refs.iter().map(|(t, n)| format!("{t}: {n} refs")).collect();
+            let types: Vec<_> = empty_refs
+                .iter()
+                .map(|(t, n)| format!("{t}: {n} refs"))
+                .collect();
             changes.push(("block data: empty refs dropped".into(), types.join(", ")));
         }
         if !renumbered.is_empty() {
-            let types: Vec<_> = renumbered.iter().map(|(t, n)| format!("{t} x{n}")).collect();
-            changes.push(("block data: string indices renumbered".into(), types.join(", ")));
+            let types: Vec<_> = renumbered
+                .iter()
+                .map(|(t, n)| format!("{t} x{n}"))
+                .collect();
+            changes.push((
+                "block data: string indices renumbered".into(),
+                types.join(", "),
+            ));
         }
         if let Some(example) = texture_example {
             changes.push((
@@ -902,17 +1055,19 @@ fn string_indices_renumbered(
             continue;
         }
         // Find a 4-byte field containing `p` whose old and new values name the same string.
-        let explained = (p.saturating_sub(3)..=p).filter(|&s| s + 4 <= x.len()).any(|s| {
-            let (i, j) = (read(x, s), read(y, s));
-            let renumbered = i != j && i < xs.len() && j < ys.len() && xs[i] == ys[j];
-            let none_to_empty =
-                none_as_empty && i == u32::MAX as usize && j < ys.len() && ys[j].is_empty();
-            let same = renumbered || none_to_empty;
-            if same {
-                covered_until = s + 4;
-            }
-            same
-        });
+        let explained = (p.saturating_sub(3)..=p)
+            .filter(|&s| s + 4 <= x.len())
+            .any(|s| {
+                let (i, j) = (read(x, s), read(y, s));
+                let renumbered = i != j && i < xs.len() && j < ys.len() && xs[i] == ys[j];
+                let none_to_empty =
+                    none_as_empty && i == u32::MAX as usize && j < ys.len() && ys[j].is_empty();
+                let same = renumbered || none_to_empty;
+                if same {
+                    covered_until = s + 4;
+                }
+                same
+            });
         if !explained {
             return false;
         }
@@ -921,14 +1076,20 @@ fn string_indices_renumbered(
 }
 
 /// For a `BSShaderTextureSet` (a count, then length-prefixed paths), the first path that differs.
-fn changed_texture_path<'a>(block_type: &str, x: &'a [u8], y: &'a [u8]) -> Option<(&'a [u8], &'a [u8])> {
+fn changed_texture_path<'a>(
+    block_type: &str,
+    x: &'a [u8],
+    y: &'a [u8],
+) -> Option<(&'a [u8], &'a [u8])> {
     if block_type != "BSShaderTextureSet" {
         return None;
     }
     let paths = |b: &'a [u8]| -> Option<Vec<&'a [u8]>> {
         let mut r = Reader { bytes: b, pos: 0 };
         let count = r.u32()?;
-        let paths = (0..count).map(|_| r.sized_string()).collect::<Option<Vec<_>>>()?;
+        let paths = (0..count)
+            .map(|_| r.sized_string())
+            .collect::<Option<Vec<_>>>()?;
         (r.pos == b.len()).then_some(paths)
     };
     let (px, py) = (paths(x)?, paths(y)?);

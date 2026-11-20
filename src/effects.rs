@@ -25,7 +25,7 @@ use int_enum::IntEnum;
 use nifly_sys::{effects::ffi, nif_file::ffi as nif_ffi};
 
 use crate::{
-    file::{block_index_to_ffi, index_from_ffi, Index},
+    file::{Index, block_index_to_ffi, index_from_ffi},
     handle::{Edit, View},
     iter::{BlockIter, RefIndices},
     nodes::NiNode,
@@ -139,7 +139,9 @@ impl NiTextureEffect {
     pub fn projection_matrix(&self) -> Matrix3 {
         let mut rows = [Vec3::ZERO.to_ffi(); 3];
         ffi::texture_effect_matrix(&self.0, &mut rows);
-        Matrix3 { rows: rows.map(Vec3::from_ffi) }
+        Matrix3 {
+            rows: rows.map(Vec3::from_ffi),
+        }
     }
 
     /// Sets the [projection matrix](Self::projection_matrix).
@@ -267,7 +269,10 @@ impl<'a, T: NiType> View<'a, T> {
         T: IsA<NiNode, I>,
     {
         let node: &NiNode = self.get().upcast_ref();
-        BlockIter::new(self.file(), RefIndices::new(ffi::node_effects(node.as_ffi())))
+        BlockIter::new(
+            self.file(),
+            RefIndices::new(ffi::node_effects(node.as_ffi())),
+        )
     }
 
     /// The nodes the effect applies to, with their subtrees. Saved from Oblivion until Fallout 4,
@@ -278,7 +283,10 @@ impl<'a, T: NiType> View<'a, T> {
         T: IsA<NiDynamicEffect, I>,
     {
         let effect: &NiDynamicEffect = self.get().upcast_ref();
-        BlockIter::new(self.file(), RefIndices::new(ffi::effect_affected_nodes(&effect.0)))
+        BlockIter::new(
+            self.file(),
+            RefIndices::new(ffi::effect_affected_nodes(&effect.0)),
+        )
     }
 }
 
@@ -291,7 +299,11 @@ impl<T: NiType> Edit<'_, T> {
     where
         T: IsA<NiNode, I>,
     {
-        let Some(effects) = effects.iter().map(|&e| block_index_to_ffi(e)).collect::<Option<Vec<_>>>() else {
+        let Some(effects) = effects
+            .iter()
+            .map(|&e| block_index_to_ffi(e))
+            .collect::<Option<Vec<_>>>()
+        else {
             return false;
         };
         let node = self.index() as u32;
@@ -318,7 +330,8 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiNode, I>,
     {
         let node = self.index() as u32;
-        index_from_ffi(E::add(self.file_mut().inner.pin_mut(), node)).expect("the block is an NiNode")
+        index_from_ffi(E::add(self.file_mut().inner.pin_mut(), node))
+            .expect("the block is an NiNode")
     }
 
     /// Replaces the effect's [affected nodes](View::affected_nodes). Returns `false`, changing
@@ -327,7 +340,11 @@ impl<T: NiType> Edit<'_, T> {
     where
         T: IsA<NiDynamicEffect, I>,
     {
-        let Some(nodes) = nodes.iter().map(|&n| block_index_to_ffi(n)).collect::<Option<Vec<_>>>() else {
+        let Some(nodes) = nodes
+            .iter()
+            .map(|&n| block_index_to_ffi(n))
+            .collect::<Option<Vec<_>>>()
+        else {
             return false;
         };
         let effect = self.index() as u32;

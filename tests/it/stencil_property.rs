@@ -5,15 +5,20 @@ use std::{fs, ptr};
 
 use nifly::{
     file::NifFile,
-    shaders::{
-        DrawMode, NiStencilProperty, StencilAction, StencilFlags, StencilTest,
-    },
+    shaders::{DrawMode, NiStencilProperty, StencilAction, StencilFlags, StencilTest},
 };
 
 /// The stencil property of the shape named "Tri EditorMarker_box_02".
 fn stencil(nif: &NifFile) -> &NiStencilProperty {
-    let shape = nif.shapes().find(|s| s.name() == "Tri EditorMarker_box_02").unwrap();
-    nif.view_of(shape).unwrap().stencil_property().unwrap().get()
+    let shape = nif
+        .shapes()
+        .find(|s| s.name() == "Tri EditorMarker_box_02")
+        .unwrap();
+    nif.view_of(shape)
+        .unwrap()
+        .stencil_property()
+        .unwrap()
+        .get()
 }
 
 type Fields = (
@@ -61,17 +66,31 @@ fn reads_stored_fields() {
 
     // It's in the shape's property list; the collision shape has none.
     let shapes: Vec<_> = nif.shapes().collect();
-    let with: Vec<_> = shapes.iter().map(|s| nif.view_of(*s).unwrap().stencil_property().is_some()).collect();
+    let with: Vec<_> = shapes
+        .iter()
+        .map(|s| nif.view_of(*s).unwrap().stencil_property().is_some())
+        .collect();
     assert_eq!(with.iter().filter(|w| **w).count(), 1);
-    let shape = nif.shapes().find(|s| s.name() == "Tri EditorMarker_box_02").unwrap();
-    let listed = nif.child_blocks_of::<NiStencilProperty>(shape).next().unwrap();
+    let shape = nif
+        .shapes()
+        .find(|s| s.name() == "Tri EditorMarker_box_02")
+        .unwrap();
+    let listed = nif
+        .child_blocks_of::<NiStencilProperty>(shape)
+        .next()
+        .unwrap();
     assert!(ptr::eq(listed, s));
 }
 
 #[test]
 fn setters_round_trip() {
     let mut nif = load("Stencil_MW");
-    let shape = nif.shapes().indexed().find(|(_, s)| s.name() == "Tri EditorMarker_box_02").unwrap().0;
+    let shape = nif
+        .shapes()
+        .indexed()
+        .find(|(_, s)| s.name() == "Tri EditorMarker_box_02")
+        .unwrap()
+        .0;
     let mut s_shape = nif.edit::<nifly::geometry::NiShape>(shape).unwrap();
     let mut s_edit = s_shape.stencil_property().unwrap();
     let s = &mut *s_edit;
@@ -107,17 +126,33 @@ fn setters_round_trip() {
 fn none_without_one() {
     for asset in ["Bones", "Cone", "Cube", "Icosphere", "Suzanne"] {
         let nif = load(asset);
-        assert!(nif.shapes().all(|s| nif.view_of(s).unwrap().stencil_property().is_none()), "{asset}");
+        assert!(
+            nif.shapes()
+                .all(|s| nif.view_of(s).unwrap().stencil_property().is_none()),
+            "{asset}"
+        );
     }
     let upstream = "nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_MW.nif";
     let nif = NifFile::load(fs::read(upstream).unwrap().as_slice(), None).unwrap();
-    assert!(nif.shapes().all(|s| nif.view_of(s).unwrap().stencil_property().is_none()));
+    assert!(
+        nif.shapes()
+            .all(|s| nif.view_of(s).unwrap().stencil_property().is_none())
+    );
 
     let nif = load("Stencil_MW");
-    let stencil_index = nif.blocks_of::<NiStencilProperty>().indices().next().unwrap();
+    let stencil_index = nif
+        .blocks_of::<NiStencilProperty>()
+        .indices()
+        .next()
+        .unwrap();
     let count = nif.blocks().count();
     for index in [0, stencil_index, count, usize::MAX] {
-        assert!(nif.view::<nifly::geometry::NiShape>(index).and_then(|v| v.stencil_property()).is_none(), "{index}");
+        assert!(
+            nif.view::<nifly::geometry::NiShape>(index)
+                .and_then(|v| v.stencil_property())
+                .is_none(),
+            "{index}"
+        );
     }
 }
 
@@ -128,9 +163,19 @@ fn stencil_flag_builders() {
         .with_pass_action(StencilAction::Increment)
         .with_draw_mode(DrawMode::Both);
     assert_eq!(parts, StencilFlags::DEFAULT);
-    let f = parts.with_enabled(true).with_fail_action(StencilAction::Zero).with_z_fail_action(StencilAction::Replace);
+    let f = parts
+        .with_enabled(true)
+        .with_fail_action(StencilAction::Zero)
+        .with_z_fail_action(StencilAction::Replace);
     assert_eq!(f.bits(), 19840 + 1 + (1 << 1) + (2 << 4));
-    assert_eq!((f.enabled(), f.fail_action(), f.z_fail_action()), (true, Some(StencilAction::Zero), Some(StencilAction::Replace)));
+    assert_eq!(
+        (f.enabled(), f.fail_action(), f.z_fail_action()),
+        (
+            true,
+            Some(StencilAction::Zero),
+            Some(StencilAction::Replace)
+        )
+    );
     // Action bits holding 6 aren't an action.
     assert_eq!(StencilFlags::from_bits(6 << 1).fail_action(), None);
 }

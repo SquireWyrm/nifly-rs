@@ -1,4 +1,3 @@
-
 // cxx's generated wrapper for `object_mut` doesn't carry its `# Safety` doc where clippy looks.
 #[allow(clippy::missing_safety_doc)]
 #[cxx::bridge]
@@ -110,7 +109,7 @@ pub mod ffi {
         vertex: u16,
         weight: f32,
     }
-    
+
     #[namespace = "read_bridge"]
     extern "C++" {
         include!("nifly-sys/src/read_bridge.rs.h");
@@ -344,7 +343,7 @@ pub mod ffi {
     }
 
     #[namespace = "nifly_rs"]
-    unsafe extern "C++" {        
+    unsafe extern "C++" {
         include!("sort_state.h");
         include!("nif_file_shim.h");
 
@@ -383,29 +382,144 @@ pub mod ffi {
         ) -> u32;
 
         /// Like `add_node`, creating the node subclass in the name.
-        fn add_bs_fade_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_root_collision_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_avoid_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_ni_bs_animation_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_ni_bs_particle_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_value_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_leaf_anim_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_tree_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_ordered_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_multi_bound_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_weak_reference_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_distant_object_instanced_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_range_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_debris_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_blast_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_damage_stage(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_face_gen_ni_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_ni_billboard_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_ni_switch_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_ni_lod_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_ni_bone(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_ni_sort_adjust_node(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
-        fn add_bs_master_particle_system(file: Pin<&mut NifFile>, name: &[u8], transform: Transform, parent_index: u32) -> u32;
+        fn add_bs_fade_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_root_collision_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_avoid_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_ni_bs_animation_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_ni_bs_particle_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_value_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_leaf_anim_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_tree_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_ordered_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_multi_bound_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_weak_reference_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_distant_object_instanced_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_range_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_debris_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_blast_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_damage_stage(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_face_gen_ni_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_ni_billboard_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_ni_switch_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_ni_lod_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_ni_bone(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_ni_sort_adjust_node(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
+        fn add_bs_master_particle_system(
+            file: Pin<&mut NifFile>,
+            name: &[u8],
+            transform: Transform,
+            parent_index: u32,
+        ) -> u32;
 
         /// `NifFile::GetBlockID`. `u32::MAX` (`NIF_NPOS`) if `obj` isn't in `file`. Linear search.
         fn block_index(file: &NifFile, obj: &NiObject) -> u32;
@@ -415,7 +529,6 @@ pub mod ffi {
 
         /// `NifFile::CanDeleteNode(name)`. False if no node has that name.
         fn can_delete_node_by_name(file: &NifFile, name: &[u8]) -> bool;
-
 
         /// `NifFile::SetShapeOrder` with the names of the shapes at block indices `shapes`.
         /// Silently does nothing in the cases upstream does; the safe crate checks first.
@@ -436,7 +549,10 @@ pub mod ffi {
 
         /// `NifFile::DeleteUnreferencedBlocks<T>`, with `matches` deciding which blocks are a
         /// `T`. Returns the number of blocks deleted.
-        fn delete_unreferenced_blocks(file: Pin<&mut NifFile>, matches: fn(&NiObject) -> bool) -> u32;
+        fn delete_unreferenced_blocks(
+            file: Pin<&mut NifFile>,
+            matches: fn(&NiObject) -> bool,
+        ) -> u32;
 
         /// `NifFile::DeleteUnreferencedNodes`. Returns the number of nodes deleted, or -1 if
         /// nifly refused (unknown blocks or no root node).
@@ -456,7 +572,12 @@ pub mod ffi {
         /// `shape_index`. Placed in the ref or the property list by what the version saves, and
         /// shared old properties are kept. Returns the new block's index, or `u32::MAX` if that
         /// block isn't a shape.
-        fn assign_alpha_property(file: Pin<&mut NifFile>, shape_index: u32, flags: u16, threshold: u8) -> u32;
+        fn assign_alpha_property(
+            file: Pin<&mut NifFile>,
+            shape_index: u32,
+            flags: u16,
+            threshold: u8,
+        ) -> u32;
         /// `NifFile::RemoveAlphaProperty` on the shape at block `shape_index`, deleting only
         /// properties no other block refers to. Returns whether it had one.
         fn remove_alpha_property(file: Pin<&mut NifFile>, shape_index: u32) -> bool;
@@ -464,7 +585,12 @@ pub mod ffi {
         /// Gives the `BSMultiBoundNode` at `node` a new `BSMultiBound` with this data, replacing
         /// its ref. Returns the `BSMultiBound`'s index, or `u32::MAX` if that block isn't a
         /// `BSMultiBoundNode`. `rotation` has 3 rows.
-        fn assign_multi_bound_aabb(file: Pin<&mut NifFile>, node: u32, center: Vec3, half_extent: Vec3) -> u32;
+        fn assign_multi_bound_aabb(
+            file: Pin<&mut NifFile>,
+            node: u32,
+            center: Vec3,
+            half_extent: Vec3,
+        ) -> u32;
         fn assign_multi_bound_obb(
             file: Pin<&mut NifFile>,
             node: u32,
@@ -472,7 +598,12 @@ pub mod ffi {
             size: Vec3,
             rotation: &[Vec3],
         ) -> u32;
-        fn assign_multi_bound_sphere(file: Pin<&mut NifFile>, node: u32, center: Vec3, radius: f32) -> u32;
+        fn assign_multi_bound_sphere(
+            file: Pin<&mut NifFile>,
+            node: u32,
+            center: Vec3,
+            radius: f32,
+        ) -> u32;
         /// Clears the multi-bound ref of the `BSMultiBoundNode` at `node`. Returns false if that
         /// block isn't one or has no multi-bound.
         fn remove_multi_bound(file: Pin<&mut NifFile>, node: u32) -> bool;
@@ -486,7 +617,8 @@ pub mod ffi {
         /// Gives the `NiGeometryData` at `data` a new `BSPackedAdditionalGeometryData` if
         /// `packed`, otherwise a new `NiAdditionalGeometryData`, with the data's vertex count.
         /// Returns its index, or `NIF_NPOS` (changing nothing) if that block isn't geometry data.
-        fn assign_additional_geometry_data(file: Pin<&mut NifFile>, data: u32, packed: bool) -> u32;
+        fn assign_additional_geometry_data(file: Pin<&mut NifFile>, data: u32, packed: bool)
+        -> u32;
         /// Clears the additional data ref of the `NiGeometryData` at `data`. False if that block
         /// isn't one or has no additional data.
         fn remove_additional_geometry_data(file: Pin<&mut NifFile>, data: u32) -> bool;
@@ -548,7 +680,8 @@ pub mod ffi {
         /// unless the shape stores settable triangles (`NiTriShapeData`, a `BSTriShape`, or a
         /// `BSGeometry` mesh), every index is below its vertex count, and the count fits.
         /// Not an upstream `NifFile` method.
-        fn set_shape_triangles(file: Pin<&mut NifFile>, shape: u32, triangles: &[Triangle]) -> bool;
+        fn set_shape_triangles(file: Pin<&mut NifFile>, shape: u32, triangles: &[Triangle])
+        -> bool;
 
         /// `NifFile::CalcNormalsForShape` on the shape at block `shape`. Returns whether normals
         /// were calculated (see the shim).
@@ -601,7 +734,12 @@ pub mod ffi {
 
         /// `NifFile::UpdateShapeBoneID` on the shape at block `shape`. Returns false, changing
         /// nothing, unless it's skinned, `new_id` is a node and a bone is `old_id`.
-        fn replace_shape_bone(file: Pin<&mut NifFile>, shape: u32, old_id: u32, new_id: u32) -> bool;
+        fn replace_shape_bone(
+            file: Pin<&mut NifFile>,
+            shape: u32,
+            old_id: u32,
+            new_id: u32,
+        ) -> bool;
 
         /// `NifFile::RemoveEmptyPartitions` on the shape at block `shape`. The number of partitions
         /// removed, or -1, changing nothing, if it can't run (see the shim).
@@ -627,7 +765,12 @@ pub mod ffi {
         fn external_mesh_path(shape: &NiShape, index: u32) -> &[u8];
         /// Sets the path of external mesh `index` of the `BSGeometry` at block `shape`. Returns
         /// false if there's no such mesh.
-        fn set_external_mesh_path(file: Pin<&mut NifFile>, shape: u32, index: u32, path: &[u8]) -> bool;
+        fn set_external_mesh_path(
+            file: Pin<&mut NifFile>,
+            shape: u32,
+            index: u32,
+            path: &[u8],
+        ) -> bool;
         /// `NifFile::TriangulateShape` on the shape at block `shape`. Returns false, changing
         /// nothing, unless it's an `NiTriStrips` with triangles and unshared data.
         fn triangulate_shape(file: Pin<&mut NifFile>, shape: u32) -> bool;
@@ -641,7 +784,12 @@ pub mod ffi {
         fn delete_shape_vertices(file: Pin<&mut NifFile>, shape: u32, vertices: &[u32]) -> bool;
         /// `NifFile::MoveVertex` on the shape at block `shape`. Returns false, changing nothing,
         /// unless it stores vertices and `vertex` is one of them.
-        fn set_shape_vertex(file: Pin<&mut NifFile>, shape: u32, vertex: u32, position: Vec3) -> bool;
+        fn set_shape_vertex(
+            file: Pin<&mut NifFile>,
+            shape: u32,
+            vertex: u32,
+            position: Vec3,
+        ) -> bool;
         /// `NifFile::MirrorShape` on the shape at block `shape`. Returns false, changing nothing,
         /// unless it can be mirrored (see the shim).
         fn mirror_shape(file: Pin<&mut NifFile>, shape: u32, x: bool, y: bool, z: bool) -> bool;
@@ -662,7 +810,12 @@ pub mod ffi {
         /// isn't a shape.
         fn clone_shape(file: Pin<&mut NifFile>, shape: u32, name: &[u8]) -> u32;
         /// `NifFile::CloneShape` from `source`. `u32::MAX` unless the versions match.
-        fn clone_shape_from(file: Pin<&mut NifFile>, source: &NifFile, shape: &NiShape, name: &[u8]) -> u32;
+        fn clone_shape_from(
+            file: Pin<&mut NifFile>,
+            source: &NifFile,
+            shape: &NiShape,
+            name: &[u8],
+        ) -> u32;
         /// `NifFile::CloneNamedNode` on a given node within the file. `u32::MAX` if not a node.
         fn clone_node(file: Pin<&mut NifFile>, node: u32) -> u32;
         /// The same from `source`. `u32::MAX` unless the versions match.
@@ -751,12 +904,19 @@ pub mod ffi {
 
         /// `NifFile::CalcShapeTransformGlobalToSkin`. Returns false, leaving `out` unchanged, if
         /// the transform is neither stored nor calculable.
-        fn calc_shape_transform_global_to_skin(file: &NifFile, shape: &NiShape, out: &mut Transform) -> bool;
+        fn calc_shape_transform_global_to_skin(
+            file: &NifFile,
+            shape: &NiShape,
+            out: &mut Transform,
+        ) -> bool;
 
         /// `NifFile::GetShapeTransformGlobalToSkin`. Returns false, leaving `out` unchanged, if
         /// the shape has no stored global-to-skin transform.
-        fn shape_transform_global_to_skin(file: &NifFile, shape: &NiShape, out: &mut Transform) -> bool;
-
+        fn shape_transform_global_to_skin(
+            file: &NifFile,
+            shape: &NiShape,
+            out: &mut Transform,
+        ) -> bool;
 
         /// Sets `targetRef` of the `NiSkinInstance` (to an `NiNode`) or `BSSkinInstance` (to an
         /// `NiAVObject`) at block `skin`. Returns false, changing nothing, if either block is
@@ -774,7 +934,12 @@ pub mod ffi {
 
         /// `NifFile::GetShapeBoneBounds`. Returns false, leaving `out` unchanged, if the shape
         /// isn't skinned or has no such bone.
-        fn shape_bone_bounds(file: &NifFile, shape: &NiShape, bone_index: u32, out: &mut BoundingSphere) -> bool;
+        fn shape_bone_bounds(
+            file: &NifFile,
+            shape: &NiShape,
+            bone_index: u32,
+            out: &mut BoundingSphere,
+        ) -> bool;
 
         /// `NifFile::SetShapeBoneBounds` on the shape at block `shape`. Returns false, changing
         /// nothing, if that block isn't a shape, isn't skinned or has no such bone.
@@ -817,7 +982,12 @@ pub mod ffi {
         /// Replaces `BSTreeNode::bones1` (`list` 1) or `bones2` (`list` 2) of the block at
         /// `node_index`. Returns false, changing nothing, if that block isn't a `BSTreeNode` or a
         /// bone isn't an `NiNode`.
-        fn set_tree_node_bones(file: Pin<&mut NifFile>, node_index: u32, list: u8, bones: &[u32]) -> bool;
+        fn set_tree_node_bones(
+            file: Pin<&mut NifFile>,
+            node_index: u32,
+            list: u8,
+            bones: &[u32],
+        ) -> bool;
 
         /// `NifFile::GetShapeBoneList`. Empty if the shape isn't skinned.
         fn shape_bone_list(file: &NifFile, shape: &NiShape) -> UniquePtr<CxxVector<CxxString>>;
@@ -856,7 +1026,11 @@ pub mod ffi {
 
         /// `NifFile::GetShapeBoneWeights`, sorted by vertex. `bone_index` is the position in the
         /// shape's bone list. Empty if the shape isn't skinned or the index is out of range.
-        fn shape_bone_weights(file: &NifFile, shape: &NiShape, bone_index: u32) -> Vec<VertexWeight>;
+        fn shape_bone_weights(
+            file: &NifFile,
+            shape: &NiShape,
+            bone_index: u32,
+        ) -> Vec<VertexWeight>;
 
         /// `NifFile::SetShapeBoneWeights` on the shape at block `shape`, with `weights` sorted by
         /// vertex and free of duplicates. Returns false, changing nothing, if that block isn't a

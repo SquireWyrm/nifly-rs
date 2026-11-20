@@ -79,12 +79,14 @@ impl NiTexturingProperty {
     /// the [clamp mode](ClampMode). Only saved from version 20.1.0.3 (Fallout 3) on; the
     /// separate fields aren't converted into them.
     pub fn map_raw_flags(&self, map: impl Into<MapSlot>) -> Option<u16> {
-        self.map_field(map, ffi::texturing_map_flags).map(|v| v as u16)
+        self.map_field(map, ffi::texturing_map_flags)
+            .map(|v| v as u16)
     }
 
     /// `map`'s maximum anisotropy. Only saved from version 20.5.0.4 on.
     pub fn map_max_anisotropy(&self, map: impl Into<MapSlot>) -> Option<u16> {
-        self.map_field(map, ffi::texturing_map_max_anisotropy).map(|v| v as u16)
+        self.map_field(map, ffi::texturing_map_max_anisotropy)
+            .map(|v| v as u16)
     }
 
     /// `map`'s PlayStation 2 L and K values, as `[l, k]`. Only saved before version 10.4.0.1.
@@ -97,7 +99,8 @@ impl NiTexturingProperty {
 
     /// A value of unknown meaning stored with `map`. Only saved up to version 4.1.0.12.
     pub fn map_unknown(&self, map: impl Into<MapSlot>) -> Option<u16> {
-        self.map_field(map, ffi::texturing_map_unknown).map(|v| v as u16)
+        self.map_field(map, ffi::texturing_map_unknown)
+            .map(|v| v as u16)
     }
 
     /// `map`'s texture coordinate transform, or `None` if the property doesn't have `map` or
@@ -145,7 +148,12 @@ impl NiTexturingProperty {
         transform: Option<TextureTransform>,
     ) -> bool {
         let value = transform.unwrap_or_default().to_ffi();
-        ffi::set_texturing_map_transform(self.ffi_mut(), map.into().to_ffi(), transform.is_some(), &value)
+        ffi::set_texturing_map_transform(
+            self.ffi_mut(),
+            map.into().to_ffi(),
+            transform.is_some(),
+            &value,
+        )
     }
 
     /// The number of shader maps, used or not. Only saved from version 10.0.1.0 on.
@@ -203,7 +211,10 @@ impl MapSlot {
     pub(super) fn to_ffi(self) -> u32 {
         match self {
             MapSlot::Map(map) => map.into(),
-            MapSlot::Shader(i) => u32::try_from(i).ok().and_then(|i| i.checked_add(12)).unwrap_or(u32::MAX),
+            MapSlot::Shader(i) => u32::try_from(i)
+                .ok()
+                .and_then(|i| i.checked_add(12))
+                .unwrap_or(u32::MAX),
         }
     }
 }

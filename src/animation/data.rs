@@ -43,7 +43,9 @@ const XYZ_ROTATION: u32 = 4;
 impl NiKeyframeData {
     pub fn rotations(&self) -> Rotations {
         if ffi::keyframe_rotation_type(&self.0) == XYZ_ROTATION {
-            Rotations::Xyz([0, 1, 2].map(|axis| group_from_ffi(ffi::keyframe_xyz_rotations(&self.0, axis))))
+            Rotations::Xyz(
+                [0, 1, 2].map(|axis| group_from_ffi(ffi::keyframe_xyz_rotations(&self.0, axis))),
+            )
         } else {
             Rotations::Quaternion(group_from_ffi(ffi::keyframe_quaternion_keys(&self.0)))
         }
@@ -53,10 +55,15 @@ impl NiKeyframeData {
     /// group has keys but no interpolation.
     pub fn set_rotations(&mut self, rotations: &Rotations) -> bool {
         match rotations {
-            Rotations::Quaternion(keys) => ffi::set_keyframe_quaternion_keys(self.ffi_mut(), &group_to_ffi(keys)),
-            Rotations::Xyz([x, y, z]) => {
-                ffi::set_keyframe_xyz_rotations(self.ffi_mut(), &group_to_ffi(x), &group_to_ffi(y), &group_to_ffi(z))
+            Rotations::Quaternion(keys) => {
+                ffi::set_keyframe_quaternion_keys(self.ffi_mut(), &group_to_ffi(keys))
             }
+            Rotations::Xyz([x, y, z]) => ffi::set_keyframe_xyz_rotations(
+                self.ffi_mut(),
+                &group_to_ffi(x),
+                &group_to_ffi(y),
+                &group_to_ffi(z),
+            ),
         }
     }
 
@@ -110,7 +117,10 @@ impl NiUvData {
 impl NiVisData {
     /// The visibility keys. Only each key's time and value are saved.
     pub fn keys(&self) -> Vec<Key<bool>> {
-        ffi::vis_data_keys(&self.0).iter().map(key_from_ffi).collect()
+        ffi::vis_data_keys(&self.0)
+            .iter()
+            .map(key_from_ffi)
+            .collect()
     }
 
     pub fn set_keys(&mut self, keys: &[Key<bool>]) {

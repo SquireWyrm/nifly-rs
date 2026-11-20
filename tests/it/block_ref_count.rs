@@ -1,6 +1,6 @@
 //! Tests for NifFile::block_ref_count.
 
-use crate::common::{load};
+use crate::common::load;
 
 use nifly::{file::NifFile, geometry::NiShape};
 
@@ -45,7 +45,10 @@ fn unreferenced_blocks() {
 fn refs_from_outside_the_tree_count() {
     // Bones' skin data is only referenced by the skin instance, which isn't a node.
     let nif = load("Bones");
-    let data = nif.blocks().position(|b| b.block_name() == "NiSkinData").unwrap();
+    let data = nif
+        .blocks()
+        .position(|b| b.block_name() == "NiSkinData")
+        .unwrap();
     assert_eq!(nif.block_ref_count(data, false), 1);
 }
 
@@ -61,10 +64,14 @@ fn no_block_at_index() {
 #[test]
 fn follows_edits() {
     let mut nif = load("Suzanne");
-    let shape = nif.block_index(nif.blocks_of::<NiShape>().next().unwrap()).unwrap();
+    let shape = nif
+        .block_index(nif.blocks_of::<NiShape>().next().unwrap())
+        .unwrap();
     // Attaching a node under the root adds a ref to it; the root itself is still unowned.
     let root = nif.root_node().unwrap().index();
-    let node = nif.add_node("Extra", nif.root_node().unwrap().transform(), None).unwrap();
+    let node = nif
+        .add_node("Extra", nif.root_node().unwrap().transform(), None)
+        .unwrap();
     assert_eq!(nif.block_ref_count(node, false), 1);
     assert_eq!(nif.block_ref_count(root, false), 0);
 

@@ -37,11 +37,19 @@ pub struct SubPart {
 
 impl SubPart {
     pub(super) fn from_ffi(p: ffi::SubPartFfi) -> Self {
-        Self { filter: HavokFilter::from_ffi(p.filter), vertex_count: p.vertex_count, material: p.material }
+        Self {
+            filter: HavokFilter::from_ffi(p.filter),
+            vertex_count: p.vertex_count,
+            material: p.material,
+        }
     }
 
     pub(super) fn to_ffi(self) -> ffi::SubPartFfi {
-        ffi::SubPartFfi { filter: self.filter.to_ffi(), vertex_count: self.vertex_count, material: self.material }
+        ffi::SubPartFfi {
+            filter: self.filter.to_ffi(),
+            vertex_count: self.vertex_count,
+            material: self.material,
+        }
     }
 }
 
@@ -121,7 +129,10 @@ impl HkPackedNiTriStripsData {
     }
 
     pub fn vertices(&self) -> Vec<Vec3> {
-        ffi::packed_data_vertices(&self.0).into_iter().map(Vec3::from_ffi).collect()
+        ffi::packed_data_vertices(&self.0)
+            .into_iter()
+            .map(Vec3::from_ffi)
+            .collect()
     }
 
     /// Replaces the vertices, changing the vertex count. Returns `false`, changing nothing, if a
@@ -264,14 +275,20 @@ impl BhkCompressedMeshShapeData {
     pub fn chunk_materials(&self) -> Vec<ChunkMaterial> {
         ffi::cms_materials(&self.0)
             .into_iter()
-            .map(|m| ChunkMaterial { material: m.material, filter: HavokFilter::from_ffi(m.filter) })
+            .map(|m| ChunkMaterial {
+                material: m.material,
+                filter: HavokFilter::from_ffi(m.filter),
+            })
             .collect()
     }
 
     pub fn set_chunk_materials(&mut self, materials: &[ChunkMaterial]) {
         let materials: Vec<_> = materials
             .iter()
-            .map(|m| ffi::CmsMaterialFfi { material: m.material, filter: m.filter.to_ffi() })
+            .map(|m| ffi::CmsMaterialFfi {
+                material: m.material,
+                filter: m.filter.to_ffi(),
+            })
             .collect();
         ffi::set_cms_materials(self.ffi_mut(), &materials);
     }
@@ -280,14 +297,20 @@ impl BhkCompressedMeshShapeData {
     pub fn chunk_transforms(&self) -> Vec<ChunkTransform> {
         ffi::cms_transforms(&self.0)
             .into_iter()
-            .map(|t| ChunkTransform { translation: t.translation, rotation: t.rotation })
+            .map(|t| ChunkTransform {
+                translation: t.translation,
+                rotation: t.rotation,
+            })
             .collect()
     }
 
     pub fn set_chunk_transforms(&mut self, transforms: &[ChunkTransform]) {
         let transforms: Vec<_> = transforms
             .iter()
-            .map(|t| ffi::CmsTransformFfi { translation: t.translation, rotation: t.rotation })
+            .map(|t| ffi::CmsTransformFfi {
+                translation: t.translation,
+                rotation: t.rotation,
+            })
             .collect();
         ffi::set_cms_transforms(self.ffi_mut(), &transforms);
     }
@@ -308,7 +331,11 @@ impl BhkCompressedMeshShapeData {
     pub fn big_triangles(&self) -> Vec<BigTriangle> {
         ffi::cms_big_triangles(&self.0)
             .into_iter()
-            .map(|t| BigTriangle { triangle: [t.p1, t.p2, t.p3], material: t.material, welding_info: t.welding_info })
+            .map(|t| BigTriangle {
+                triangle: [t.p1, t.p2, t.p3],
+                material: t.material,
+                welding_info: t.welding_info,
+            })
             .collect()
     }
 
@@ -363,6 +390,9 @@ impl BhkCompressedMeshShapeData {
                 lengths.push(u32::try_from(list.len()).expect("a chunk list fits in u32"));
             }
         }
-        assert!(ffi::set_cms_chunks(self.ffi_mut(), &headers, &lists, &lengths), "lengths add up");
+        assert!(
+            ffi::set_cms_chunks(self.ffi_mut(), &headers, &lists, &lengths),
+            "lengths add up"
+        );
     }
 }

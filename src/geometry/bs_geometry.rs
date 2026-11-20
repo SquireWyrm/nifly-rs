@@ -78,7 +78,11 @@ impl BsGeometry {
 
     /// Sets the [mesh info](Self::mesh_info). Returns `false` if `index` is out of range.
     pub fn set_mesh_info(&mut self, index: usize, info: MeshInfo) -> bool {
-        ffi::set_bs_geometry_mesh_info(self.ffi_mut(), index, &[info.index_count, info.vertex_count, info.raw_flags])
+        ffi::set_bs_geometry_mesh_info(
+            self.ffi_mut(),
+            index,
+            &[info.index_count, info.vertex_count, info.raw_flags],
+        )
     }
 
     /// Adds an empty mesh at the end. Returns `false`, changing nothing, if there are already 4.
@@ -205,7 +209,11 @@ impl BsGeometryMeshData {
         flat.as_chunks::<2>()
             .0
             .chunks(per)
-            .map(|v| v.iter().map(|&[bone, weight]| MeshWeight { bone, weight }).collect())
+            .map(|v| {
+                v.iter()
+                    .map(|&[bone, weight]| MeshWeight { bone, weight })
+                    .collect()
+            })
             .collect()
     }
 
@@ -216,19 +224,27 @@ impl BsGeometryMeshData {
         if weights.iter().any(|w| w.as_ref().len() != per) {
             return false;
         }
-        let flat: Vec<u16> = weights.iter().flat_map(|w| w.as_ref().iter().flat_map(|w| [w.bone, w.weight])).collect();
+        let flat: Vec<u16> = weights
+            .iter()
+            .flat_map(|w| w.as_ref().iter().flat_map(|w| [w.bone, w.weight]))
+            .collect();
         ffi::set_mesh_data_skin_weights(self.ffi_mut(), &flat, per as u32)
     }
 
     /// Lower-detail triangle lists over the same vertices.
     pub fn lods(&self) -> Vec<Vec<[u16; 3]>> {
-        (0..ffi::mesh_data_lod_count(&self.0)).map(|i| triangles_of(ffi::mesh_data_lod(&self.0, i))).collect()
+        (0..ffi::mesh_data_lod_count(&self.0))
+            .map(|i| triangles_of(ffi::mesh_data_lod(&self.0, i)))
+            .collect()
     }
 
     /// Replaces the [LODs](Self::lods). Returns `false`, changing nothing, if an index isn't
     /// below the vertex count.
     pub fn set_lods<S: AsRef<[[u16; 3]]>>(&mut self, lods: &[S]) -> bool {
-        let flat: Vec<u16> = lods.iter().flat_map(|l| l.as_ref().as_flattened().iter().copied()).collect();
+        let flat: Vec<u16> = lods
+            .iter()
+            .flat_map(|l| l.as_ref().as_flattened().iter().copied())
+            .collect();
         let lengths: Vec<usize> = lods.iter().map(|l| l.as_ref().len() * 3).collect();
         ffi::set_mesh_data_lods(self.ffi_mut(), &flat, &lengths)
     }
@@ -238,20 +254,36 @@ impl BsGeometryMeshData {
             .as_chunks::<4>()
             .0
             .iter()
-            .map(|&[vertex_count, vertex_offset, primitive_count, primitive_offset]| Meshlet {
-                vertex_count,
-                vertex_offset,
-                primitive_count,
-                primitive_offset,
-            })
+            .map(
+                |&[
+                    vertex_count,
+                    vertex_offset,
+                    primitive_count,
+                    primitive_offset,
+                ]| Meshlet {
+                    vertex_count,
+                    vertex_offset,
+                    primitive_count,
+                    primitive_offset,
+                },
+            )
             .collect()
     }
 
     /// Replaces the [meshlets](Self::meshlets). Not checked against the triangles; see
     /// [`generate_meshlets`](Self::generate_meshlets).
     pub fn set_meshlets(&mut self, meshlets: &[Meshlet]) {
-        let flat: Vec<u32> =
-            meshlets.iter().flat_map(|m| [m.vertex_count, m.vertex_offset, m.primitive_count, m.primitive_offset]).collect();
+        let flat: Vec<u32> = meshlets
+            .iter()
+            .flat_map(|m| {
+                [
+                    m.vertex_count,
+                    m.vertex_offset,
+                    m.primitive_count,
+                    m.primitive_offset,
+                ]
+            })
+            .collect();
         ffi::set_mesh_data_meshlets(self.ffi_mut(), &flat);
     }
 
@@ -266,7 +298,10 @@ impl BsGeometryMeshData {
     }
 
     pub fn set_cull_data(&mut self, cull_data: &[CullData]) {
-        let flat: Vec<_> = cull_data.iter().flat_map(|c| [c.center.to_ffi(), c.expand.to_ffi()]).collect();
+        let flat: Vec<_> = cull_data
+            .iter()
+            .flat_map(|c| [c.center.to_ffi(), c.expand.to_ffi()])
+            .collect();
         ffi::set_mesh_data_cull_data(self.ffi_mut(), &flat);
     }
 

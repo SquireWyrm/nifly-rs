@@ -193,7 +193,10 @@ impl NiPSysModifierCtlr {
 
     /// Sets [`modifier_name`](Self::modifier_name).
     pub fn set_modifier_name(&mut self, name: impl AsRef<[u8]>) {
-        nifly_sys::particles::ffi::set_psys_modifier_ctlr_modifier_name(self.ffi_mut(), name.as_ref());
+        nifly_sys::particles::ffi::set_psys_modifier_ctlr_modifier_name(
+            self.ffi_mut(),
+            name.as_ref(),
+        );
     }
 }
 
@@ -391,7 +394,10 @@ pub struct MorphWeight {
 /// Controller type refs.
 impl<'a, T: NiType> View<'a, T> {
     /// One of the lightning controller's interpolators, or `None` if it has none.
-    pub fn lightning_interpolator<I>(&self, which: LightningInterpolator) -> Option<View<'a, NiInterpolator>>
+    pub fn lightning_interpolator<I>(
+        &self,
+        which: LightningInterpolator,
+    ) -> Option<View<'a, NiInterpolator>>
     where
         T: IsA<BsProceduralLightningController, I>,
     {
@@ -420,10 +426,14 @@ impl<'a, T: NiType> View<'a, T> {
     where
         T: IsA<NiMultiTargetTransformController, I>,
     {
-        refs_ffi::block_ref_list(&self.file().inner, self.index() as u32, RefList::ExtraTargets)
-            .into_iter()
-            .map(index_from_ffi)
-            .collect()
+        refs_ffi::block_ref_list(
+            &self.file().inner,
+            self.index() as u32,
+            RefList::ExtraTargets,
+        )
+        .into_iter()
+        .map(index_from_ffi)
+        .collect()
     }
 
     /// The geometry morpher's interpolators, one per morph. Saved from 10.1.0.106 on; the
@@ -434,7 +444,10 @@ impl<'a, T: NiType> View<'a, T> {
     {
         ffi::morph_weights(&self.file().inner, self.index() as u32)
             .into_iter()
-            .map(|w| MorphWeight { interpolator: index_from_ffi(w.interpolator), weight: w.weight })
+            .map(|w| MorphWeight {
+                interpolator: index_from_ffi(w.interpolator),
+                weight: w.weight,
+            })
             .collect()
     }
 
@@ -453,7 +466,10 @@ impl<'a, T: NiType> View<'a, T> {
 
 impl<T: NiType> Edit<'_, T> {
     /// Like [`View::lightning_interpolator`], for editing.
-    pub fn lightning_interpolator<I>(&mut self, which: LightningInterpolator) -> Option<Edit<'_, NiInterpolator>>
+    pub fn lightning_interpolator<I>(
+        &mut self,
+        which: LightningInterpolator,
+    ) -> Option<Edit<'_, NiInterpolator>>
     where
         T: IsA<BsProceduralLightningController, I>,
     {
@@ -463,7 +479,11 @@ impl<T: NiType> Edit<'_, T> {
     /// Sets one of the [lightning interpolators](View::lightning_interpolator), or clears it
     /// with `None`. Returns `false`, changing nothing, unless `interpolator` is an
     /// [`NiInterpolator`].
-    pub fn set_lightning_interpolator<I>(&mut self, which: LightningInterpolator, interpolator: Option<Index>) -> bool
+    pub fn set_lightning_interpolator<I>(
+        &mut self,
+        which: LightningInterpolator,
+        interpolator: Option<Index>,
+    ) -> bool
     where
         T: IsA<BsProceduralLightningController, I>,
     {
@@ -503,11 +523,20 @@ impl<T: NiType> Edit<'_, T> {
     where
         T: IsA<NiMultiTargetTransformController, I>,
     {
-        let Some(targets) = targets.iter().map(|&t| optional_index_to_ffi(t)).collect::<Option<Vec<_>>>() else {
+        let Some(targets) = targets
+            .iter()
+            .map(|&t| optional_index_to_ffi(t))
+            .collect::<Option<Vec<_>>>()
+        else {
             return false;
         };
         let owner = self.index() as u32;
-        refs_ffi::set_block_ref_list(self.file_mut().inner.pin_mut(), owner, RefList::ExtraTargets, &targets)
+        refs_ffi::set_block_ref_list(
+            self.file_mut().inner.pin_mut(),
+            owner,
+            RefList::ExtraTargets,
+            &targets,
+        )
     }
 
     /// Replaces the [morph interpolators](View::morph_interpolators). Returns `false`, changing
@@ -518,7 +547,12 @@ impl<T: NiType> Edit<'_, T> {
     {
         let Some(weights) = interpolators
             .iter()
-            .map(|w| Some(ffi::MorphWeightFfi { interpolator: optional_index_to_ffi(w.interpolator)?, weight: w.weight }))
+            .map(|w| {
+                Some(ffi::MorphWeightFfi {
+                    interpolator: optional_index_to_ffi(w.interpolator)?,
+                    weight: w.weight,
+                })
+            })
             .collect::<Option<Vec<_>>>()
         else {
             return false;
@@ -536,7 +570,14 @@ impl<T: NiType> Edit<'_, T> {
     {
         let Some(groups) = groups
             .iter()
-            .map(|g| Some(ffi::NodeGroupFfi { nodes: g.iter().map(|&i| block_index_to_ffi(i)).collect::<Option<_>>()? }))
+            .map(|g| {
+                Some(ffi::NodeGroupFfi {
+                    nodes: g
+                        .iter()
+                        .map(|&i| block_index_to_ffi(i))
+                        .collect::<Option<_>>()?,
+                })
+            })
             .collect::<Option<Vec<_>>>()
         else {
             return false;

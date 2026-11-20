@@ -8,7 +8,7 @@ use nifly::{
     geometry::{NiAdditionalGeometryData, NiGeometryData, NiShape},
     nodes::{BsMultiBound, BsMultiBoundNode, NiLodNode, NiRangeLodData},
     object3d::Transform,
-    shaders::{AlphaFlags, NiShader, NiSourceTexture, NiPixelData, TextureRenderData},
+    shaders::{AlphaFlags, NiPixelData, NiShader, NiSourceTexture, TextureRenderData},
     skin::{BsSkinInstance, NiSkinData, NiSkinInstance},
 };
 
@@ -17,7 +17,14 @@ use crate::common::{load, upstream};
 /// Saves without optimizing or sorting, so block indices and unattached blocks stay.
 fn reload(nif: &mut NifFile) -> NifFile {
     let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, Some(SaveOptions { optimize: false, sort_blocks: false })).unwrap();
+    nif.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize: false,
+            sort_blocks: false,
+        }),
+    )
+    .unwrap();
     NifFile::load(cur.into_inner().as_slice(), None).unwrap()
 }
 
@@ -27,7 +34,11 @@ fn first_shape(nif: &NifFile) -> Index {
 
 fn data_index(nif: &NifFile, shape: Index) -> Index {
     let data = nif.view::<NiShape>(shape).unwrap().geometry_data().unwrap();
-    nif.blocks_of::<NiGeometryData>().indexed().find(|(_, d)| std::ptr::eq(*d, data)).unwrap().0
+    nif.blocks_of::<NiGeometryData>()
+        .indexed()
+        .find(|(_, d)| std::ptr::eq(*d, data))
+        .unwrap()
+        .0
 }
 
 #[test]
@@ -51,21 +62,39 @@ fn shader_alpha_and_texture_set() {
     let mut shader_edit = nif.edit::<NiShader>(shader).unwrap();
     assert!(!shader_edit.set_texture_set(Some(shader)));
     assert!(shader_edit.set_texture_set(None));
-    assert!(reload(&mut nif).view::<NiShader>(shader).unwrap().texture_set().is_none());
-    assert!(nif.edit::<NiShader>(shader).unwrap().set_texture_set(Some(set)));
+    assert!(
+        reload(&mut nif)
+            .view::<NiShader>(shader)
+            .unwrap()
+            .texture_set()
+            .is_none()
+    );
+    assert!(
+        nif.edit::<NiShader>(shader)
+            .unwrap()
+            .set_texture_set(Some(set))
+    );
 
     let saved = reload(&mut nif);
     let view = saved.view::<NiShape>(shape).unwrap();
     assert_eq!(view.shader().map(|s| s.index()), Some(shader));
     assert_eq!(view.alpha_property().map(|a| a.index()), Some(alpha));
-    assert_eq!(view.shader().unwrap().texture_set().map(|s| s.index()), Some(set));
+    assert_eq!(
+        view.shader().unwrap().texture_set().map(|s| s.index()),
+        Some(set)
+    );
 }
 
 #[test]
 fn geometry_data() {
     // Strips_MW: NiTriStrips `a` has its own data; `b` shares its data with a third shape.
     let mut nif = load("Strips_MW");
-    let a = nif.shapes().indexed().find(|(_, s)| s.name() == "Tri EditorMarker_box_02").unwrap().0;
+    let a = nif
+        .shapes()
+        .indexed()
+        .find(|(_, s)| s.name() == "Tri EditorMarker_box_02")
+        .unwrap()
+        .0;
     let b = nif.shapes().indices().find(|&s| s != a).unwrap();
     let b_data = data_index(&nif, b);
     assert!(!nif.edit::<NiShape>(a).unwrap().set_geometry_data(a));
@@ -91,15 +120,29 @@ fn geometry_data() {
 fn ni_skin_instance() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let shape = first_shape(&nif);
-    let skin = nif.view::<NiShape>(shape).unwrap().skin_instance().unwrap().index();
+    let skin = nif
+        .view::<NiShape>(shape)
+        .unwrap()
+        .skin_instance()
+        .unwrap()
+        .index();
     let view = nif.view::<NiSkinInstance>(skin).unwrap();
-    let (data, partition) = (view.data().unwrap().index(), view.partition().unwrap().index());
+    let (data, partition) = (
+        view.data().unwrap().index(),
+        view.partition().unwrap().index(),
+    );
 
     let mut edit = nif.edit::<NiSkinInstance>(skin).unwrap();
     assert!(!edit.set_data(Some(partition)));
     assert!(!edit.set_partition(Some(data)));
     assert!(edit.set_partition(None));
-    assert!(reload(&mut nif).view::<NiSkinInstance>(skin).unwrap().partition().is_none());
+    assert!(
+        reload(&mut nif)
+            .view::<NiSkinInstance>(skin)
+            .unwrap()
+            .partition()
+            .is_none()
+    );
     let mut edit = nif.edit::<NiSkinInstance>(skin).unwrap();
     assert!(edit.set_partition(Some(partition)) && edit.set_data(Some(data)));
     assert!(edit.data().is_some() && edit.partition().is_some());
@@ -108,21 +151,49 @@ fn ni_skin_instance() {
     assert!(!shape_edit.set_skin_instance(Some(data)));
     assert!(shape_edit.set_skin_instance(None));
     assert!(shape_edit.skin_instance().is_none());
-    assert!(reload(&mut nif).view::<NiShape>(shape).unwrap().bone_ids().is_empty());
-    assert!(nif.edit::<NiShape>(shape).unwrap().set_skin_instance(Some(skin)));
-    assert_eq!(reload(&mut nif).view::<NiShape>(shape).unwrap().skin_instance().unwrap().index(), skin);
+    assert!(
+        reload(&mut nif)
+            .view::<NiShape>(shape)
+            .unwrap()
+            .bone_ids()
+            .is_empty()
+    );
+    assert!(
+        nif.edit::<NiShape>(shape)
+            .unwrap()
+            .set_skin_instance(Some(skin))
+    );
+    assert_eq!(
+        reload(&mut nif)
+            .view::<NiShape>(shape)
+            .unwrap()
+            .skin_instance()
+            .unwrap()
+            .index(),
+        skin
+    );
 }
 
 #[test]
 fn skin_data_partition() {
     let mut nif = upstream("TestNifFile_Skinned_MW");
     let data = nif.blocks_of::<NiSkinData>().indices().next().unwrap();
-    let before = nif.view::<NiSkinData>(data).unwrap().partition().map(|p| p.index());
+    let before = nif
+        .view::<NiSkinData>(data)
+        .unwrap()
+        .partition()
+        .map(|p| p.index());
     let mut edit = nif.edit::<NiSkinData>(data).unwrap();
     assert!(!edit.set_partition(Some(data)));
     assert!(edit.set_partition(None));
     assert!(edit.partition().is_none());
-    assert!(reload(&mut nif).view::<NiSkinData>(data).unwrap().partition().is_none());
+    assert!(
+        reload(&mut nif)
+            .view::<NiSkinData>(data)
+            .unwrap()
+            .partition()
+            .is_none()
+    );
     assert!(nif.edit::<NiSkinData>(data).unwrap().set_partition(before));
 }
 
@@ -134,15 +205,37 @@ fn bs_skin_instance() {
     let data = edit.data().unwrap().index();
     assert!(!edit.set_data(Some(skin)));
     assert!(edit.set_data(None));
-    assert!(reload(&mut nif).view::<BsSkinInstance>(skin).unwrap().data().is_none());
-    assert!(nif.edit::<BsSkinInstance>(skin).unwrap().set_data(Some(data)));
-    assert_eq!(reload(&mut nif).view::<BsSkinInstance>(skin).unwrap().data().unwrap().index(), data);
+    assert!(
+        reload(&mut nif)
+            .view::<BsSkinInstance>(skin)
+            .unwrap()
+            .data()
+            .is_none()
+    );
+    assert!(
+        nif.edit::<BsSkinInstance>(skin)
+            .unwrap()
+            .set_data(Some(data))
+    );
+    assert_eq!(
+        reload(&mut nif)
+            .view::<BsSkinInstance>(skin)
+            .unwrap()
+            .data()
+            .unwrap()
+            .index(),
+        data
+    );
 }
 
 #[test]
 fn multi_bound() {
     let mut nif = upstream("TestNifFile_MultiBound_SE");
-    let node = nif.blocks_of::<BsMultiBoundNode>().indices().next().unwrap();
+    let node = nif
+        .blocks_of::<BsMultiBoundNode>()
+        .indices()
+        .next()
+        .unwrap();
     let mut edit = nif.edit::<BsMultiBoundNode>(node).unwrap();
     let bound = edit.view().multi_bound().unwrap().index();
     let data = edit.view().multi_bound().unwrap().data().unwrap().index();
@@ -152,27 +245,55 @@ fn multi_bound() {
     assert!(!bound_edit.set_data(Some(bound)));
     assert!(bound_edit.set_data(None));
     let saved = reload(&mut nif);
-    assert!(saved.view::<BsMultiBoundNode>(node).unwrap().multi_bound().is_none());
+    assert!(
+        saved
+            .view::<BsMultiBoundNode>(node)
+            .unwrap()
+            .multi_bound()
+            .is_none()
+    );
     assert!(saved.view::<BsMultiBound>(bound).unwrap().data().is_none());
 
-    assert!(nif.edit::<BsMultiBound>(bound).unwrap().set_data(Some(data)));
-    assert!(nif.edit::<BsMultiBoundNode>(node).unwrap().set_multi_bound(Some(bound)));
+    assert!(
+        nif.edit::<BsMultiBound>(bound)
+            .unwrap()
+            .set_data(Some(data))
+    );
+    assert!(
+        nif.edit::<BsMultiBoundNode>(node)
+            .unwrap()
+            .set_multi_bound(Some(bound))
+    );
     let saved = reload(&mut nif);
-    let bound = saved.view::<BsMultiBoundNode>(node).unwrap().multi_bound().unwrap();
+    let bound = saved
+        .view::<BsMultiBoundNode>(node)
+        .unwrap()
+        .multi_bound()
+        .unwrap();
     assert_eq!(bound.data().map(|d| d.index()), Some(data));
 }
 
 #[test]
 fn lod_data() {
     let mut nif = NifFile::create(NifVersion::OBLIVION);
-    let node = nif.add_node_of::<NiLodNode>("LOD", Transform::default(), None).unwrap();
+    let node = nif
+        .add_node_of::<NiLodNode>("LOD", Transform::default(), None)
+        .unwrap();
     let mut edit = nif.edit::<NiLodNode>(node).unwrap();
     let data = edit.assign_lod_data::<NiRangeLodData>();
     assert!(!edit.set_lod_data(Some(node)));
     assert!(edit.set_lod_data(None));
     assert!(edit.lod_data().is_none());
     assert!(edit.set_lod_data(Some(data)));
-    assert_eq!(reload(&mut nif).view::<NiLodNode>(node).unwrap().lod_data().unwrap().index(), data);
+    assert_eq!(
+        reload(&mut nif)
+            .view::<NiLodNode>(node)
+            .unwrap()
+            .lod_data()
+            .unwrap()
+            .index(),
+        data
+    );
 }
 
 #[test]
@@ -185,18 +306,30 @@ fn additional_data() {
     assert!(edit.set_additional_data(None));
     assert!(edit.additional_data().is_none());
     assert!(edit.set_additional_data(Some(extra)));
-    assert_eq!(reload(&mut nif).view::<NiGeometryData>(data).unwrap().additional_data().unwrap().index(), extra);
+    assert_eq!(
+        reload(&mut nif)
+            .view::<NiGeometryData>(data)
+            .unwrap()
+            .additional_data()
+            .unwrap()
+            .index(),
+        extra
+    );
 }
 
 #[test]
 fn pixel_data_and_palette() {
     let mut nif = NifFile::create(NifVersion::MORROWIND);
     let texture = nif.add_source_texture("embedded.dds");
-    nif.block_of_mut::<NiSourceTexture>(texture).unwrap().set_use_external(false);
+    nif.block_of_mut::<NiSourceTexture>(texture)
+        .unwrap()
+        .set_use_external(false);
     let mut edit = nif.edit::<NiSourceTexture>(texture).unwrap();
     let data = edit.assign_pixel_data::<NiPixelData>();
     let mut data_edit = nif.edit::<TextureRenderData>(data).unwrap();
-    let palette = data_edit.assign_palette(&[[0, 0, 0, 255]; 16], false).unwrap();
+    let palette = data_edit
+        .assign_palette(&[[0, 0, 0, 255]; 16], false)
+        .unwrap();
     assert!(!data_edit.set_palette(Some(data)));
     assert!(data_edit.set_palette(None));
     assert!(data_edit.palette().is_none());
@@ -205,9 +338,26 @@ fn pixel_data_and_palette() {
     let mut edit = nif.edit::<NiSourceTexture>(texture).unwrap();
     assert!(!edit.set_pixel_data(Some(palette)));
     assert!(edit.set_pixel_data(None));
-    assert!(reload(&mut nif).view::<NiSourceTexture>(texture).unwrap().pixel_data().is_none());
-    assert!(nif.edit::<NiSourceTexture>(texture).unwrap().set_pixel_data(Some(data)));
+    assert!(
+        reload(&mut nif)
+            .view::<NiSourceTexture>(texture)
+            .unwrap()
+            .pixel_data()
+            .is_none()
+    );
+    assert!(
+        nif.edit::<NiSourceTexture>(texture)
+            .unwrap()
+            .set_pixel_data(Some(data))
+    );
     let saved = reload(&mut nif);
-    let data_view = saved.view::<NiSourceTexture>(texture).unwrap().pixel_data().unwrap();
-    assert_eq!((data_view.index(), data_view.palette().map(|p| p.index())), (data, Some(palette)));
+    let data_view = saved
+        .view::<NiSourceTexture>(texture)
+        .unwrap()
+        .pixel_data()
+        .unwrap();
+    assert_eq!(
+        (data_view.index(), data_view.palette().map(|p| p.index())),
+        (data, Some(palette))
+    );
 }

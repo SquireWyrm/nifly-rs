@@ -51,7 +51,7 @@ use nifly_sys::{
 
 use crate::{
     error::{Error, LoadError, NifResult},
-    file::{block_index_to_ffi, index_from_ffi, Index, NifFile},
+    file::{Index, NifFile, block_index_to_ffi, index_from_ffi},
     handle::{Edit, View},
     iter::BlockIter,
 };
@@ -124,7 +124,11 @@ pub struct NormalOptions {
 
 impl Default for NormalOptions {
     fn default() -> Self {
-        Self { smooth: true, smooth_threshold: 60.0, force_model_space: false }
+        Self {
+            smooth: true,
+            smooth_threshold: 60.0,
+            force_model_space: false,
+        }
     }
 }
 
@@ -195,7 +199,13 @@ fn vec3s(v: Vec<nifly_sys::object_3d::ffi::Vec3>) -> Vec<Vec3> {
 
 /// Joins `lists` for the bridge: the values and each list's length.
 fn joined_u16<S: AsRef<[u16]>>(lists: &[S]) -> (Vec<u16>, Vec<usize>) {
-    (lists.iter().flat_map(|l| l.as_ref().iter().copied()).collect(), lists.iter().map(|l| l.as_ref().len()).collect())
+    (
+        lists
+            .iter()
+            .flat_map(|l| l.as_ref().iter().copied())
+            .collect(),
+        lists.iter().map(|l| l.as_ref().len()).collect(),
+    )
 }
 
 impl NiShape {
@@ -246,7 +256,10 @@ impl NifFile {
     }
 
     /// Block indices of the shapes named in `order`, if `set_shape_order` can apply it.
-    fn shape_order_indices<N: AsRef<[u8]>>(&self, order: impl IntoIterator<Item = N>) -> Option<Vec<u32>> {
+    fn shape_order_indices<N: AsRef<[u8]>>(
+        &self,
+        order: impl IntoIterator<Item = N>,
+    ) -> Option<Vec<u32>> {
         if self.has_unknown() {
             return None;
         }
@@ -309,13 +322,26 @@ impl NifFile {
         normals: Option<&[Vec3]>,
     ) -> Option<Index> {
         // Empty lists mean "none" across the bridge, so an empty given list must match no vertices.
-        if uvs.is_some_and(|u| u.len() != vertices.len()) || normals.is_some_and(|n| n.len() != vertices.len()) {
+        if uvs.is_some_and(|u| u.len() != vertices.len())
+            || normals.is_some_and(|n| n.len() != vertices.len())
+        {
             return None;
         }
         let vertices: Vec<_> = vertices.iter().map(|v| v.to_ffi()).collect();
-        let triangles: Vec<_> = triangles.iter().map(|&[p1, p2, p3]| nif_ffi::Triangle { p1, p2, p3 }).collect();
-        let uvs: Vec<_> = uvs.unwrap_or_default().iter().map(|&[u, v]| nif_ffi::Uv { u, v }).collect();
-        let normals: Vec<_> = normals.unwrap_or_default().iter().map(|n| n.to_ffi()).collect();
+        let triangles: Vec<_> = triangles
+            .iter()
+            .map(|&[p1, p2, p3]| nif_ffi::Triangle { p1, p2, p3 })
+            .collect();
+        let uvs: Vec<_> = uvs
+            .unwrap_or_default()
+            .iter()
+            .map(|&[u, v]| nif_ffi::Uv { u, v })
+            .collect();
+        let normals: Vec<_> = normals
+            .unwrap_or_default()
+            .iter()
+            .map(|n| n.to_ffi())
+            .collect();
         index_from_ffi(nif_ffi::create_shape(
             self.inner.pin_mut(),
             name.as_ref(),
@@ -339,9 +365,18 @@ impl NifFile {
     /// other versions must have the same [version](Self::version). Between versions of a game,
     /// the copy is saved in this file's version, so fields it doesn't store are dropped, and
     /// unknown blocks are copied as they are.
-    pub fn clone_shape_from(&mut self, shape: View<'_, NiShape>, name: impl AsRef<[u8]>) -> Option<Index> {
+    pub fn clone_shape_from(
+        &mut self,
+        shape: View<'_, NiShape>,
+        name: impl AsRef<[u8]>,
+    ) -> Option<Index> {
         let source = shape.file();
-        index_from_ffi(nif_ffi::clone_shape_from(self.inner.pin_mut(), &source.inner, shape.get().as_ffi(), name.as_ref()))
+        index_from_ffi(nif_ffi::clone_shape_from(
+            self.inner.pin_mut(),
+            &source.inner,
+            shape.get().as_ffi(),
+            name.as_ref(),
+        ))
     }
 
     fn set_vertex_array<T>(
@@ -358,7 +393,10 @@ impl NifFile {
         shape: &NiShape,
         get: fn(&nif_ffi::NifFile, &ffi::NiShape, &mut Vec<T>) -> bool,
     ) -> Option<Vec<T>> {
-        debug_assert!(self.contains(shape), "shape does not belong to this NifFile");
+        debug_assert!(
+            self.contains(shape),
+            "shape does not belong to this NifFile"
+        );
 
         let mut out = Vec::new();
         get(&self.inner, shape.as_ffi(), &mut out).then_some(out)
@@ -383,21 +421,22 @@ impl NifFile {
     /// 4294967295 from Fallout 4 on.
     pub fn triangle_limit(&self) -> usize {
         nif_ffi::NifFile::GetTriangleLimit(&self.inner)
-    }}
+    }
+}
 
 /// Whether every component is under 0.0001 in magnitude, the threshold for an unchanged vertex.
 fn nearly_zero(components: &[f32]) -> bool {
     components.iter().all(|c| c.abs() < 1e-4)
 }
 
-mod data;
 mod additional_data;
-mod bs_shapes;
 mod bs_geometry;
-mod shape_view;
+mod bs_shapes;
+mod data;
 mod shape_edit;
+mod shape_view;
 
-pub use self::data::*;
 pub use self::additional_data::*;
-pub use self::bs_shapes::*;
 pub use self::bs_geometry::*;
+pub use self::bs_shapes::*;
+pub use self::data::*;

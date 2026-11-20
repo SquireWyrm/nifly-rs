@@ -55,7 +55,11 @@ pub mod ffi {
         fn skin_data_bone_count(data: &NiSkinData) -> usize;
         /// `NiSkinData::bones[index].boneTransform`: skin to bone. Returns false, leaving `out`
         /// unchanged, if `index` is out of range.
-        fn skin_data_transform_skin_to_bone(data: &NiSkinData, index: usize, out: &mut Transform) -> bool;
+        fn skin_data_transform_skin_to_bone(
+            data: &NiSkinData,
+            index: usize,
+            out: &mut Transform,
+        ) -> bool;
         fn set_skin_data_transform_global_to_skin(data: Pin<&mut NiSkinData>, transform: Transform);
         /// `NiSkinData::hasVertWeights`.
         fn skin_data_has_vertex_weights(data: &NiSkinData) -> bool;
@@ -82,13 +86,22 @@ pub mod ffi {
 
         /// `NiSkinData::bones[index].bounds`. Returns false, leaving `out` unchanged, if `index`
         /// is out of range.
-        fn skin_data_bone_bounds(data: &NiSkinData, index: usize, out: &mut BoundingSphere) -> bool;
+        fn skin_data_bone_bounds(data: &NiSkinData, index: usize, out: &mut BoundingSphere)
+        -> bool;
         fn set_skin_data_has_vertex_weights(data: Pin<&mut NiSkinData>, value: bool);
         /// `BSSkinBoneData::boneXforms`: its size, and an entry's transform and bounds. The
         /// getters return false, leaving `out` unchanged, if `index` is out of range.
         fn skin_bone_data_bone_count(data: &BSSkinBoneData) -> usize;
-        fn skin_bone_data_transform_skin_to_bone(data: &BSSkinBoneData, index: usize, out: &mut Transform) -> bool;
-        fn skin_bone_data_bounds(data: &BSSkinBoneData, index: usize, out: &mut BoundingSphere) -> bool;
+        fn skin_bone_data_transform_skin_to_bone(
+            data: &BSSkinBoneData,
+            index: usize,
+            out: &mut Transform,
+        ) -> bool;
+        fn skin_bone_data_bounds(
+            data: &BSSkinBoneData,
+            index: usize,
+            out: &mut BoundingSphere,
+        ) -> bool;
         /// `BSSkinInstance::scales`.
         fn skin_instance_scales(inst: &BSSkinInstance) -> Vec<Vec3>;
         fn set_skin_instance_scales(inst: Pin<&mut BSSkinInstance>, scales: &[Vec3]);
@@ -105,30 +118,81 @@ pub mod ffi {
         fn skin_partition_strip_count(part: &NiSkinPartition, index: usize) -> usize;
         fn skin_partition_strip(part: &NiSkinPartition, index: usize, strip: usize) -> &[u16];
         fn skin_partition_lod_level(part: &NiSkinPartition, index: usize) -> u8;
-        fn set_skin_partition_lod_level(part: Pin<&mut NiSkinPartition>, index: usize, value: u8) -> bool;
+        fn set_skin_partition_lod_level(
+            part: Pin<&mut NiSkinPartition>,
+            index: usize,
+            value: u8,
+        ) -> bool;
         fn skin_partition_global_vb(part: &NiSkinPartition, index: usize) -> bool;
-        fn set_skin_partition_global_vb(part: Pin<&mut NiSkinPartition>, index: usize, value: bool) -> bool;
+        fn set_skin_partition_global_vb(
+            part: Pin<&mut NiSkinPartition>,
+            index: usize,
+            value: bool,
+        ) -> bool;
 
-        fn set_skin_data_transform_skin_to_bone(data: Pin<&mut NiSkinData>, index: usize, t: Transform) -> bool;
-        fn set_skin_data_bone_bounds(data: Pin<&mut NiSkinData>, index: usize, b: BoundingSphere) -> bool;
+        fn set_skin_data_transform_skin_to_bone(
+            data: Pin<&mut NiSkinData>,
+            index: usize,
+            t: Transform,
+        ) -> bool;
+        fn set_skin_data_bone_bounds(
+            data: Pin<&mut NiSkinData>,
+            index: usize,
+            b: BoundingSphere,
+        ) -> bool;
         /// Bone `index`'s weights as parallel lists. False if `index` is out of range.
-        fn skin_data_vertex_weights(data: &NiSkinData, index: usize, vertices: &mut Vec<u16>, weights: &mut Vec<f32>) -> bool;
+        fn skin_data_vertex_weights(
+            data: &NiSkinData,
+            index: usize,
+            vertices: &mut Vec<u16>,
+            weights: &mut Vec<f32>,
+        ) -> bool;
         /// Keeps `numVertices` in step. False, changing nothing, if `index` is out of range, the
         /// lists differ in length or are longer than 65535.
-        fn set_skin_data_vertex_weights(data: Pin<&mut NiSkinData>, index: usize, vertices: &[u16], weights: &[f32]) -> bool;
-        fn set_skin_bone_data_transform_skin_to_bone(data: Pin<&mut BSSkinBoneData>, index: usize, t: Transform) -> bool;
-        fn set_skin_bone_data_bounds(data: Pin<&mut BSSkinBoneData>, index: usize, b: BoundingSphere) -> bool;
-        fn set_dismember_partition_body_part(inst: Pin<&mut BSDismemberSkinInstance>, index: usize, part: u16) -> bool;
+        fn set_skin_data_vertex_weights(
+            data: Pin<&mut NiSkinData>,
+            index: usize,
+            vertices: &[u16],
+            weights: &[f32],
+        ) -> bool;
+        fn set_skin_bone_data_transform_skin_to_bone(
+            data: Pin<&mut BSSkinBoneData>,
+            index: usize,
+            t: Transform,
+        ) -> bool;
+        fn set_skin_bone_data_bounds(
+            data: Pin<&mut BSSkinBoneData>,
+            index: usize,
+            b: BoundingSphere,
+        ) -> bool;
+        fn set_dismember_partition_body_part(
+            inst: Pin<&mut BSDismemberSkinInstance>,
+            index: usize,
+            part: u16,
+        ) -> bool;
         /// `which`: 0 `hasVertexMap`, 1 `hasVertexWeights`, 2 `hasFaces`, 3 `hasBoneIndices`.
         fn skin_partition_flag(part: &NiSkinPartition, index: usize, which: u8) -> bool;
-        fn set_skin_partition_flag(part: Pin<&mut NiSkinPartition>, index: usize, which: u8, value: bool) -> bool;
+        fn set_skin_partition_flag(
+            part: Pin<&mut NiSkinPartition>,
+            index: usize,
+            which: u8,
+            value: bool,
+        ) -> bool;
         fn skin_partition_vertex_desc(part: &NiSkinPartition) -> u64;
         fn set_skin_partition_vertex_desc(part: Pin<&mut NiSkinPartition>, bits: u64);
         fn skin_partition_block_vertex_desc(part: &NiSkinPartition, index: usize) -> u64;
-        fn set_skin_partition_block_vertex_desc(part: Pin<&mut NiSkinPartition>, index: usize, bits: u64) -> bool;
+        fn set_skin_partition_block_vertex_desc(
+            part: Pin<&mut NiSkinPartition>,
+            index: usize,
+            bits: u64,
+        ) -> bool;
         /// Flattened, 3 per triangle.
         fn skin_partition_true_triangles(part: &NiSkinPartition, index: usize) -> &[u16];
         /// False, changing nothing, unless there are `numTriangles` triangles.
-        fn set_skin_partition_true_triangles(part: Pin<&mut NiSkinPartition>, index: usize, flat: &[u16]) -> bool;
+        fn set_skin_partition_true_triangles(
+            part: Pin<&mut NiSkinPartition>,
+            index: usize,
+            flat: &[u16],
+        ) -> bool;
     }
 }

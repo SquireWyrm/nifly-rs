@@ -1,6 +1,6 @@
 //! Tests for NifFile::create and NifFile::version.
 
-use crate::common::{save};
+use crate::common::save;
 use std::fs;
 
 use nifly::{
@@ -64,7 +64,11 @@ fn version_of_loaded_assets() {
         ("Cone", NifVersion::SKYRIM_SE),
     ];
     for (name, version) in expected {
-        let nif = NifFile::load(fs::read(format!("assets/{name}.nif")).unwrap().as_slice(), None).unwrap();
+        let nif = NifFile::load(
+            fs::read(format!("assets/{name}.nif")).unwrap().as_slice(),
+            None,
+        )
+        .unwrap();
         assert_eq!(nif.version(), version, "{name}");
     }
 }
@@ -77,7 +81,12 @@ fn create_then_build_a_small_tree() {
     nif.add_node("Hand", identity, Some(arm)).unwrap();
 
     let arm_node = nif.block_of::<NiNode>(arm).unwrap();
-    let hand: Vec<_> = nif.view_of(arm_node).unwrap().children().map(|c| c.name().to_string()).collect();
+    let hand: Vec<_> = nif
+        .view_of(arm_node)
+        .unwrap()
+        .children()
+        .map(|c| c.name().to_string())
+        .collect();
     assert_eq!(hand, ["Hand"]);
     assert!(nif.is_all_sse_compatible());
 }
@@ -85,15 +94,29 @@ fn create_then_build_a_small_tree() {
 #[test]
 fn sse_compatibility_per_shape() {
     for name in ["Cube", "Suzanne", "Icosphere", "Bones", "Cone"] {
-        let nif = NifFile::load(fs::read(format!("assets/{name}.nif")).unwrap().as_slice(), None).unwrap();
+        let nif = NifFile::load(
+            fs::read(format!("assets/{name}.nif")).unwrap().as_slice(),
+            None,
+        )
+        .unwrap();
         let shapes: Vec<_> = nif.blocks_of::<NiShape>().collect();
         assert!(!shapes.is_empty(), "{name}");
 
         // None of the assets use strips, including Bones' skin partition.
         for shape in &shapes {
-            assert!(nif.view_of(*shape).unwrap().is_sse_compatible(), "{name}: {}", shape.name());
+            assert!(
+                nif.view_of(*shape).unwrap().is_sse_compatible(),
+                "{name}: {}",
+                shape.name()
+            );
         }
         // The whole-file check agrees with checking each shape.
-        assert_eq!(nif.is_all_sse_compatible(), shapes.iter().all(|s| nif.view_of(*s).unwrap().is_sse_compatible()), "{name}");
+        assert_eq!(
+            nif.is_all_sse_compatible(),
+            shapes
+                .iter()
+                .all(|s| nif.view_of(*s).unwrap().is_sse_compatible()),
+            "{name}"
+        );
     }
 }

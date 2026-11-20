@@ -126,22 +126,30 @@ pub mod ffi {
         fn upcast_bs_bound(obj: &BSBound) -> &NiExtraData;
         fn downcast_bs_bound(obj: &NiObject) -> *const BSBound;
         fn upcast_bs_behavior_graph_extra_data(obj: &BSBehaviorGraphExtraData) -> &NiExtraData;
-        fn downcast_bs_behavior_graph_extra_data(obj: &NiObject) -> *const BSBehaviorGraphExtraData;
+        fn downcast_bs_behavior_graph_extra_data(obj: &NiObject)
+        -> *const BSBehaviorGraphExtraData;
 
         fn binary_extra_data_bytes(obj: &NiBinaryExtraData) -> &[u8];
         fn floats_extra_data_values(obj: &NiFloatsExtraData) -> &[f32];
         fn strings_extra_data_len(obj: &NiStringsExtraData) -> usize;
         /// Empty if `index` is out of range.
         fn strings_extra_data_value(obj: &NiStringsExtraData, index: usize) -> &[u8];
-        fn upcast_bs_packed_combined_shared_geom_data_extra(obj: &BSPackedCombinedSharedGeomDataExtra) -> &NiExtraData;
+        fn upcast_bs_packed_combined_shared_geom_data_extra(
+            obj: &BSPackedCombinedSharedGeomDataExtra,
+        ) -> &NiExtraData;
         fn downcast_bs_packed_combined_shared_geom_data_extra(
             obj: &NiObject,
         ) -> *const BSPackedCombinedSharedGeomDataExtra;
         /// Each instance is 18 floats: the grayscale to palette scale, the rotation (row-major),
         /// translation and scale, and the bounding sphere's center and radius.
         fn packed_shared_header(obj: &BSPackedCombinedSharedGeomDataExtra) -> PackedGeomHeader;
-        fn set_packed_shared_header(obj: Pin<&mut BSPackedCombinedSharedGeomDataExtra>, header: PackedGeomHeader);
-        fn packed_shared_objects(obj: &BSPackedCombinedSharedGeomDataExtra) -> Vec<PackedGeomObjectFfi>;
+        fn set_packed_shared_header(
+            obj: Pin<&mut BSPackedCombinedSharedGeomDataExtra>,
+            header: PackedGeomHeader,
+        );
+        fn packed_shared_objects(
+            obj: &BSPackedCombinedSharedGeomDataExtra,
+        ) -> Vec<PackedGeomObjectFfi>;
         fn packed_shared_instances(obj: &BSPackedCombinedSharedGeomDataExtra) -> Vec<f32>;
         /// Returns false, changing nothing, if the instance counts don't add up to `instances`.
         fn set_packed_shared_objects(
@@ -163,14 +171,24 @@ pub mod ffi {
         fn set_integers_extra_data(obj: Pin<&mut NiIntegersExtraData>, values: &[u32]);
         fn set_binary_extra_data(obj: Pin<&mut NiBinaryExtraData>, bytes: &[u8]);
         fn set_floats_extra_data(obj: Pin<&mut NiFloatsExtraData>, values: &[f32]);
-        fn set_strings_extra_data(obj: Pin<&mut NiStringsExtraData>, bytes: &[u8], lengths: &[usize]);
+        fn set_strings_extra_data(
+            obj: Pin<&mut NiStringsExtraData>,
+            bytes: &[u8],
+            lengths: &[usize],
+        );
         fn set_skin_attach_bones(obj: Pin<&mut SkinAttach>, bytes: &[u8], lengths: &[usize]);
         fn set_cloth_extra_data(obj: Pin<&mut BSClothExtraData>, bytes: &[u8]);
-        fn set_collision_query_proxy_extra_data(obj: Pin<&mut BSCollisionQueryProxyExtraData>, bytes: &[u8]);
+        fn set_collision_query_proxy_extra_data(
+            obj: Pin<&mut BSCollisionQueryProxyExtraData>,
+            bytes: &[u8],
+        );
         fn set_color_extra_data(obj: Pin<&mut NiColorExtraData>, c: Float4);
         fn set_vector_extra_data(obj: Pin<&mut NiVectorExtraData>, v: Float4);
         /// False, changing nothing, for more than 65535 weights.
-        fn set_vert_weights_extra_data(obj: Pin<&mut NiVertWeightsExtraData>, weights: &[f32]) -> bool;
+        fn set_vert_weights_extra_data(
+            obj: Pin<&mut NiVertWeightsExtraData>,
+            weights: &[f32],
+        ) -> bool;
         fn set_eye_center_extra_data(obj: Pin<&mut BSEyeCenterExtraData>, values: &[f32]);
         fn set_position_data(obj: Pin<&mut BSPositionData>, values: &[f32]);
         fn set_w_array(obj: Pin<&mut BSWArray>, values: &[u32]);
@@ -183,8 +201,14 @@ pub mod ffi {
             normals: &[Vec3],
         ) -> bool;
         fn set_distant_object_flags(obj: Pin<&mut BSDistantObjectExtraData>, flags: u32);
-        fn set_distant_object_large_ref(obj: Pin<&mut BSDistantObjectLargeRefExtraData>, large_ref: bool);
-        fn set_furniture_positions(obj: Pin<&mut BSFurnitureMarker>, positions: &[FurniturePositionFfi]);
+        fn set_distant_object_large_ref(
+            obj: Pin<&mut BSDistantObjectLargeRefExtraData>,
+            large_ref: bool,
+        );
+        fn set_furniture_positions(
+            obj: Pin<&mut BSFurnitureMarker>,
+            positions: &[FurniturePositionFfi],
+        );
         fn set_connect_points(
             obj: Pin<&mut BSConnectPointParents>,
             bytes: &[u8],
@@ -192,15 +216,32 @@ pub mod ffi {
             transforms: &[ConnectPointTransform],
         );
         fn set_connect_point_skinned(obj: Pin<&mut BSConnectPointChildren>, skinned: bool);
-        fn set_connect_point_targets(obj: Pin<&mut BSConnectPointChildren>, bytes: &[u8], lengths: &[usize]);
+        fn set_connect_point_targets(
+            obj: Pin<&mut BSConnectPointChildren>,
+            bytes: &[u8],
+            lengths: &[usize],
+        );
         fn set_inv_marker(obj: Pin<&mut BSInvMarker>, marker: InvMarkerFfi);
         fn set_bound_center(obj: Pin<&mut BSBound>, v: Vec3);
         fn set_bound_half_extents(obj: Pin<&mut BSBound>, v: Vec3);
         fn set_behavior_graph_file(obj: Pin<&mut BSBehaviorGraphExtraData>, graph_file: &[u8]);
-        fn set_behavior_graph_controls_base_skeleton(obj: Pin<&mut BSBehaviorGraphExtraData>, controls: bool);
-        fn set_bone_lods(obj: Pin<&mut BSBoneLODExtraData>, bytes: &[u8], lengths: &[usize], distances: &[u32]);
+        fn set_behavior_graph_controls_base_skeleton(
+            obj: Pin<&mut BSBehaviorGraphExtraData>,
+            controls: bool,
+        );
+        fn set_bone_lods(
+            obj: Pin<&mut BSBoneLODExtraData>,
+            bytes: &[u8],
+            lengths: &[usize],
+            distances: &[u32],
+        );
         /// Key i is `bytes` split into `lengths`, at `times[i]`.
-        fn set_text_keys(obj: Pin<&mut NiTextKeyExtraData>, bytes: &[u8], lengths: &[usize], times: &[f32]);
+        fn set_text_keys(
+            obj: Pin<&mut NiTextKeyExtraData>,
+            bytes: &[u8],
+            lengths: &[usize],
+            times: &[f32],
+        );
         /// Keeps the stored count in step.
         fn set_bone_translations(
             obj: Pin<&mut BoneTranslations>,
@@ -217,7 +258,10 @@ pub mod ffi {
         fn connect_point_parent(obj: &BSConnectPointParents, index: usize) -> &[u8];
         fn connect_point_name(obj: &BSConnectPointParents, index: usize) -> &[u8];
         /// Identity if out of range.
-        fn connect_point_transform(obj: &BSConnectPointParents, index: usize) -> ConnectPointTransform;
+        fn connect_point_transform(
+            obj: &BSConnectPointParents,
+            index: usize,
+        ) -> ConnectPointTransform;
         fn connect_point_children_skinned(obj: &BSConnectPointChildren) -> bool;
         fn connect_point_children_len(obj: &BSConnectPointChildren) -> usize;
         /// Empty if `index` is out of range.
@@ -240,14 +284,23 @@ pub mod ffi {
         fn downcast_bs_position_data(obj: &NiObject) -> *const BSPositionData;
         fn upcast_bs_w_array(obj: &BSWArray) -> &NiExtraData;
         fn downcast_bs_w_array(obj: &NiObject) -> *const BSWArray;
-        fn upcast_bs_decal_placement_vector_extra_data(obj: &BSDecalPlacementVectorExtraData) -> &NiFloatExtraData;
-        fn downcast_bs_decal_placement_vector_extra_data(obj: &NiObject) -> *const BSDecalPlacementVectorExtraData;
+        fn upcast_bs_decal_placement_vector_extra_data(
+            obj: &BSDecalPlacementVectorExtraData,
+        ) -> &NiFloatExtraData;
+        fn downcast_bs_decal_placement_vector_extra_data(
+            obj: &NiObject,
+        ) -> *const BSDecalPlacementVectorExtraData;
         fn upcast_bs_bone_lod_extra_data(obj: &BSBoneLODExtraData) -> &NiExtraData;
         fn downcast_bs_bone_lod_extra_data(obj: &NiObject) -> *const BSBoneLODExtraData;
         fn upcast_bs_distant_object_extra_data(obj: &BSDistantObjectExtraData) -> &NiExtraData;
-        fn downcast_bs_distant_object_extra_data(obj: &NiObject) -> *const BSDistantObjectExtraData;
-        fn upcast_bs_distant_object_large_ref_extra_data(obj: &BSDistantObjectLargeRefExtraData) -> &NiExtraData;
-        fn downcast_bs_distant_object_large_ref_extra_data(obj: &NiObject) -> *const BSDistantObjectLargeRefExtraData;
+        fn downcast_bs_distant_object_extra_data(obj: &NiObject)
+        -> *const BSDistantObjectExtraData;
+        fn upcast_bs_distant_object_large_ref_extra_data(
+            obj: &BSDistantObjectLargeRefExtraData,
+        ) -> &NiExtraData;
+        fn downcast_bs_distant_object_large_ref_extra_data(
+            obj: &NiObject,
+        ) -> *const BSDistantObjectLargeRefExtraData;
         fn upcast_bone_translations(obj: &BoneTranslations) -> &NiExtraData;
         fn downcast_bone_translations(obj: &NiObject) -> *const BoneTranslations;
         fn upcast_ni_text_key_extra_data(obj: &NiTextKeyExtraData) -> &NiExtraData;

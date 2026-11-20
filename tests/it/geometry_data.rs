@@ -1,6 +1,6 @@
 //! Tests for NifFile::geometry_data(_mut) and NiGeometryData.
 
-use crate::common::{load, upstream, reload};
+use crate::common::{load, reload, upstream};
 use std::{io::Cursor, ptr};
 
 use nifly::{
@@ -11,7 +11,11 @@ use nifly::{
 };
 
 fn shape_index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes().indexed().find(|(_, s)| s.name() == name).unwrap().0
+    nif.shapes()
+        .indexed()
+        .find(|(_, s)| s.name() == name)
+        .unwrap()
+        .0
 }
 
 fn data<'a>(nif: &'a NifFile, name: &str) -> &'a NiGeometryData {
@@ -44,13 +48,22 @@ fn tri_shape_data_block() {
     assert!(d.downcast::<NiTriShapeData>().is_some());
     assert!(d.downcast::<NiTriBasedGeomData>().is_some());
     assert_eq!(summary(d), (164, 252, true, true, false, true, true));
-    assert_eq!(d.bounds(), BoundingSphere::new(Vec3::new(0.0, 0.0, 1.0), 1.299038));
+    assert_eq!(
+        d.bounds(),
+        BoundingSphere::new(Vec3::new(0.0, 0.0, 1.0), 1.299038)
+    );
 
     // Older files: vertex colors (Skyrim LE) and no UVs (Morrowind).
     let nif = upstream("TestNifFile_Animated_LE");
-    assert_eq!(summary(data(&nif, "Low02:0")), (10, 4, true, true, true, true, true));
+    assert_eq!(
+        summary(data(&nif, "Low02:0")),
+        (10, 4, true, true, true, true, true)
+    );
     let nif = upstream("TestNifFile_Static_MW");
-    assert_eq!(summary(data(&nif, "Tri EditorMarker_box_02")), (4, 2, true, true, false, false, false));
+    assert_eq!(
+        summary(data(&nif, "Tri EditorMarker_box_02")),
+        (4, 2, true, true, false, false, false)
+    );
 }
 
 #[test]
@@ -62,29 +75,51 @@ fn bounds_setters_round_trip() {
     assert_eq!(stored.radius, 9354.119);
 
     let bounds = BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0);
-    nif.edit::<nifly::geometry::NiShape>(shape).unwrap().geometry_data().unwrap().set_bounds(bounds);
+    nif.edit::<nifly::geometry::NiShape>(shape)
+        .unwrap()
+        .geometry_data()
+        .unwrap()
+        .set_bounds(bounds);
     assert_eq!(data(&nif, name).bounds(), bounds);
 
     // Saving without optimizing keeps them.
     let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, Some(SaveOptions { optimize: false, sort_blocks: true })).unwrap();
+    nif.save(
+        &mut cur,
+        Some(SaveOptions {
+            optimize: false,
+            sort_blocks: true,
+        }),
+    )
+    .unwrap();
     let mut kept = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
     assert_eq!(data(&kept, name).bounds(), bounds);
 
     // Recalculating from the vertices gives the stored sphere back.
     let shape = shape_index(&kept, name);
-    kept.edit::<nifly::geometry::NiShape>(shape).unwrap().geometry_data().unwrap().update_bounds();
+    kept.edit::<nifly::geometry::NiShape>(shape)
+        .unwrap()
+        .geometry_data()
+        .unwrap()
+        .update_bounds();
     assert_close(data(&kept, name).bounds(), stored);
 
     // A default save recalculates them too.
-    nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name)).unwrap().geometry_data().unwrap().set_bounds(bounds);
+    nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name))
+        .unwrap()
+        .geometry_data()
+        .unwrap()
+        .set_bounds(bounds);
     assert_close(data(&reload(&mut nif), name).bounds(), stored);
 }
 
 fn assert_close(a: BoundingSphere, b: BoundingSphere) {
     let close = |x: f32, y: f32| (x - y).abs() < 0.01;
     assert!(
-        close(a.radius, b.radius) && close(a.center.x, b.center.x) && close(a.center.y, b.center.y) && close(a.center.z, b.center.z),
+        close(a.radius, b.radius)
+            && close(a.center.x, b.center.x)
+            && close(a.center.y, b.center.y)
+            && close(a.center.z, b.center.z),
         "{a:?} != {b:?}"
     );
 }
@@ -104,7 +139,11 @@ fn none_for_other_shapes() {
     // BSTriShapes keep their vertices themselves.
     for asset in ["Cone", "Cube", "Icosphere", "Suzanne"] {
         let nif = load(asset);
-        assert!(nif.shapes().all(|s| nif.view_of(s).unwrap().geometry_data().is_none()), "{asset}");
+        assert!(
+            nif.shapes()
+                .all(|s| nif.view_of(s).unwrap().geometry_data().is_none()),
+            "{asset}"
+        );
     }
     // Particles aren't triangle-based.
     let nif = upstream("TestNifFile_Particles_MW");
@@ -115,7 +154,12 @@ fn none_for_other_shapes() {
     let nif = load("Bones");
     let count = nif.blocks().count();
     for index in [0, 5, count, usize::MAX] {
-        assert!(nif.view::<nifly::geometry::NiShape>(index).and_then(|v| v.geometry_data()).is_none(), "{index}");
+        assert!(
+            nif.view::<nifly::geometry::NiShape>(index)
+                .and_then(|v| v.geometry_data())
+                .is_none(),
+            "{index}"
+        );
     }
 }
 
@@ -123,7 +167,11 @@ fn none_for_other_shapes() {
 fn mut_is_the_same_data() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     let shape = shape_index(&nif, "Cuirass");
-    let shared: *const NiGeometryData = nif.view_of(nif.block_of::<NiShape>(shape).unwrap()).unwrap().geometry_data().unwrap();
+    let shared: *const NiGeometryData = nif
+        .view_of(nif.block_of::<NiShape>(shape).unwrap())
+        .unwrap()
+        .geometry_data()
+        .unwrap();
     let mut shape_edit = nif.edit::<nifly::geometry::NiShape>(shape).unwrap();
     let geometry = shape_edit.geometry_data().unwrap();
     assert!(ptr::eq(&*geometry, shared));

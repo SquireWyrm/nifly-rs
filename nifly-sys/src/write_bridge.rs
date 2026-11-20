@@ -152,6 +152,9 @@ mod tests {
         let mut w = RustWriter::new(&mut f);
         let err = ffi::write_and_patch(&mut w, "hello", 0, "j").unwrap_err();
         assert!(err.what().contains("boom"));
-        assert_eq!(w.take_error().unwrap().kind(), io::ErrorKind::PermissionDenied);
+        assert_eq!(
+            w.take_error().unwrap().kind(),
+            io::ErrorKind::PermissionDenied
+        );
     }
 }

@@ -75,7 +75,10 @@ impl NiRotatingParticlesData {
 
     /// The particles' rotations as quaternions, `[x, y, z, w]`.
     pub fn rotations_2(&self) -> Vec<[f32; 4]> {
-        ffi::rotating_particles_data_rotations_2(&self.0).as_chunks::<4>().0.to_vec()
+        ffi::rotating_particles_data_rotations_2(&self.0)
+            .as_chunks::<4>()
+            .0
+            .to_vec()
     }
 
     /// Replaces [`rotations_2`](Self::rotations_2). Returns `false`, changing nothing, unless
@@ -118,7 +121,10 @@ impl NiParticlesData {
 
     /// The particles' rotations as quaternions, `[x, y, z, w]`.
     pub fn rotations(&self) -> Vec<[f32; 4]> {
-        ffi::particles_data_rotations(&self.0).as_chunks::<4>().0.to_vec()
+        ffi::particles_data_rotations(&self.0)
+            .as_chunks::<4>()
+            .0
+            .to_vec()
     }
 
     /// Replaces [`rotations`](Self::rotations). Returns `false`, changing nothing, unless there
@@ -140,7 +146,10 @@ impl NiParticlesData {
 
     /// The particles' rotation axes.
     pub fn rotation_axes(&self) -> Vec<Vec3> {
-        ffi::particles_data_rotation_axes(&self.0).into_iter().map(Vec3::from_ffi).collect()
+        ffi::particles_data_rotation_axes(&self.0)
+            .into_iter()
+            .map(Vec3::from_ffi)
+            .collect()
     }
 
     /// Replaces [`rotation_axes`](Self::rotation_axes). Returns `false`, changing nothing, unless
@@ -153,7 +162,10 @@ impl NiParticlesData {
     /// The UV offsets of the subtextures a [`BsPSysSubTexModifier`] cycles through. Saved only in
     /// 20.2.0.7; before Skyrim, at most 255 are saved.
     pub fn subtexture_offsets(&self) -> Vec<[f32; 4]> {
-        ffi::particles_data_subtexture_offsets(&self.0).as_chunks::<4>().0.to_vec()
+        ffi::particles_data_subtexture_offsets(&self.0)
+            .as_chunks::<4>()
+            .0
+            .to_vec()
     }
 
     /// Replaces [`subtexture_offsets`](Self::subtexture_offsets).
@@ -177,7 +189,10 @@ impl NiPSysData {
 
     /// Each particle's motion. Saved except in 20.2.0.7.
     pub fn particle_info(&self) -> Vec<ParticleInfo> {
-        ffi::psys_data_particle_info(&self.0).into_iter().map(ParticleInfo::from_ffi).collect()
+        ffi::psys_data_particle_info(&self.0)
+            .into_iter()
+            .map(ParticleInfo::from_ffi)
+            .collect()
     }
 
     /// Replaces [`particle_info`](Self::particle_info). Returns `false`, changing nothing, unless
