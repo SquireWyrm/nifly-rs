@@ -226,6 +226,55 @@ pub mod ffi {
         LightningArcOffset,
         /// `BSProceduralLightningController::shaderPropertyRef` (`BSShaderProperty`).
         LightningShader,
+        /// `NiParticleSystem::psysDataRef` and `dataRef`, kept equal (`NiPSysData`).
+        ParticleData,
+        /// `NiParticleSystem::skinInstanceRef` (`NiBoneContainer`).
+        ParticleSkinInstance,
+        /// `NiParticleSystem::shaderPropertyRef` (`BSShaderProperty`).
+        ParticleShader,
+        /// `NiParticleSystem::alphaPropertyRef` (`NiAlphaProperty`).
+        ParticleAlpha,
+        /// `NiPSysModifier::targetRef` (`NiParticleSystem`), a pointer.
+        ParticleSystem,
+        /// The `spawnModifierRef` (`NiPSysSpawnModifier`) of an `NiPSysAgeDeathModifier` or
+        /// `NiPSysCollider`.
+        SpawnModifier,
+        /// The object a particle modifier or collider works around: `NiNode` for
+        /// `NiPSysBombModifier::bombNodeRef` and `NiPSysVolumeEmitter::emitterNodeRef`,
+        /// `NiAVObject` for the gravity, drag, inherit velocity and recycle bound modifiers'
+        /// pointers, `NiPSysFieldModifier::fieldObjectRef` and `NiPSysCollider::colliderNodeRef`.
+        ModifierObject,
+        /// `NiPSysColorModifier::dataRef` or `NiParticleColorModifier::colorDataRef`
+        /// (`NiColorData`).
+        ColorData,
+        /// `BSPSysHavokUpdateModifier::modifierRef` (`NiPSysModifier`).
+        HavokUpdateModifier,
+        /// `NiMeshPSysData::nodeRef` (`NiNode`).
+        MeshPSysNode,
+        /// `NiPSysCollider::nextColliderRef` (`NiPSysCollider`). The chain can't loop back to the
+        /// owner.
+        NextCollider,
+        /// `NiPSysCollider::managerRef` (`NiPSysColliderManager`), a pointer.
+        ColliderManager,
+        /// `NiPSysEmitterCtlr::dataRef` (`NiPSysEmitterCtlrData`).
+        EmitterCtlrData,
+        /// `NiPSysEmitterCtlr::visInterpolatorRef` (`NiInterpolator`).
+        VisibilityInterpolator,
+        /// `BSPSysMultiTargetEmitterCtlr::masterParticleSystemRef` (`BSMasterParticleSystem`), a
+        /// pointer.
+        MasterParticleSystem,
+        /// `NiParticleModifier::nextModifierRef` (`NiParticleModifier`) or
+        /// `NiEmitterModifier::nextModifierRef` (`NiEmitterModifier`).
+        NextParticleModifier,
+        /// `NiParticleModifier::controllerRef` or `NiEmitterModifier::controllerRef`
+        /// (`NiParticleSystemController`), a pointer.
+        ParticleController,
+        /// `NiParticleSystemController::emitterRef` (`NiAVObject`), a pointer.
+        ParticleEmitter,
+        /// `NiParticleMeshesData::dataRef` (`NiNode`).
+        ContainerNode,
+        /// `NiParticles::dataRef` (`NiParticlesData`).
+        ParticlesData,
     }
 
     /// A list of block refs, for `block_ref_list` and `set_block_ref_list`.
@@ -264,6 +313,25 @@ pub mod ffi {
         /// `NiMultiTargetTransformController::targetRefs` (`NiAVObject` or empty), pointers, at most
         /// 65535.
         ExtraTargets,
+        /// `NiParticleSystem::modifierRefs` (`NiPSysModifier`).
+        Modifiers,
+        /// The meshes (`NiAVObject`) of an `NiPSysMeshUpdateModifier`, `NiPSysMeshEmitter`
+        /// (pointers) or `NiParticleMeshModifier`.
+        ParticleMeshes,
+        /// `BSPSysHavokUpdateModifier::nodeRefs` (`NiNode`).
+        HavokUpdateNodes,
+        /// `NiPSysColliderManager::colliderRef` and each `NiPSysCollider::nextColliderRef` after
+        /// it.
+        Colliders,
+        /// `NiParticleSystemController::particleModifierRef` (`NiParticleModifier`) and each
+        /// `NiParticleModifier::nextModifierRef` after it.
+        ParticleModifiers,
+        /// `NiParticleSystemController::particleColliderRef` (`NiParticleCollider`) and each
+        /// `NiParticleModifier::nextModifierRef` (`NiParticleModifier`) after it.
+        ParticleColliders,
+        /// `NiParticleSystemController::emitterModifierRef` and each
+        /// `NiEmitterModifier::nextModifierRef` after it (`NiEmitterModifier`).
+        EmitterModifiers,
     }
 
     #[namespace = "read_bridge"]

@@ -66,3 +66,33 @@ macro_rules! ni_types {
         }
     )*};
 }
+
+/// Getter and setter pairs over the bridge's field shims, converting with `$to` and `$from`.
+macro_rules! fields {
+    ($($(#[$doc:meta])* $get:ident, $set:ident: $ty:ty = $ffi_get:ident, $ffi_set:ident, $to:expr, $from:expr;)*) => {$(
+        $(#[$doc])*
+        pub fn $get(&self) -> $ty {
+            ($to)(ffi::$ffi_get(&self.0))
+        }
+
+        #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
+        pub fn $set(self: Pin<&mut Self>, value: $ty) {
+            ffi::$ffi_set(self.ffi_mut(), ($from)(value));
+        }
+    )*};
+}
+
+/// A typed getter and setter over a `u32` field shim; values outside `$ty` read as `None`.
+macro_rules! enum_field {
+    ($(#[$doc:meta])* $get:ident, $set:ident: $ty:ty = $ffi_get:ident, $ffi_set:ident) => {
+        $(#[$doc])*
+        pub fn $get(&self) -> Option<$ty> {
+            <$ty>::try_from(ffi::$ffi_get(&self.0)).ok()
+        }
+
+        #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
+        pub fn $set(self: Pin<&mut Self>, value: $ty) {
+            ffi::$ffi_set(self.ffi_mut(), value.into());
+        }
+    };
+}

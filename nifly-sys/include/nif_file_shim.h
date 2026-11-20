@@ -28,6 +28,7 @@
 #include "nifly-sys/src/nif_file.rs.h"
 #include "nifly-sys/src/object_3d.rs.h"
 #include "nifly-sys/src/read_bridge.rs.h"
+#include "particles_shim.h"
 #include "read_bridge.h"
 #include "rust/cxx.h"
 #include "sort_state.h"
@@ -107,6 +108,20 @@ inline void register_factories() {
             std::make_unique<GeometryFactory>();
         regs[nifly::NiFloatExtraDataController::BlockName] =
             std::make_unique<FloatExtraDataControllerFactory>();
+        regs[nifly::NiPSysSphereEmitter::BlockName] = std::make_unique<
+            ReplacementFactory<Emitter<nifly::NiPSysSphereEmitter>>>();
+        regs[nifly::NiPSysCylinderEmitter::BlockName] = std::make_unique<
+            ReplacementFactory<Emitter<nifly::NiPSysCylinderEmitter>>>();
+        regs[nifly::NiPSysBoxEmitter::BlockName] = std::make_unique<
+            ReplacementFactory<Emitter<nifly::NiPSysBoxEmitter>>>();
+        regs[nifly::BSPSysArrayEmitter::BlockName] = std::make_unique<
+            ReplacementFactory<Emitter<nifly::BSPSysArrayEmitter>>>();
+        regs[nifly::NiPSysMeshEmitter::BlockName] = std::make_unique<
+            ReplacementFactory<Emitter<nifly::NiPSysMeshEmitter>>>();
+        regs[nifly::NiPSysRotationModifier::BlockName] =
+            std::make_unique<ReplacementFactory<RotationModifier>>();
+        regs[nifly::NiMeshPSysData::BlockName] =
+            std::make_unique<ReplacementFactory<MeshPSysData>>();
         regs[nifly::NiBlendBoolInterpolator::BlockName] = std::make_unique<
             BlendInterpolatorFactory<nifly::NiBlendBoolInterpolator>>();
         regs[nifly::NiBlendFloatInterpolator::BlockName] = std::make_unique<
@@ -4096,6 +4111,123 @@ inline RefSlot find_ref(nifly::NiObject& obj, RefKind kind) {
                 obj,
                 [](auto& o) { return &o.shaderPropertyRef; }
             );
+        case RefKind::ParticleData:
+            return ref_slot<NiParticleSystem, NiPSysData>(obj, [](auto& o) {
+                return &o.psysDataRef;
+            });
+        case RefKind::ParticleSkinInstance:
+            return ref_slot<NiParticleSystem, NiBoneContainer>(
+                obj,
+                [](auto& o) { return &o.skinInstanceRef; }
+            );
+        case RefKind::ParticleShader:
+            return ref_slot<NiParticleSystem, BSShaderProperty>(
+                obj,
+                [](auto& o) { return &o.shaderPropertyRef; }
+            );
+        case RefKind::ParticleAlpha:
+            return ref_slot<NiParticleSystem, NiAlphaProperty>(
+                obj,
+                [](auto& o) { return &o.alphaPropertyRef; }
+            );
+        case RefKind::ParticleSystem:
+            return ref_slot<NiPSysModifier, NiParticleSystem>(obj, [](auto& o) {
+                return &o.targetRef;
+            });
+        case RefKind::SpawnModifier:
+            if (auto m = dynamic_cast<NiPSysAgeDeathModifier*>(&obj))
+                return {&m->spawnModifierRef, &is_a<NiPSysSpawnModifier>};
+            return ref_slot<NiPSysCollider, NiPSysSpawnModifier>(
+                obj,
+                [](auto& o) { return &o.spawnModifierRef; }
+            );
+        case RefKind::ModifierObject:
+            if (auto m = dynamic_cast<NiPSysGravityModifier*>(&obj))
+                return {&m->gravityObjRef, &is_a<NiAVObject>};
+            if (auto m = dynamic_cast<NiPSysDragModifier*>(&obj))
+                return {&m->parentRef, &is_a<NiAVObject>};
+            if (auto m = dynamic_cast<BSPSysInheritVelocityModifier*>(&obj))
+                return {&m->targetNodeRef, &is_a<NiAVObject>};
+            if (auto m = dynamic_cast<NiPSysBombModifier*>(&obj))
+                return {&m->bombNodeRef, &is_a<NiNode>};
+            if (auto m = dynamic_cast<NiPSysFieldModifier*>(&obj))
+                return {&m->fieldObjectRef, &is_a<NiAVObject>};
+            if (auto m = dynamic_cast<BSPSysRecycleBoundModifier*>(&obj))
+                return {&m->targetNodeRef, &is_a<NiAVObject>};
+            if (auto m = dynamic_cast<NiPSysVolumeEmitter*>(&obj))
+                return {&m->emitterNodeRef, &is_a<NiNode>};
+            return ref_slot<NiPSysCollider, NiAVObject>(obj, [](auto& o) {
+                return &o.colliderNodeRef;
+            });
+        case RefKind::ColorData:
+            if (auto m = dynamic_cast<NiPSysColorModifier*>(&obj))
+                return {&m->dataRef, &is_a<NiColorData>};
+            return ref_slot<NiParticleColorModifier, NiColorData>(
+                obj,
+                [](auto& o) { return &o.colorDataRef; }
+            );
+        case RefKind::HavokUpdateModifier:
+            return ref_slot<BSPSysHavokUpdateModifier, NiPSysModifier>(
+                obj,
+                [](auto& o) { return &o.modifierRef; }
+            );
+        case RefKind::MeshPSysNode:
+            return ref_slot<NiMeshPSysData, NiNode>(obj, [](auto& o) {
+                return &o.nodeRef;
+            });
+        case RefKind::NextCollider:
+            return ref_slot<NiPSysCollider, NiPSysCollider>(obj, [](auto& o) {
+                return &o.nextColliderRef;
+            });
+        case RefKind::ColliderManager:
+            return ref_slot<NiPSysCollider, NiPSysColliderManager>(
+                obj,
+                [](auto& o) { return &o.managerRef; }
+            );
+        case RefKind::EmitterCtlrData:
+            return ref_slot<NiPSysEmitterCtlr, NiPSysEmitterCtlrData>(
+                obj,
+                [](auto& o) { return &o.dataRef; }
+            );
+        case RefKind::VisibilityInterpolator:
+            return ref_slot<NiPSysEmitterCtlr, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.visInterpolatorRef; }
+            );
+        case RefKind::MasterParticleSystem:
+            return ref_slot<
+                BSPSysMultiTargetEmitterCtlr,
+                BSMasterParticleSystem>(obj, [](auto& o) {
+                return &o.masterParticleSystemRef;
+            });
+        case RefKind::NextParticleModifier:
+            if (auto m = dynamic_cast<NiEmitterModifier*>(&obj))
+                return {&m->nextModifierRef, &is_a<NiEmitterModifier>};
+            return ref_slot<NiParticleModifier, NiParticleModifier>(
+                obj,
+                [](auto& o) { return &o.nextModifierRef; }
+            );
+        case RefKind::ParticleController:
+            if (auto m = dynamic_cast<NiEmitterModifier*>(&obj))
+                return {&m->controllerRef, &is_a<NiParticleSystemController>};
+            return ref_slot<NiParticleModifier, NiParticleSystemController>(
+                obj,
+                [](auto& o) { return &o.controllerRef; }
+            );
+        case RefKind::ParticleEmitter:
+            return ref_slot<NiParticleSystemController, NiAVObject>(
+                obj,
+                [](auto& o) { return &o.emitterRef; }
+            );
+        case RefKind::ContainerNode:
+            return ref_slot<NiParticleMeshesData, NiNode>(obj, [](auto& o) {
+                return &o.dataRef;
+            });
+        case RefKind::ParticlesData:
+            // NiGeometry's dataRef is protected.
+            return ref_slot<NiParticles, NiParticlesData>(obj, [](auto& o) {
+                return o.DataRef();
+            });
         default:
             return {};
     }
@@ -4129,6 +4261,72 @@ in_shape_tree(const nifly::NiHeader& hdr, uint32_t root, uint32_t target) {
                 stack.push_back(list->shapeRefs.GetBlockRef(i));
     }
     return false;
+}
+
+// Whether the collider chain from `from`, through next collider refs, reaches
+// the block at `target`. Stops at a repeat.
+inline bool collider_chain_reaches(
+    const nifly::NiHeader& hdr,
+    uint32_t from,
+    uint32_t target
+) {
+    std::set<uint32_t> seen;
+    for (uint32_t at = from; at != nifly::NIF_NPOS;) {
+        if (at == target)
+            return true;
+        auto c = hdr.GetBlock<nifly::NiPSysCollider>(at);
+        if (!c || !seen.insert(at).second)
+            return false;
+        at = c->nextColliderRef.index;
+    }
+    return false;
+}
+
+// The next modifier ref of an old particle modifier or emitter modifier, or
+// null for another block.
+inline nifly::NiRef* next_particle_modifier(nifly::NiObject* obj) {
+    if (auto m = dynamic_cast<nifly::NiParticleModifier*>(obj))
+        return &m->nextModifierRef;
+    if (auto m = dynamic_cast<nifly::NiEmitterModifier*>(obj))
+        return &m->nextModifierRef;
+    return nullptr;
+}
+
+// Whether the old particle modifier chain from `from`, through next modifier
+// refs, reaches the block at `target`. Stops at a repeat.
+inline bool particle_modifier_chain_reaches(
+    const nifly::NiHeader& hdr,
+    uint32_t from,
+    uint32_t target
+) {
+    std::set<uint32_t> seen;
+    for (uint32_t at = from; at != nifly::NIF_NPOS;) {
+        if (at == target)
+            return true;
+        auto next = next_particle_modifier(hdr.GetBlock<nifly::NiObject>(at));
+        if (!next || !seen.insert(at).second)
+            return false;
+        at = next->index;
+    }
+    return false;
+}
+
+// The chain of old particle modifiers from `first`, a `Head`, through the
+// next modifier refs of `Link`s. Stops at a block of another type or a repeat.
+template<class Head, class Link>
+rust::Vec<uint32_t>
+particle_modifier_chain(const nifly::NiHeader& hdr, uint32_t first) {
+    rust::Vec<uint32_t> out;
+    if (!hdr.GetBlock<Head>(first))
+        return out;
+    std::set<uint32_t> seen;
+    for (uint32_t at = first; auto m = hdr.GetBlock<Link>(at);) {
+        if (!seen.insert(at).second)
+            break;
+        out.push_back(at);
+        at = m->nextModifierRef.index;
+    }
+    return out;
 }
 
 // Whether the controller chain from `from`, through next controller refs,
@@ -4197,8 +4395,16 @@ inline bool set_block_ref(
         if (kind == RefKind::NextController
             && controller_chain_reaches(hdr, target, owner))
             return false;
+        if (kind == RefKind::NextCollider
+            && collider_chain_reaches(hdr, target, owner))
+            return false;
+        if (kind == RefKind::NextParticleModifier
+            && particle_modifier_chain_reaches(hdr, target, owner))
+            return false;
     }
     slot.ref->index = target;
+    if (kind == RefKind::ParticleData)
+        static_cast<nifly::NiParticleSystem*>(obj)->dataRef.index = target;
     return true;
 }
 
@@ -4335,6 +4541,52 @@ block_ref_list(const nifly::NifFile& file, uint32_t owner, RefList list) {
             if (auto c = dynamic_cast<NiMultiTargetTransformController*>(obj))
                 return ref_array(c->targetRefs);
             break;
+        case RefList::Modifiers:
+            if (auto system = dynamic_cast<NiParticleSystem*>(obj))
+                return ref_array(system->modifierRefs);
+            break;
+        case RefList::ParticleMeshes:
+            if (auto m = dynamic_cast<NiPSysMeshUpdateModifier*>(obj))
+                return ref_array(m->meshRefs);
+            if (auto m = dynamic_cast<NiPSysMeshEmitter*>(obj))
+                return ref_array(m->meshRefs);
+            if (auto m = dynamic_cast<NiParticleMeshModifier*>(obj))
+                return ref_array(m->particleMeshRefs);
+            break;
+        case RefList::HavokUpdateNodes:
+            if (auto m = dynamic_cast<BSPSysHavokUpdateModifier*>(obj))
+                return ref_array(m->nodeRefs);
+            break;
+        case RefList::Colliders:
+            if (auto manager = dynamic_cast<NiPSysColliderManager*>(obj)) {
+                rust::Vec<uint32_t> out;
+                std::set<uint32_t> seen;
+                auto c = hdr.GetBlock<NiPSysCollider>(manager->colliderRef);
+                while (c && seen.insert(hdr.GetBlockID(c)).second) {
+                    out.push_back(hdr.GetBlockID(c));
+                    c = hdr.GetBlock<NiPSysCollider>(c->nextColliderRef);
+                }
+                return out;
+            }
+            break;
+        case RefList::ParticleModifiers:
+            if (auto c = dynamic_cast<NiParticleSystemController*>(obj))
+                return particle_modifier_chain<
+                    NiParticleModifier,
+                    NiParticleModifier>(hdr, c->particleModifierRef.index);
+            break;
+        case RefList::ParticleColliders:
+            if (auto c = dynamic_cast<NiParticleSystemController*>(obj))
+                return particle_modifier_chain<
+                    NiParticleCollider,
+                    NiParticleModifier>(hdr, c->particleColliderRef.index);
+            break;
+        case RefList::EmitterModifiers:
+            if (auto c = dynamic_cast<NiParticleSystemController*>(obj))
+                return particle_modifier_chain<
+                    NiEmitterModifier,
+                    NiEmitterModifier>(hdr, c->emitterModifierRef.index);
+            break;
         case RefList::Controllers:
             if (auto net = dynamic_cast<NiObjectNET*>(obj)) {
                 rust::Vec<uint32_t> out;
@@ -4380,6 +4632,28 @@ bool all_are(const nifly::NiHeader& hdr, rust::Slice<const uint32_t> ids) {
 // next, so they must be distinct. Bones are nodes, as many as the skin's data
 // has. Returns false, changing nothing, if a target doesn't fit or the block
 // has no such list.
+// Links distinct `targets` in order from `head`, through the next modifier refs
+// of `Link`s. False, changing nothing, unless the first is a `Head` and all
+// are `Link`s.
+template<class Head, class Link>
+bool set_particle_modifier_chain(
+    nifly::NiHeader& hdr,
+    nifly::NiRef& head,
+    rust::Slice<const uint32_t> targets
+) {
+    if (!all_are<Link>(hdr, targets)
+        || (!targets.empty() && !hdr.GetBlock<Head>(targets[0])))
+        return false;
+    std::set<uint32_t> distinct(targets.begin(), targets.end());
+    if (distinct.size() != targets.size())
+        return false;
+    head.index = targets.empty() ? nifly::NIF_NPOS : targets[0];
+    for (size_t i = 0; i < targets.size(); i++)
+        hdr.GetBlock<Link>(targets[i])->nextModifierRef.index =
+            i + 1 < targets.size() ? targets[i + 1] : nifly::NIF_NPOS;
+    return true;
+}
+
 inline bool set_block_ref_list(
     nifly::NifFile& file,
     uint32_t owner,
@@ -4518,6 +4792,70 @@ inline bool set_block_ref_list(
                     return false;
             set_ref_array(c->targetRefs, targets);
             return true;
+        }
+        case RefList::Modifiers: {
+            auto system = dynamic_cast<NiParticleSystem*>(obj);
+            if (!system || !all_are<NiPSysModifier>(hdr, targets))
+                return false;
+            set_ref_array(system->modifierRefs, targets);
+            return true;
+        }
+        case RefList::ParticleMeshes: {
+            if (!all_are<NiAVObject>(hdr, targets))
+                return false;
+            if (auto m = dynamic_cast<NiPSysMeshUpdateModifier*>(obj)) {
+                set_ref_array(m->meshRefs, targets);
+                return true;
+            }
+            if (auto m = dynamic_cast<NiPSysMeshEmitter*>(obj)) {
+                set_ref_array(m->meshRefs, targets);
+                return true;
+            }
+            if (auto m = dynamic_cast<NiParticleMeshModifier*>(obj)) {
+                set_ref_array(m->particleMeshRefs, targets);
+                return true;
+            }
+            return false;
+        }
+        case RefList::HavokUpdateNodes: {
+            auto m = dynamic_cast<BSPSysHavokUpdateModifier*>(obj);
+            if (!m || !all_are<NiNode>(hdr, targets))
+                return false;
+            set_ref_array(m->nodeRefs, targets);
+            return true;
+        }
+        case RefList::Colliders: {
+            auto manager = dynamic_cast<NiPSysColliderManager*>(obj);
+            if (!manager || !all_are<NiPSysCollider>(hdr, targets))
+                return false;
+            std::set<uint32_t> distinct(targets.begin(), targets.end());
+            if (distinct.size() != targets.size())
+                return false;
+            manager->colliderRef.index =
+                targets.empty() ? NIF_NPOS : targets[0];
+            for (size_t i = 0; i < targets.size(); i++)
+                hdr.GetBlock<NiPSysCollider>(targets[i])
+                    ->nextColliderRef.index =
+                    i + 1 < targets.size() ? targets[i + 1] : NIF_NPOS;
+            return true;
+        }
+        case RefList::ParticleModifiers:
+        case RefList::ParticleColliders:
+        case RefList::EmitterModifiers: {
+            auto c = dynamic_cast<NiParticleSystemController*>(obj);
+            if (!c)
+                return false;
+            if (list == RefList::EmitterModifiers)
+                return set_particle_modifier_chain<
+                    NiEmitterModifier,
+                    NiEmitterModifier>(hdr, c->emitterModifierRef, targets);
+            if (list == RefList::ParticleColliders)
+                return set_particle_modifier_chain<
+                    NiParticleCollider,
+                    NiParticleModifier>(hdr, c->particleColliderRef, targets);
+            return set_particle_modifier_chain<
+                NiParticleModifier,
+                NiParticleModifier>(hdr, c->particleModifierRef, targets);
         }
         case RefList::Controllers: {
             auto net = dynamic_cast<NiObjectNET*>(obj);

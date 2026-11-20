@@ -33,6 +33,7 @@ fn main() {
         "src/nodes.rs",
         "src/object_3d.rs",
         "src/objects.rs",
+        "src/particles.rs",
         "src/read_bridge.rs",
         "src/shaders.rs",
         "src/skin.rs",

@@ -403,7 +403,7 @@ impl KeyValue for [f32; 4] {
     }
 }
 
-fn key_from_ffi<T: KeyValue>(k: &ffi::KeyFfi) -> Key<T> {
+pub(crate) fn key_from_ffi<T: KeyValue>(k: &ffi::KeyFfi) -> Key<T> {
     let [tension, bias, continuity] = k.tbc;
     Key {
         time: k.time,
@@ -414,7 +414,7 @@ fn key_from_ffi<T: KeyValue>(k: &ffi::KeyFfi) -> Key<T> {
     }
 }
 
-fn key_to_ffi<T: KeyValue>(k: &Key<T>) -> ffi::KeyFfi {
+pub(crate) fn key_to_ffi<T: KeyValue>(k: &Key<T>) -> ffi::KeyFfi {
     ffi::KeyFfi {
         time: k.time,
         value: k.value.to_floats(),
@@ -424,14 +424,14 @@ fn key_to_ffi<T: KeyValue>(k: &Key<T>) -> ffi::KeyFfi {
     }
 }
 
-fn group_from_ffi<T: KeyValue>(g: ffi::KeyGroupFfi) -> KeyGroup<T> {
+pub(crate) fn group_from_ffi<T: KeyValue>(g: ffi::KeyGroupFfi) -> KeyGroup<T> {
     KeyGroup {
         interpolation: Interpolation::try_from(g.interpolation).ok(),
         keys: g.keys.iter().map(key_from_ffi).collect(),
     }
 }
 
-fn group_to_ffi<T: KeyValue>(g: &KeyGroup<T>) -> ffi::KeyGroupFfi {
+pub(crate) fn group_to_ffi<T: KeyValue>(g: &KeyGroup<T>) -> ffi::KeyGroupFfi {
     ffi::KeyGroupFfi {
         interpolation: g.interpolation.map_or(0, u32::from),
         keys: g.keys.iter().map(key_to_ffi).collect(),
@@ -745,30 +745,15 @@ impl NifFile {
     }
 }
 
-/// Getter and setter pairs over the bridge's field shims, converting with `$to` and `$from`.
-macro_rules! fields {
-    ($($(#[$doc:meta])* $get:ident, $set:ident: $ty:ty = $ffi_get:ident, $ffi_set:ident, $to:expr, $from:expr;)*) => {$(
-        $(#[$doc])*
-        pub fn $get(&self) -> $ty {
-            ($to)(ffi::$ffi_get(&self.0))
-        }
-
-        #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: $ty) {
-            ffi::$ffi_set(self.ffi_mut(), ($from)(value));
-        }
-    )*};
-}
-
-fn same<T>(x: T) -> T {
+pub(crate) fn same<T>(x: T) -> T {
     x
 }
 
-fn vec3(v: ffi::Vec3) -> Vec3 {
+pub(crate) fn vec3(v: ffi::Vec3) -> Vec3 {
     Vec3::from_ffi(v)
 }
 
-fn vec3_to_ffi(v: Vec3) -> ffi::Vec3 {
+pub(crate) fn vec3_to_ffi(v: Vec3) -> ffi::Vec3 {
     v.to_ffi()
 }
 
@@ -2172,6 +2157,18 @@ impl NiFloatExtraDataController {
     }
 }
 
+impl NiPSysModifierCtlr {
+    /// The [name](crate::particles::NiPSysModifier::name) of the modifier to animate, in the controller's target.
+    pub fn modifier_name(&self) -> &BStr {
+        nifly_sys::particles::ffi::psys_modifier_ctlr_modifier_name(&self.0).as_bstr()
+    }
+
+    /// Sets [`modifier_name`](Self::modifier_name).
+    pub fn set_modifier_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+        nifly_sys::particles::ffi::set_psys_modifier_ctlr_modifier_name(self.ffi_mut(), name.as_ref());
+    }
+}
+
 /// Which float of a [`BsLightingShaderProperty`](crate::shaders::BsLightingShaderProperty) a
 /// [`BsLightingShaderPropertyFloatController`] animates.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
@@ -2239,21 +2236,6 @@ pub enum EffectShaderControlledVariable {
 #[repr(u32)]
 pub enum EffectShaderControlledColor {
     Emissive = 0,
-}
-
-/// A typed getter and setter over a `u32` field shim; values outside `$ty` read as `None`.
-macro_rules! enum_field {
-    ($(#[$doc:meta])* $get:ident, $set:ident: $ty:ty = $ffi_get:ident, $ffi_set:ident) => {
-        $(#[$doc])*
-        pub fn $get(&self) -> Option<$ty> {
-            <$ty>::try_from(ffi::$ffi_get(&self.0)).ok()
-        }
-
-        #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
-        pub fn $set(self: Pin<&mut Self>, value: $ty) {
-            ffi::$ffi_set(self.ffi_mut(), value.into());
-        }
-    };
 }
 
 impl BsLightingShaderPropertyFloatController {

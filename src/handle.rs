@@ -12,7 +12,7 @@
 //! |---|---|---|
 //! | [`NiObjectNet`](crate::objects::NiObjectNet) and subtypes | `extra_data`, `extra_data_chain`, `controller`, `controllers` | `assign_extra_data`, `set_extra_data`, `set_extra_data_chain`, `controller`, `set_controller`, `set_controllers`, `add_controller` |
 //! | [`NiAvObject`](crate::objects::NiAvObject) and subtypes | `parent`, `properties`, `collision` | `parent`, `set_parent`, `add_property`, `set_properties`, `collision`, `set_collision`, `assign_collision` |
-//! | [`NiNode`](crate::nodes::NiNode) and subtypes | `children`, `children_of`, `effects` | `set_children`, `add_child`, `add_child_of`, `clone_node`, `set_effects`, `add_effect` |
+//! | [`NiNode`](crate::nodes::NiNode) and subtypes | `children`, `children_of`, `effects` | `set_children`, `add_child`, `add_child_of`, `add_particle_system`, `clone_node`, `set_effects`, `add_effect` |
 //! | [`NiGeometryData`](crate::geometry::NiGeometryData) and subtypes | `additional_data` | `additional_data`, `assign_additional_data`, `set_additional_data`, `remove_additional_data`, `set_uv_sets`, `set_data_raw_flags` |
 //! | [`NiExtraData`](crate::extra_data::NiExtraData) | `next_extra_data` | `next_extra_data`, `set_next_extra_data` |
 //! | [`NiDynamicEffect`](crate::effects::NiDynamicEffect) and subtypes | `affected_nodes` | `set_affected_nodes` |
@@ -60,6 +60,22 @@
 //! | [`NiMultiTargetTransformController`](crate::animation::NiMultiTargetTransformController) | `extra_targets` | `set_extra_targets` |
 //! | [`NiGeomMorpherController`](crate::animation::NiGeomMorpherController) | `morph_interpolators` | `set_morph_interpolators` |
 //! | [`NiBoneLodController`](crate::animation::NiBoneLodController) and subtypes | `node_groups` | `set_node_groups` |
+//! | [`NiParticleSystem`](crate::particles::NiParticleSystem) (not subtypes; `upcast` first) | `data`, `skin_instance`, `shader`, `alpha_property`, `modifiers` | the same and their `set_` forms, `add_modifier` |
+//! | [`NiPSysModifier`](crate::particles::NiPSysModifier) and subtypes | `particle_system` | `particle_system`, `set_particle_system` |
+//! | [`NiPSysAgeDeathModifier`](crate::particles::NiPSysAgeDeathModifier), [`NiPSysCollider`](crate::particles::NiPSysCollider) ([`HasSpawnModifier`](crate::particles::HasSpawnModifier)) | `spawn_modifier` | `spawn_modifier`, `set_spawn_modifier` |
+//! | Modifiers and colliders that work around an object ([`HasModifierObject`](crate::particles::HasModifierObject)) | `modifier_object` | `modifier_object`, `set_modifier_object` |
+//! | [`NiPSysColorModifier`](crate::particles::NiPSysColorModifier), [`NiParticleColorModifier`](crate::particles::NiParticleColorModifier) ([`HasColorData`](crate::particles::HasColorData)) | `color_data` | `color_data`, `set_color_data` |
+//! | [`NiPSysMeshUpdateModifier`](crate::particles::NiPSysMeshUpdateModifier), [`NiPSysMeshEmitter`](crate::particles::NiPSysMeshEmitter), [`NiParticleMeshModifier`](crate::particles::NiParticleMeshModifier) ([`HasParticleMeshes`](crate::particles::HasParticleMeshes)) | `particle_meshes` | `set_particle_meshes` |
+//! | [`NiPSysColliderManager`](crate::particles::NiPSysColliderManager) and subtypes | `colliders` | `set_colliders`, `add_collider` |
+//! | [`NiPSysCollider`](crate::particles::NiPSysCollider) and subtypes | `next_collider`, `collider_manager` | the same, and `set_` forms |
+//! | [`BsPSysHavokUpdateModifier`](crate::particles::BsPSysHavokUpdateModifier) | `havok_nodes`, `havok_modifier` | `set_havok_nodes`, `havok_modifier`, `set_havok_modifier` |
+//! | [`NiMeshPSysData`](crate::particles::NiMeshPSysData) | `mesh_node` | `mesh_node`, `set_mesh_node` |
+//! | [`NiPSysEmitterCtlr`](crate::particles::NiPSysEmitterCtlr) and subtypes | `emitter_data`, `visibility_interpolator` | the same, and `set_` forms |
+//! | [`BsPSysMultiTargetEmitterCtlr`](crate::particles::BsPSysMultiTargetEmitterCtlr) | `master_particle_system` | `master_particle_system`, `set_master_particle_system` |
+//! | [`NiParticles`](crate::geometry::NiParticles) and subtypes | `particles_data` | `particles_data`, `set_particles_data` |
+//! | [`NiParticleSystemController`](crate::particles::NiParticleSystemController) and subtypes | `emitter`, `particle_modifiers`, `particle_colliders`, `emitter_modifiers` | `emitter`, `set_` forms, `add_particle_modifier` |
+//! | Old particle modifiers and [`NiEmitterModifier`](crate::particles::NiEmitterModifier) ([`ChainedModifier`](crate::particles::ChainedModifier)) | `next_modifier`, `particle_controller` | the same, and `set_` forms |
+//! | [`NiParticleMeshesData`](crate::particles::NiParticleMeshesData) | `container_node` | `container_node`, `set_container_node` |
 //!
 //! ```
 //! # use nifly::{file::NifFile, nodes::NiNode};

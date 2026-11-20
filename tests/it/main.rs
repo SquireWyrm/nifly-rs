@@ -69,6 +69,8 @@ mod node_skin_fields;
 mod object_palette;
 mod optimize_for;
 mod packed_shared_geom;
+mod old_particles;
+mod particles;
 mod pixel_data;
 mod rename_duplicate_shapes;
 mod reorder_shape_triangles;

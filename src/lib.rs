@@ -19,3 +19,4 @@ pub mod shaders;
 pub mod effects;
 pub mod collision;
 pub mod animation;
+pub mod particles;

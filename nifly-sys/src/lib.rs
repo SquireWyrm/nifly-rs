@@ -9,6 +9,7 @@ pub mod nif_file;
 pub mod nodes;
 pub mod object_3d;
 pub mod objects;
+pub mod particles;
 pub mod read_bridge;
 pub mod shaders;
 pub mod skin;
