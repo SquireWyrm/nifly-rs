@@ -1,4 +1,5 @@
 
+pub mod collision;
 pub mod effects;
 pub mod extra_data;
 pub mod extra_data_types;

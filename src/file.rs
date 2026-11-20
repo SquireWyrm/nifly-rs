@@ -162,9 +162,11 @@ pub type Index = usize;
 ///   [`set_shape_order`](Self::set_shape_order), [`create_shape`](Self::create_shape),
 ///   [`clone_shape_from`](Self::clone_shape_from).
 /// - **Shaders, materials and textures:** [`add_source_texture`](Self::add_source_texture).
+/// - **Collision:** [`add_action`](Self::add_action).
 ///
-/// Methods returning a block have a `_mut` form taking a block [`Index`] and returning
-/// `Pin<&mut T>`, for the block's setters.
+/// Methods returning a block have a `_mut` form taking a block [`Index`]. It returns
+/// `Pin<&mut T>`, for the block's setters, or an [`Edit`] where the shared form returns a
+/// [`View`].
 ///
 /// Methods for one block, such as a shape's vertices, skin and shader, a node's children and
 /// parent, or a tree node's bones, are on [`View`] and [`Edit`], from [`view`](Self::view) and

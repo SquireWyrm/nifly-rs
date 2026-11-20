@@ -39,4 +39,5 @@ pub mod ffi {
     // Lets other bridges pass `Vec<Vec3>`.
     impl Vec<Vec3> {}
     impl Vec<BoundingVolumeFfi> {}
+    impl Vec<BoundingSphere> {}
 }

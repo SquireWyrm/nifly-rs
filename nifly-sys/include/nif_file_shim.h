@@ -19,6 +19,7 @@
 #include "Object3d.hpp"
 #include "Particles.hpp"
 #include "bhk.hpp"
+#include "collision_shim.h"
 #include "effects_shim.h"
 #include "extra_data_shim.h"
 #include "mesh_writer.h"
@@ -3769,6 +3770,31 @@ RefSlot ref_slot(nifly::NiObject& obj, Get get) {
     return {get(*owner), &is_a<T>};
 }
 
+// Slot `i` of a constraint's entity array, or none if it has fewer slots.
+inline RefSlot
+entity_slot(nifly::NiBlockRefArray<nifly::bhkEntity>& refs, uint32_t i) {
+    if (refs.GetSize() <= i)
+        return {};
+    return {&*(refs.begin() + i), &is_a<nifly::bhkEntity>};
+}
+
+// Gives the entity arrays behind `kind` on `obj` their two slots, which every
+// save writes, so the slots exist to set.
+inline void make_entity_slots(nifly::NiObject& obj, RefKind kind) {
+    using namespace nifly;
+    if (kind == RefKind::EntityA || kind == RefKind::EntityB) {
+        if (auto c = dynamic_cast<bhkConstraint*>(&obj))
+            two_entity_slots(c->entityRefs);
+    } else if (
+        kind == RefKind::WrappedEntityA || kind == RefKind::WrappedEntityB
+    ) {
+        if (auto c = dynamic_cast<bhkBreakableConstraint*>(&obj))
+            two_entity_slots(c->subConstraint.entityRefs);
+        if (auto c = dynamic_cast<bhkMalleableConstraint*>(&obj))
+            two_entity_slots(c->subConstraint.entityRefs);
+    }
+}
+
 inline RefSlot find_ref(nifly::NiObject& obj, RefKind kind) {
     using namespace nifly;
     switch (kind) {
@@ -3838,9 +3864,98 @@ inline RefSlot find_ref(nifly::NiObject& obj, RefKind kind) {
             return ref_slot<TextureRenderData, NiPalette>(obj, [](auto& o) {
                 return &o.paletteRef;
             });
+        case RefKind::CollisionTarget:
+            return ref_slot<NiCollisionObject, NiAVObject>(obj, [](auto& o) {
+                return &o.targetRef;
+            });
+        case RefKind::CollisionBody:
+            if (auto np = dynamic_cast<bhkNPCollisionObject*>(&obj))
+                return {&np->bodyRef, [](NiObject* target) {
+                            return is_a<bhkPhysicsSystem>(target)
+                                || is_a<bhkRagdollSystem>(target);
+                        }};
+            return ref_slot<bhkNiCollisionObject, bhkWorldObject>(
+                obj,
+                [](auto& o) { return &o.bodyRef; }
+            );
+        case RefKind::HavokShape:
+            if (auto ref = child_shape_ref(&obj))
+                return {ref, &is_a<bhkShape>};
+            return {};
+        case RefKind::HingedBody:
+            return ref_slot<bhkOrientHingedBodyAction, bhkRigidBody>(
+                obj,
+                [](auto& o) { return &o.bodyRef; }
+            );
+        case RefKind::CompressedMeshTarget:
+            return ref_slot<bhkCompressedMeshShape, NiAVObject>(
+                obj,
+                [](auto& o) { return &o.targetRef; }
+            );
+        case RefKind::CompressedMeshData:
+            return ref_slot<bhkCompressedMeshShape, bhkCompressedMeshShapeData>(
+                obj,
+                [](auto& o) { return &o.dataRef; }
+            );
+        case RefKind::EntityA:
+        case RefKind::EntityB: {
+            uint32_t i = kind == RefKind::EntityA ? 0 : 1;
+            if (auto chain = dynamic_cast<bhkBallSocketConstraintChain*>(&obj))
+                return {
+                    i == 0 ? &chain->entityARef : &chain->entityBRef,
+                    &is_a<bhkEntity>
+                };
+            if (auto c = dynamic_cast<bhkConstraint*>(&obj))
+                return entity_slot(c->entityRefs, i);
+            return {};
+        }
+        case RefKind::WrappedEntityA:
+        case RefKind::WrappedEntityB: {
+            uint32_t i = kind == RefKind::WrappedEntityA ? 0 : 1;
+            if (auto c = dynamic_cast<bhkBreakableConstraint*>(&obj))
+                return entity_slot(c->subConstraint.entityRefs, i);
+            if (auto c = dynamic_cast<bhkMalleableConstraint*>(&obj))
+                return entity_slot(c->subConstraint.entityRefs, i);
+            return {};
+        }
+        case RefKind::PackedData:
+            return ref_slot<bhkPackedNiTriStripsShape, hkPackedNiTriStripsData>(
+                obj,
+                [](auto& o) { return &o.dataRef; }
+            );
         default:
             return {};
     }
+}
+
+// Whether the shape at `target` is the one at `root` or contained in it,
+// through child shape and sub-shape refs.
+inline bool
+in_shape_tree(const nifly::NiHeader& hdr, uint32_t root, uint32_t target) {
+    using namespace nifly;
+    std::vector<bool> seen(hdr.GetNumBlocks());
+    std::vector<uint32_t> stack {root};
+    while (!stack.empty()) {
+        uint32_t id = stack.back();
+        stack.pop_back();
+        if (id == target)
+            return true;
+        if (id >= seen.size() || seen[id])
+            continue;
+        seen[id] = true;
+        auto obj = hdr.GetBlock<bhkShape>(id);
+        if (!obj)
+            continue;
+        if (auto ref = child_shape_ref(obj))
+            stack.push_back(ref->index);
+        if (auto list = dynamic_cast<bhkListShape*>(obj))
+            for (uint32_t i = 0; i < list->subShapeRefs.GetSize(); i++)
+                stack.push_back(list->subShapeRefs.GetBlockRef(i));
+        if (auto list = dynamic_cast<bhkConvexListShape*>(obj))
+            for (uint32_t i = 0; i < list->shapeRefs.GetSize(); i++)
+                stack.push_back(list->shapeRefs.GetBlockRef(i));
+    }
+    return false;
 }
 
 // The block index in the `kind` ref of the block at `owner`; NIF_NPOS if it's
@@ -3867,12 +3982,22 @@ inline bool set_block_ref(
     auto obj = hdr.GetBlock<nifly::NiObject>(owner);
     if (!obj)
         return false;
+    // Entity slots may need creating, so check the target first.
+    bool entity = kind == RefKind::EntityA || kind == RefKind::EntityB
+        || kind == RefKind::WrappedEntityA || kind == RefKind::WrappedEntityB;
+    if (entity && target != nifly::NIF_NPOS
+        && !is_a<nifly::bhkEntity>(hdr.GetBlock<nifly::NiObject>(target)))
+        return false;
+    if (entity)
+        make_entity_slots(*obj, kind);
     RefSlot slot = find_ref(*obj, kind);
     if (!slot.ref)
         return false;
     if (target != nifly::NIF_NPOS) {
         auto block = hdr.GetBlock<nifly::NiObject>(target);
         if (!block || !slot.target_ok(block))
+            return false;
+        if (kind == RefKind::HavokShape && in_shape_tree(hdr, target, owner))
             return false;
     }
     slot.ref->index = target;
@@ -3982,6 +4107,28 @@ block_ref_list(const nifly::NifFile& file, uint32_t owner, RefList list) {
             if (auto master = dynamic_cast<BSMasterParticleSystem*>(obj))
                 return ref_array(master->particleSysRefs);
             break;
+        case RefList::Constraints:
+            if (auto body = dynamic_cast<bhkRigidBody*>(obj))
+                return ref_array(body->constraintRefs);
+            break;
+        case RefList::SubShapes:
+            if (auto list = dynamic_cast<bhkListShape*>(obj))
+                return ref_array(list->subShapeRefs);
+            if (auto list = dynamic_cast<bhkConvexListShape*>(obj))
+                return ref_array(list->shapeRefs);
+            break;
+        case RefList::StripsData:
+            if (auto shape = dynamic_cast<bhkNiTriStripsShape*>(obj))
+                return ref_array(shape->partRefs);
+            break;
+        case RefList::ChainedEntities:
+            if (auto chain = dynamic_cast<bhkBallSocketConstraintChain*>(obj))
+                return ref_array(chain->chainedEntityRefs);
+            break;
+        case RefList::RagdollBones:
+            if (auto t = dynamic_cast<bhkRagdollTemplate*>(obj))
+                return ref_array(t->boneRefs);
+            break;
         default:
             break;
     }
@@ -4081,6 +4228,60 @@ inline bool set_block_ref_list(
             if (!master || !all_are<NiAVObject>(hdr, targets))
                 return false;
             set_ref_array(master->particleSysRefs, targets);
+            return true;
+        }
+        case RefList::Constraints: {
+            auto body = dynamic_cast<bhkRigidBody*>(obj);
+            if (!body)
+                return false;
+            for (uint32_t id : targets)
+                if (!hdr.GetBlock<bhkConstraint>(id)
+                    && !hdr.GetBlock<bhkBallSocketConstraintChain>(id))
+                    return false;
+            set_ref_array(body->constraintRefs, targets);
+            return true;
+        }
+        case RefList::SubShapes: {
+            for (uint32_t id : targets)
+                if (in_shape_tree(hdr, id, owner))
+                    return false;
+            if (auto list = dynamic_cast<bhkListShape*>(obj)) {
+                if (!all_are<bhkShape>(hdr, targets))
+                    return false;
+                if (list->filters.size() == list->subShapeRefs.GetSize())
+                    list->filters.resize(static_cast<uint32_t>(targets.size()));
+                set_ref_array(list->subShapeRefs, targets);
+                return true;
+            }
+            if (auto list = dynamic_cast<bhkConvexListShape*>(obj)) {
+                if (!all_are<bhkConvexShape>(hdr, targets))
+                    return false;
+                set_ref_array(list->shapeRefs, targets);
+                return true;
+            }
+            return false;
+        }
+        case RefList::StripsData: {
+            auto shape = dynamic_cast<bhkNiTriStripsShape*>(obj);
+            if (!shape || !all_are<NiTriStripsData>(hdr, targets))
+                return false;
+            if (shape->filters.size() == shape->partRefs.GetSize())
+                shape->filters.resize(static_cast<uint32_t>(targets.size()));
+            set_ref_array(shape->partRefs, targets);
+            return true;
+        }
+        case RefList::ChainedEntities: {
+            auto chain = dynamic_cast<bhkBallSocketConstraintChain*>(obj);
+            if (!chain || !all_are<bhkRigidBody>(hdr, targets))
+                return false;
+            set_ref_array(chain->chainedEntityRefs, targets);
+            return true;
+        }
+        case RefList::RagdollBones: {
+            auto t = dynamic_cast<bhkRagdollTemplate*>(obj);
+            if (!t || !all_are<bhkRagdollTemplateData>(hdr, targets))
+                return false;
+            set_ref_array(t->boneRefs, targets);
             return true;
         }
         default:

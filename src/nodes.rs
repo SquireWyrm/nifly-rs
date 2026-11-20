@@ -20,7 +20,7 @@ use crate::{
     objects::{IsA, NiObject, NiType},
 };
 
-use crate::{extra_data::joined, objects::NiAvObject};
+use crate::{collision::NiCollisionObject, extra_data::joined, objects::NiAvObject};
 
 ni_types! { ffi;
     /// A scene graph node that can have children, from [`View::children`].
@@ -945,7 +945,7 @@ impl<'a, T: NiType> View<'a, T> {
     }
 
     /// The object's collision object, or `None` if it has none.
-    pub fn collision<I>(&self) -> Option<View<'a, NiObject>>
+    pub fn collision<I>(&self) -> Option<View<'a, NiCollisionObject>>
     where
         T: IsA<NiAvObject, I>,
     {
@@ -974,7 +974,7 @@ impl<T: NiType> Edit<'_, T> {
     }
 
     /// Like [`View::collision`], for editing.
-    pub fn collision<I>(&mut self) -> Option<Edit<'_, NiObject>>
+    pub fn collision<I>(&mut self) -> Option<Edit<'_, NiCollisionObject>>
     where
         T: IsA<NiAvObject, I>,
     {
@@ -982,8 +982,8 @@ impl<T: NiType> Edit<'_, T> {
     }
 
     /// Sets the object's collision object, or removes it with `None`. Returns `false`, changing
-    /// nothing, unless `collision` is a collision object block. The collision object's target
-    /// isn't changed.
+    /// nothing, unless `collision` is an [`NiCollisionObject`]. The collision object's
+    /// [target](View::target) isn't changed. [`Edit::assign_collision`] adds a new one.
     pub fn set_collision<I>(&mut self, collision: Option<Index>) -> bool
     where
         T: IsA<NiAvObject, I>,

@@ -36,6 +36,7 @@ It holds meshes extracted from Skyrim and is gitignored for legal reasons. Never
 | Nodes | `nodes.rs` |
 | Shapes | `geometry.rs` |
 | Shaders, materials and textures | `shaders.rs` |
+| Collision | `collision.rs` |
 
 - Put a new method in its topic's block.
 - Each block opens with a `# Heading` doc comment, which rustdoc shows as a section.

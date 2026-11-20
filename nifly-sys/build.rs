@@ -23,6 +23,7 @@ fn main() {
     }
 
     let bridge_files = [
+        "src/collision.rs",
         "src/effects.rs",
         "src/extra_data.rs",
         "src/extra_data_types.rs",

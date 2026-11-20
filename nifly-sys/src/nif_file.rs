@@ -147,6 +147,32 @@ pub mod ffi {
         PixelData,
         /// `TextureRenderData::paletteRef` (`NiPalette`).
         Palette,
+        /// `NiCollisionObject::targetRef` (`NiAVObject`), a pointer.
+        CollisionTarget,
+        /// `bhkNiCollisionObject::bodyRef`: a `bhkWorldObject`, or for a `bhkNPCollisionObject`
+        /// a `bhkPhysicsSystem` or `bhkRagdollSystem`.
+        CollisionBody,
+        /// The `shapeRef` (`bhkShape`) of a `bhkWorldObject`, `bhkTransformShape` or
+        /// `bhkMoppBvTreeShape`. A shape can't contain itself.
+        HavokShape,
+        /// `bhkOrientHingedBodyAction::bodyRef` (`bhkRigidBody`), a pointer.
+        HingedBody,
+        /// `bhkCompressedMeshShape::targetRef` (`NiAVObject`), a pointer.
+        CompressedMeshTarget,
+        /// `bhkCompressedMeshShape::dataRef` (`bhkCompressedMeshShapeData`).
+        CompressedMeshData,
+        /// `bhkPackedNiTriStripsShape::dataRef` (`hkPackedNiTriStripsData`).
+        PackedData,
+        /// The first entity (`bhkEntity`) of a `bhkConstraint` (`entityRefs`, sized to two
+        /// when set) or `bhkBallSocketConstraintChain` (`entityARef`), a pointer.
+        EntityA,
+        /// The second entity, like `EntityA` (`entityBRef` for a chain).
+        EntityB,
+        /// The first entity (`bhkEntity`) of a `bhkBreakableConstraint`'s or
+        /// `bhkMalleableConstraint`'s `subConstraint`, sized to two when set, a pointer.
+        WrappedEntityA,
+        /// The second entity, like `WrappedEntityA`.
+        WrappedEntityB,
     }
 
     /// A list of block refs, for `block_ref_list` and `set_block_ref_list`.
@@ -165,6 +191,19 @@ pub mod ffi {
         Bones,
         /// `BSMasterParticleSystem::particleSysRefs` (`NiAVObject`).
         ParticleSystems,
+        /// `bhkRigidBody::constraintRefs` (`bhkConstraint` or `bhkBallSocketConstraintChain`).
+        Constraints,
+        /// `bhkListShape::subShapeRefs` (`bhkShape`) or `bhkConvexListShape::shapeRefs`
+        /// (`bhkConvexShape`). A shape can't contain itself. A list shape's filters are resized
+        /// to match if there was one per sub-shape.
+        SubShapes,
+        /// `bhkNiTriStripsShape::partRefs` (`NiTriStripsData`). The filters are resized to match
+        /// if there was one per ref.
+        StripsData,
+        /// `bhkBallSocketConstraintChain::chainedEntityRefs` (`bhkRigidBody`), pointers.
+        ChainedEntities,
+        /// `bhkRagdollTemplate::boneRefs` (`bhkRagdollTemplateData`).
+        RagdollBones,
     }
 
     #[namespace = "read_bridge"]

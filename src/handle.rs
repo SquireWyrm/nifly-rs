@@ -11,7 +11,7 @@
 //! | Type | [`View`] | [`Edit`] |
 //! |---|---|---|
 //! | [`NiObjectNet`](crate::objects::NiObjectNet) and subtypes | `extra_data`, `extra_data_chain`, `controller` | `assign_extra_data`, `set_extra_data`, `set_extra_data_chain`, `controller`, `set_controller` |
-//! | [`NiAvObject`](crate::objects::NiAvObject) and subtypes | `parent`, `properties`, `collision` | `parent`, `set_parent`, `add_property`, `set_properties`, `collision`, `set_collision` |
+//! | [`NiAvObject`](crate::objects::NiAvObject) and subtypes | `parent`, `properties`, `collision` | `parent`, `set_parent`, `add_property`, `set_properties`, `collision`, `set_collision`, `assign_collision` |
 //! | [`NiNode`](crate::nodes::NiNode) and subtypes | `children`, `children_of`, `effects` | `set_children`, `add_child`, `add_child_of`, `clone_node`, `set_effects`, `add_effect` |
 //! | [`NiGeometryData`](crate::geometry::NiGeometryData) and subtypes | `additional_data` | `additional_data`, `assign_additional_data`, `set_additional_data`, `remove_additional_data`, `set_uv_sets`, `set_data_flags` |
 //! | [`NiExtraData`](crate::extra_data::NiExtraData) | `next_extra_data` | `next_extra_data`, `set_next_extra_data` |
@@ -30,6 +30,19 @@
 //! | [`NiSkinInstance`](crate::skin::NiSkinInstance) | `data`, `partition` | `data`, `partition`, `set_data`, `set_partition` |
 //! | [`BsSkinInstance`](crate::skin::BsSkinInstance) | `data` | `data`, `set_data` |
 //! | [`NiSkinData`](crate::skin::NiSkinData) | `partition` | `partition`, `set_partition` |
+//! | [`NiCollisionObject`](crate::collision::NiCollisionObject) and subtypes | `target` | `target`, `set_target` |
+//! | [`BhkNiCollisionObject`](crate::collision::BhkNiCollisionObject) and subtypes | `body` | `body`, `set_body`, `assign_body` |
+//! | [`BhkWorldObject`](crate::collision::BhkWorldObject), [`BhkTransformShape`](crate::collision::BhkTransformShape), [`BhkMoppBvTreeShape`](crate::collision::BhkMoppBvTreeShape) and subtypes ([`HasShape`](crate::collision::HasShape)) | `shape` | `shape`, `set_shape`, `assign_shape` |
+//! | [`BhkListShape`](crate::collision::BhkListShape), [`BhkConvexListShape`](crate::collision::BhkConvexListShape) ([`HasSubShapes`](crate::collision::HasSubShapes)) | `sub_shapes` | `set_sub_shapes`, `add_sub_shape` |
+//! | [`BhkNiTriStripsShape`](crate::collision::BhkNiTriStripsShape) | `strips_data` | `set_strips_data` |
+//! | [`BhkPackedNiTriStripsShape`](crate::collision::BhkPackedNiTriStripsShape) | `packed_data` | `packed_data`, `set_packed_data`, `assign_packed_data` |
+//! | [`BhkCompressedMeshShape`](crate::collision::BhkCompressedMeshShape) | `mesh_target`, `compressed_data` | `mesh_target`, `set_mesh_target`, `compressed_data`, `set_compressed_data`, `assign_compressed_data` |
+//! | [`BhkRigidBody`](crate::collision::BhkRigidBody) and subtypes | `constraints` | `set_constraints`, `add_constraint` |
+//! | [`BhkConstraint`](crate::collision::BhkConstraint) and subtypes, [`BhkBallSocketConstraintChain`](crate::collision::BhkBallSocketConstraintChain) ([`HasEntities`](crate::collision::HasEntities)) | `entities` | `set_entities` |
+//! | [`BhkBreakableConstraint`](crate::collision::BhkBreakableConstraint), [`BhkMalleableConstraint`](crate::collision::BhkMalleableConstraint) ([`WrapsConstraint`](crate::collision::WrapsConstraint)) | `wrapped_entities` | `set_wrapped_entities` |
+//! | [`BhkBallSocketConstraintChain`](crate::collision::BhkBallSocketConstraintChain) | `chained_entities` | `set_chained_entities` |
+//! | [`BhkRagdollTemplate`](crate::collision::BhkRagdollTemplate) | `ragdoll_bones` | `set_ragdoll_bones` |
+//! | [`BhkOrientHingedBodyAction`](crate::collision::BhkOrientHingedBodyAction) | `hinged_body` | `hinged_body`, `set_hinged_body` |
 //! | [`NiShader`](crate::shaders::NiShader) | `texture_set` | `texture_set`, `set_texture_set` |
 //! | [`NiTexturingProperty`](crate::shaders::NiTexturingProperty) | `map_source` | `map_source`, `set_map_source` |
 //! | [`NiSourceTexture`](crate::shaders::NiSourceTexture) | `pixel_data` | `pixel_data`, `assign_pixel_data`, `set_pixel_data` |
