@@ -1,33 +1,56 @@
-//! Reading, editing and writing NIF files, the mesh format of Bethesda's games from Morrowind to
-//! Starfield.
+//! NIF files: the model format of Gamebryo-based games, used by Bethesda from Morrowind to
+//! Starfield. A file is a list of blocks forming a scene graph: nodes and the shapes under them,
+//! with shaders, skinning, collision, animation, particles and extra data.
 //!
-//! A [`NifFile`] holds a file's blocks. Borrow them by type for their fields, and through a
-//! [`View`](handle::View) or [`Edit`](handle::Edit) for what involves other blocks: children,
-//! shaders, skins. Each block type's docs list its handle methods.
+//! This crate reads and writes NIF files from each of those games, edits their blocks, adds new
+//! ones and creates files from scratch, and converts Skyrim meshes between
+//! [LE and SE](NifFile::optimize_for).
 //!
 //! ```
 //! use nifly::prelude::*;
-//! # use std::{fs::File, io::Cursor};
+//! use std::{fs::File, io::Cursor};
 //!
 //! let mut nif = NifFile::load(File::open("assets/Cube.nif")?, None)?;
-//! for node in nif.blocks_of::<NiNode>() {
-//!     println!("{}", node.name().to_str_lossy());
+//! for shape in nif.blocks_of::<NiShape>().views() {
+//!     println!("{}: {:?}", shape.name().to_str_lossy(), shape.texture_paths());
 //! }
-//! let root = nif.root_node().unwrap().index();
-//! let node = nif.block_of_mut::<NiNode>(root).unwrap();
-//! node.set_transform(Transform::new(Vec3::new(0.0, 0.0, 10.0), Matrix3::IDENTITY, 1.0));
-//! nif.save(Cursor::new(Vec::new()), None)?;
+//! let mut root = nif.root_node_mut().unwrap();
+//! root.set_transform(Transform::new(Vec3::new(0.0, 0.0, 10.0), Matrix3::IDENTITY, 1.0));
+//!
+//! let mut output = Cursor::new(Vec::new());
+//! nif.save(&mut output, None)?;
+//! let bytes = output.into_inner();
+//! # assert!(!bytes.is_empty());
 //! # Ok::<(), nifly::Error>(())
 //! ```
 //!
-//! [`prelude`] has the common types. Names and paths are byte strings ([`bstr`]), since files
-//! aren't always UTF-8.
+//! # Games
 //!
-//! Each game's version constant lists the types the game uses:
-//! [`MORROWIND`](NifVersion::MORROWIND), [`OBLIVION`](NifVersion::OBLIVION),
-//! [`FALLOUT_3`](NifVersion::FALLOUT_3), [`SKYRIM`](NifVersion::SKYRIM),
-//! [`SKYRIM_SE`](NifVersion::SKYRIM_SE), [`FALLOUT_4`](NifVersion::FALLOUT_4),
-//! [`FALLOUT_76`](NifVersion::FALLOUT_76) and [`STARFIELD`](NifVersion::STARFIELD).
+//! Each game's version constant lists the types it uses:
+//!
+//! - [Morrowind](NifVersion::MORROWIND)
+//! - [Oblivion](NifVersion::OBLIVION)
+//! - [Fallout 3 and New Vegas](NifVersion::FALLOUT_3)
+//! - [Skyrim](NifVersion::SKYRIM)
+//! - [Skyrim Special Edition](NifVersion::SKYRIM_SE)
+//! - [Fallout 4](NifVersion::FALLOUT_4)
+//! - [Fallout 76](NifVersion::FALLOUT_76)
+//! - [Starfield](NifVersion::STARFIELD)
+//!
+//! # Modules
+//!
+//! - Files and blocks: [`file`](mod@file), [`objects`], [`handle`], [`iter`]
+//! - Scene graph: [`nodes`], [`geometry`], [`skin`], with transforms in [`object3d`]
+//! - Appearance: [`shaders`], [`effects`]
+//! - Physics: [`collision`]
+//! - Motion: [`animation`], [`particles`]
+//! - Metadata: [`extra_data`]
+//!
+//! # Features
+//!
+//! - `mint`: conversions for [`Vec3`](object3d::Vec3) and [`Matrix3`](object3d::Matrix3).
+
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub use bstr;
 

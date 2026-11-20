@@ -4,9 +4,7 @@
 //!
 //! There are two families of types:
 //! - **Blocks**, for reading, named after the block types: [`NiStringExtraData`], [`BsxFlags`],
-//!   [`BsClothExtraData`], ... Get one from a block with
-//!   [`NiObject::downcast`](crate::objects::NiObject::downcast). Each derefs to its base class, so
-//!   [`BsxFlags`] has [`NiIntegerExtraData::value`] and every `NiExtraData` has `name()`.
+//!   [`BsClothExtraData`], ...
 //! - **Values**, for writing, prefixed `Extra`: [`ExtraString`], [`ExtraBsxFlags`],
 //!   [`ExtraBsCloth`], ... Pass one to `assign_extra_data` to create the matching block.
 //!

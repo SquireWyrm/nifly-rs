@@ -3,7 +3,8 @@
 //! A block borrowed from a [`NifFile`] can't reach the file, so it can't follow its refs to other
 //! blocks or check a block it's given. A [`View`] or [`Edit`] holds the file with the block's
 //! index, and has the methods that need both: for example, `View<BsTreeNode>` lists a tree's
-//! bones, and `Edit<BsTreeNode>` replaces them.
+//! bones, and `Edit<BsTreeNode>` replaces them. An `Edit` method that would make invalid data
+//! returns `false` or `None` and changes nothing.
 //!
 //! Each block type's docs end with a *Handle methods* section listing the methods its handles
 //! have, including those for its base types. Methods for every block, such as

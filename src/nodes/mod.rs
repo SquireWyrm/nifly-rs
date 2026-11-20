@@ -1,7 +1,6 @@
-//! `NiNode` and its subclasses.
-//!
-//! Each type derefs to its direct base class, so base-class methods are available
-//! on every subclass. Use [`NiObject::downcast`](crate::objects::NiObject::downcast) to go the other way.
+//! `NiNode` and its subclasses: the scene graph's tree, from the
+//! [root node](crate::file::NifFile::root_node) down through each node's
+//! [children](crate::handle::View::children).
 //!
 //! # Type hierarchy
 //!

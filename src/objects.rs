@@ -1,15 +1,10 @@
 //! Base classes of the object hierarchy.
 //!
-//! Each block type derefs to its base class:
+//! Each block type derefs to its base class, so base-class methods are callable on any subclass,
+//! e.g. `node.name()` or `node.block_name()`, and through a `&mut` block their setters too, e.g.
+//! `node.set_name("Root")`. Downcasting goes through [`NiObject::downcast`].
 //!
-//! ```text
-//! NiNode -> NiAvObject -> NiObjectNet -> NiObject
-//! ```
-//!
-//! This means base-class methods are callable on any subclass, e.g.
-//! `node.name()` or `node.block_name()`, and through a `&mut` block their
-//! setters too, e.g. `node.set_name("Root")`. Downcasting goes through
-//! [`NiObject::downcast`].
+//! Names and paths are byte strings ([`BStr`]), never decoded, since files aren't always UTF-8.
 //!
 //! All of these types are only ever handed out as references borrowed from a
 //! [`NifFile`](crate::file::NifFile), so they can't outlive the file or

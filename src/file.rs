@@ -22,7 +22,8 @@ use crate::{
 /// A NIF format version: the file version plus the user version and stream (user version 2)
 /// that Bethesda games use to tell their variants apart.
 ///
-/// The associated constants are the versions each game writes.
+/// The associated constants are the versions each game writes. A field only some versions save
+/// can be set in any version; its docs say what saving does with it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NifVersion {
     /// File version, one byte per component: 20.2.0.7 is `0x14020007`.
@@ -266,8 +267,14 @@ pub type Index = usize;
 ///
 /// The file owns its blocks. They're borrowed from it as `&T` (from [`block_of`](Self::block_of),
 /// [`blocks_of`](Self::blocks_of), ...) or `&mut T` (from [`block_of_mut`](Self::block_of_mut))
-/// for their fields, and as a [`View`] or [`Edit`] for what involves other blocks. Methods that
+/// for their fields. What involves other blocks, such as a shape's skin and shader, a node's
+/// children or a tree node's bones, is on a [`View`] or [`Edit`], from [`view`](Self::view),
+/// [`edit`](Self::edit) or [`BlockIter::views`](crate::iter::BlockIter::views). Methods that
 /// change the file take blocks by [`Index`].
+///
+/// Blocks of unknown types are kept and written back as read. A call that would make invalid data
+/// returns `false` or `None` and changes nothing. A `NifFile` isn't `Send`: load one per thread
+/// for parallel work.
 ///
 /// ```
 /// # use nifly::{NifFile, nodes::NiNode, shaders::NiMaterialProperty};
@@ -313,14 +320,18 @@ pub type Index = usize;
 /// Methods returning a block have a `_mut` form taking a block [`Index`]. It returns
 /// `&mut T`, for the block's setters, or an [`Edit`] where the shared form returns a
 /// [`View`].
-///
-/// Methods for one block, such as a shape's vertices, skin and shader, a node's children and
-/// parent, or a tree node's bones, are on [`View`] and [`Edit`], from [`view`](Self::view) and
-/// [`edit`](Self::edit), or [`BlockIter::views`](crate::iter::BlockIter::views) while
-/// iterating.
 pub struct NifFile {
     pub(crate) inner: UniquePtr<ffi::NifFile>,
 }
+
+/// A [`NifFile`] isn't `Send`:
+///
+/// ```compile_fail
+/// fn send<T: Send>() {}
+/// send::<nifly::NifFile>();
+/// ```
+#[cfg(doctest)]
+pub struct NifFileIsNotSend;
 
 /// A deep copy: every block is copied, at the same index. Blocks borrowed from one file don't
 /// belong to the other.
