@@ -3,7 +3,7 @@ use std::{io, pin::Pin};
 use bstr::BString;
 use cxx::UniquePtr;
 use nifly_sys::{
-    nif_file::ffi::{self, RefKind, RefList},
+    nif_file::ffi::{self, RefList},
     objects::ffi as objects_ffi,
     read_bridge::RustReader,
     write_bridge::RustWriter,
@@ -649,15 +649,6 @@ impl<'a, T: NiType> View<'a, T> {
     {
         self.follow_list(RefList::ExtraDataChain)
     }
-
-    /// The object's first controller, or `None` if it has none. Follow the rest through the
-    /// controller blocks.
-    pub fn controller<I>(&self) -> Option<View<'a, NiObject>>
-    where
-        T: IsA<NiObjectNet, I>,
-    {
-        self.follow(RefKind::Controller)
-    }
 }
 
 impl<T: NiType> Edit<'_, T> {
@@ -708,23 +699,6 @@ impl<T: NiType> Edit<'_, T> {
         T: IsA<NiObjectNet, I>,
     {
         self.set_ref_list(RefList::ExtraDataChain, extra_data)
-    }
-
-    /// Like [`View::controller`], for editing.
-    pub fn controller<I>(&mut self) -> Option<Edit<'_, NiObject>>
-    where
-        T: IsA<NiObjectNet, I>,
-    {
-        self.follow(RefKind::Controller)
-    }
-
-    /// Sets the object's first controller, or removes it with `None`. Returns `false`, changing
-    /// nothing, unless `controller` is a time controller block.
-    pub fn set_controller<I>(&mut self, controller: Option<Index>) -> bool
-    where
-        T: IsA<NiObjectNet, I>,
-    {
-        self.set_ref(RefKind::Controller, controller)
     }
 }
 

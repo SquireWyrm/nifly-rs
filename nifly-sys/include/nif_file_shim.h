@@ -89,7 +89,8 @@ struct FactoryAccess: nifly::NiFactoryRegister {
 
 // Swaps in SourceTextureFactory, SpotLightFactory (effects_shim.h),
 // PackedSharedGeomDataFactory (extra_data_shim.h), GeometryFactory
-// (mesh_writer.h) and BlendInterpolatorFactory (animation_shim.h).
+// (mesh_writer.h), BlendInterpolatorFactory and FloatExtraDataControllerFactory
+// (animation_shim.h).
 inline void register_factories() {
     static const bool registered = [] {
         auto& regs =
@@ -104,6 +105,8 @@ inline void register_factories() {
             std::make_unique<PackedSharedGeomDataFactory>();
         regs[nifly::BSGeometry::BlockName] =
             std::make_unique<GeometryFactory>();
+        regs[nifly::NiFloatExtraDataController::BlockName] =
+            std::make_unique<FloatExtraDataControllerFactory>();
         regs[nifly::NiBlendBoolInterpolator::BlockName] = std::make_unique<
             BlendInterpolatorFactory<nifly::NiBlendBoolInterpolator>>();
         regs[nifly::NiBlendFloatInterpolator::BlockName] = std::make_unique<
@@ -3962,16 +3965,38 @@ inline RefSlot find_ref(nifly::NiObject& obj, RefKind kind) {
                 return {&i->dataRef, &is_a<NiTransformData>};
             if (auto i = dynamic_cast<BSTreadTransfInterpolator*>(&obj))
                 return {&i->dataRef, &is_a<NiFloatData>};
+            if (auto c = dynamic_cast<NiKeyframeController*>(&obj))
+                return {&c->dataRef, &is_a<NiKeyframeData>};
+            if (auto c = dynamic_cast<NiMaterialColorController*>(&obj))
+                return {&c->dataRef, &is_a<NiPosData>};
+            if (auto c = dynamic_cast<NiLightColorController*>(&obj))
+                return {&c->dataRef, &is_a<NiPosData>};
+            if (auto c = dynamic_cast<NiVisController*>(&obj))
+                return {&c->dataRef, &is_a<NiVisData>};
+            if (auto c = dynamic_cast<NiAlphaController*>(&obj))
+                return {&c->dataRef, &is_a<NiFloatData>};
+            if (auto c = dynamic_cast<NiRollController*>(&obj))
+                return {&c->dataRef, &is_a<NiFloatData>};
+            if (auto c = dynamic_cast<NiUVController*>(&obj))
+                return {&c->dataRef, &is_a<NiUVData>};
+            if (auto c = dynamic_cast<NiGeomMorpherController*>(&obj))
+                return {&c->dataRef, &is_a<NiMorphData>};
             return {};
         case RefKind::PathData:
             if (auto i = dynamic_cast<NiPathInterpolator*>(&obj))
                 return {&path_data_field(*i), &is_a<NiPosData>};
-            return {};
+            return ref_slot<NiPathController, NiPosData>(obj, [](auto& o) {
+                return &o.pathDataRef;
+            });
         case RefKind::PercentData:
             if (auto i = dynamic_cast<NiPathInterpolator*>(&obj))
                 return {&path_percent_field(*i), &is_a<NiFloatData>};
-            return {};
+            return ref_slot<NiPathController, NiFloatData>(obj, [](auto& o) {
+                return &o.percentDataRef;
+            });
         case RefKind::LookAtNode:
+            if (auto c = dynamic_cast<NiLookAtController*>(&obj))
+                return {&c->lookAtNodePtr, &is_a<NiNode>};
             return ref_slot<NiLookAtInterpolator, NiNode>(obj, [](auto& o) {
                 return &o.lookAtRef;
             });
@@ -4005,6 +4030,72 @@ inline RefSlot find_ref(nifly::NiObject& obj, RefKind kind) {
                 obj,
                 [](auto& o) { return &o.basisDataRef; }
             );
+        case RefKind::NextController:
+            return ref_slot<NiTimeController, NiTimeController>(
+                obj,
+                [](auto& o) { return &o.nextControllerRef; }
+            );
+        case RefKind::ControllerTarget:
+            return ref_slot<NiTimeController, NiObjectNET>(obj, [](auto& o) {
+                return &o.targetRef;
+            });
+        case RefKind::Interpolator:
+            if (auto c = dynamic_cast<BSFrustumFOVController*>(&obj))
+                return {&c->interpolatorRef, &is_a<NiInterpolator>};
+            return ref_slot<NiSingleInterpController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.interpolatorRef; }
+            );
+        case RefKind::LightningGeneration:
+            return ref_slot<BSProceduralLightningController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.generationInterpRef; }
+            );
+        case RefKind::LightningMutation:
+            return ref_slot<BSProceduralLightningController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.mutationInterpRef; }
+            );
+        case RefKind::LightningSubdivision:
+            return ref_slot<BSProceduralLightningController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.subdivisionInterpRef; }
+            );
+        case RefKind::LightningBranches:
+            return ref_slot<BSProceduralLightningController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.numBranchesInterpRef; }
+            );
+        case RefKind::LightningBranchVariation:
+            return ref_slot<BSProceduralLightningController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.numBranchesVarInterpRef; }
+            );
+        case RefKind::LightningLength:
+            return ref_slot<BSProceduralLightningController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.lengthInterpRef; }
+            );
+        case RefKind::LightningLengthVariation:
+            return ref_slot<BSProceduralLightningController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.lengthVarInterpRef; }
+            );
+        case RefKind::LightningWidth:
+            return ref_slot<BSProceduralLightningController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.widthInterpRef; }
+            );
+        case RefKind::LightningArcOffset:
+            return ref_slot<BSProceduralLightningController, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.arcOffsetInterpRef; }
+            );
+        case RefKind::LightningShader:
+            return ref_slot<BSProceduralLightningController, BSShaderProperty>(
+                obj,
+                [](auto& o) { return &o.shaderPropertyRef; }
+            );
         default:
             return {};
     }
@@ -4036,6 +4127,25 @@ in_shape_tree(const nifly::NiHeader& hdr, uint32_t root, uint32_t target) {
         if (auto list = dynamic_cast<bhkConvexListShape*>(obj))
             for (uint32_t i = 0; i < list->shapeRefs.GetSize(); i++)
                 stack.push_back(list->shapeRefs.GetBlockRef(i));
+    }
+    return false;
+}
+
+// Whether the controller chain from `from`, through next controller refs,
+// reaches the block at `target`. Stops at a repeat.
+inline bool controller_chain_reaches(
+    const nifly::NiHeader& hdr,
+    uint32_t from,
+    uint32_t target
+) {
+    std::set<uint32_t> seen;
+    for (uint32_t at = from; at != nifly::NIF_NPOS;) {
+        if (at == target)
+            return true;
+        auto c = hdr.GetBlock<nifly::NiTimeController>(at);
+        if (!c || !seen.insert(at).second)
+            return false;
+        at = c->nextControllerRef.index;
     }
     return false;
 }
@@ -4083,6 +4193,9 @@ inline bool set_block_ref(
             return false;
         if (kind == RefKind::SingleInterpolator
             && interpolator_uses(hdr, target, owner))
+            return false;
+        if (kind == RefKind::NextController
+            && controller_chain_reaches(hdr, target, owner))
             return false;
     }
     slot.ref->index = target;
@@ -4214,6 +4327,26 @@ block_ref_list(const nifly::NifFile& file, uint32_t owner, RefList list) {
             if (auto t = dynamic_cast<bhkRagdollTemplate*>(obj))
                 return ref_array(t->boneRefs);
             break;
+        case RefList::FlipSources:
+            if (auto c = dynamic_cast<NiFlipController*>(obj))
+                return ref_array(c->sourceRefs);
+            break;
+        case RefList::ExtraTargets:
+            if (auto c = dynamic_cast<NiMultiTargetTransformController*>(obj))
+                return ref_array(c->targetRefs);
+            break;
+        case RefList::Controllers:
+            if (auto net = dynamic_cast<NiObjectNET*>(obj)) {
+                rust::Vec<uint32_t> out;
+                std::set<uint32_t> seen;
+                auto c = hdr.GetBlock<NiTimeController>(net->controllerRef);
+                while (c && seen.insert(hdr.GetBlockID(c)).second) {
+                    out.push_back(hdr.GetBlockID(c));
+                    c = hdr.GetBlock<NiTimeController>(c->nextControllerRef);
+                }
+                return out;
+            }
+            break;
         default:
             break;
     }
@@ -4243,7 +4376,7 @@ bool all_are(const nifly::NiHeader& hdr, rust::Slice<const uint32_t> ids) {
 // Replaces the `list` refs of the block at `owner` with `targets`. Children
 // must be NiAVObjects that aren't the node or above it; properties
 // NiProperty; extra data NiExtraData or BSExtraData, and the chain
-// NiExtraData. The chain links each target to the
+// NiExtraData, and the controller chain NiTimeController. Chains link each target to the
 // next, so they must be distinct. Bones are nodes, as many as the skin's data
 // has. Returns false, changing nothing, if a target doesn't fit or the block
 // has no such list.
@@ -4367,6 +4500,37 @@ inline bool set_block_ref_list(
             if (!t || !all_are<bhkRagdollTemplateData>(hdr, targets))
                 return false;
             set_ref_array(t->boneRefs, targets);
+            return true;
+        }
+        case RefList::FlipSources: {
+            auto c = dynamic_cast<NiFlipController*>(obj);
+            if (!c || !all_are<NiSourceTexture>(hdr, targets))
+                return false;
+            set_ref_array(c->sourceRefs, targets);
+            return true;
+        }
+        case RefList::ExtraTargets: {
+            auto c = dynamic_cast<NiMultiTargetTransformController*>(obj);
+            if (!c || targets.size() > UINT16_MAX)
+                return false;
+            for (uint32_t id : targets)
+                if (id != NIF_NPOS && !hdr.GetBlock<NiAVObject>(id))
+                    return false;
+            set_ref_array(c->targetRefs, targets);
+            return true;
+        }
+        case RefList::Controllers: {
+            auto net = dynamic_cast<NiObjectNET*>(obj);
+            if (!net || !all_are<NiTimeController>(hdr, targets))
+                return false;
+            std::set<uint32_t> distinct(targets.begin(), targets.end());
+            if (distinct.size() != targets.size())
+                return false;
+            net->controllerRef.index = targets.empty() ? NIF_NPOS : targets[0];
+            for (size_t i = 0; i < targets.size(); i++)
+                hdr.GetBlock<NiTimeController>(targets[i])
+                    ->nextControllerRef.index =
+                    i + 1 < targets.size() ? targets[i + 1] : NIF_NPOS;
             return true;
         }
         default:

@@ -29,6 +29,8 @@ mod collision_ragdoll;
 mod collision_shapes;
 mod cone;
 mod consistency;
+mod controller_types;
+mod controllers;
 mod create;
 mod create_shape;
 mod delete_node;

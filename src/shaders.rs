@@ -1158,13 +1158,13 @@ impl NiStencilProperty {
 }
 
 /// A position and width in bits within packed flags.
-type BitField = (u16, u16);
+pub(crate) type BitField = (u16, u16);
 
-fn get_bits(bits: u16, (pos, width): BitField) -> u32 {
+pub(crate) fn get_bits(bits: u16, (pos, width): BitField) -> u32 {
     u32::from((bits >> pos) & ((1 << width) - 1))
 }
 
-fn set_bits(bits: u16, (pos, width): BitField, value: u32) -> u16 {
+pub(crate) fn set_bits(bits: u16, (pos, width): BitField, value: u32) -> u16 {
     let mask = ((1 << width) - 1) << pos;
     // Every enum value fits its field; anything wider is masked off.
     (bits & !mask) | (((value as u16) << pos) & mask)

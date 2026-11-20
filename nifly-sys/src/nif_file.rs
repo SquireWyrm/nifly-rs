@@ -173,14 +173,17 @@ pub mod ffi {
         WrappedEntityA,
         /// The second entity, like `WrappedEntityA`.
         WrappedEntityB,
-        /// A key-based interpolator's `dataRef` (`NiBoolData`, `NiFloatData`, `NiPosData` or
-        /// `NiTransformData` by type), or a `BSTreadTransfInterpolator`'s (`NiFloatData`).
+        /// The `dataRef` of a key-based interpolator (`NiBoolData`, `NiFloatData`, `NiPosData` or
+        /// `NiTransformData` by type), a `BSTreadTransfInterpolator` (`NiFloatData`), or a
+        /// controller: `NiKeyframeData`, `NiPosData` (material and light color), `NiVisData`,
+        /// `NiFloatData` (alpha, roll), `NiUVData` or `NiMorphData`.
         KeyData,
-        /// `NiPathInterpolator`'s `pathDataRef` (`NiPosData`).
+        /// The `pathDataRef` (`NiPosData`) of an `NiPathInterpolator` or `NiPathController`.
         PathData,
-        /// `NiPathInterpolator`'s `percentDataRef` (`NiFloatData`).
+        /// The `percentDataRef` (`NiFloatData`) of an `NiPathInterpolator` or `NiPathController`.
         PercentData,
-        /// `NiLookAtInterpolator::lookAtRef` (`NiNode`), a pointer.
+        /// `NiLookAtInterpolator::lookAtRef` or `NiLookAtController::lookAtNodePtr` (`NiNode`),
+        /// a pointer.
         LookAtNode,
         /// `NiLookAtInterpolator::translateInterpRef` (`NiPoint3Interpolator`).
         LookAtTranslation,
@@ -195,6 +198,34 @@ pub mod ffi {
         SplineData,
         /// `NiBSplineInterpolator::basisDataRef` (`NiBSplineBasisData`).
         SplineBasis,
+        /// `NiTimeController::nextControllerRef` (`NiTimeController`). The chain can't loop back
+        /// to the owner.
+        NextController,
+        /// `NiTimeController::targetRef` (`NiObjectNET`), a pointer.
+        ControllerTarget,
+        /// The `interpolatorRef` (`NiInterpolator`) of an `NiSingleInterpController` or
+        /// `BSFrustumFOVController`.
+        Interpolator,
+        /// `BSProceduralLightningController::generationInterpRef` (`NiInterpolator`).
+        LightningGeneration,
+        /// `BSProceduralLightningController::mutationInterpRef` (`NiInterpolator`).
+        LightningMutation,
+        /// `BSProceduralLightningController::subdivisionInterpRef` (`NiInterpolator`).
+        LightningSubdivision,
+        /// `BSProceduralLightningController::numBranchesInterpRef` (`NiInterpolator`).
+        LightningBranches,
+        /// `BSProceduralLightningController::numBranchesVarInterpRef` (`NiInterpolator`).
+        LightningBranchVariation,
+        /// `BSProceduralLightningController::lengthInterpRef` (`NiInterpolator`).
+        LightningLength,
+        /// `BSProceduralLightningController::lengthVarInterpRef` (`NiInterpolator`).
+        LightningLengthVariation,
+        /// `BSProceduralLightningController::widthInterpRef` (`NiInterpolator`).
+        LightningWidth,
+        /// `BSProceduralLightningController::arcOffsetInterpRef` (`NiInterpolator`).
+        LightningArcOffset,
+        /// `BSProceduralLightningController::shaderPropertyRef` (`BSShaderProperty`).
+        LightningShader,
     }
 
     /// A list of block refs, for `block_ref_list` and `set_block_ref_list`.
@@ -226,6 +257,13 @@ pub mod ffi {
         ChainedEntities,
         /// `bhkRagdollTemplate::boneRefs` (`bhkRagdollTemplateData`).
         RagdollBones,
+        /// `NiObjectNET::controllerRef` and each `NiTimeController::nextControllerRef` after it.
+        Controllers,
+        /// `NiFlipController::sourceRefs` (`NiSourceTexture`).
+        FlipSources,
+        /// `NiMultiTargetTransformController::targetRefs` (`NiAVObject` or empty), pointers, at most
+        /// 65535.
+        ExtraTargets,
     }
 
     #[namespace = "read_bridge"]

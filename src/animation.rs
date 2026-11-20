@@ -11,13 +11,15 @@ use int_enum::IntEnum;
 use nifly_sys::animation::ffi;
 
 use crate::{
-    file::{index_from_ffi, optional_index_to_ffi, Index, NifFile},
+    file::{block_index_to_ffi, index_from_ffi, optional_index_to_ffi, Index, NifFile},
     handle::{Edit, View},
+    iter::{BlockIter, RefIndices},
     nodes::NiNode,
     object3d::Vec3,
-    objects::{IsA, NiObject, NiType, Sealed},
+    objects::{IsA, NiObject, NiObjectNet, NiType, Sealed},
+    shaders::{get_bits, set_bits, BitField, BsShaderProperty, MapSlot, NiSourceTexture, TextureMap},
 };
-use nifly_sys::nif_file::ffi::RefKind;
+use nifly_sys::nif_file::ffi::{self as nif_ffi, RefKind, RefList};
 
 ni_types! { ffi;
     /// Keyframes of a transform: rotation, translation and scale keys.
@@ -97,10 +99,14 @@ ni_types! { ffi;
     /// The `BSTreadTransfInterpolator` block.
     BsTreadTransfInterpolator(BSTreadTransfInterpolator): NiInterpolator => upcast_bs_tread_transf_interpolator, downcast_bs_tread_transf_interpolator;
     /// Base class of controllers, which animate a target block over time.
+    ///
+    /// Controllers form a chain on the object they animate, from
+    /// [`View::controllers`]; [`Edit::add_controller`] adds one. Through handles: the
+    /// [next controller](View::next_controller) and [target](View::controller_target).
     NiTimeController(NiTimeController): NiObject => upcast_ni_time_controller, downcast_ni_time_controller;
-    /// Turns its target to face another object.
+    /// Turns its target to face another object, the [look-at node](View::look_at_node).
     NiLookAtController(NiLookAtController): NiTimeController => upcast_ni_look_at_controller, downcast_ni_look_at_controller;
-    /// Moves its target along a path.
+    /// Moves its target along a path, from its [path data](View::path_data).
     NiPathController(NiPathController): NiTimeController => upcast_ni_path_controller, downcast_ni_path_controller;
     /// Resets a particle system when its animation loops.
     NiPSysResetOnLoopCtlr(NiPSysResetOnLoopCtlr): NiTimeController => upcast_ni_psys_reset_on_loop_ctlr, downcast_ni_psys_reset_on_loop_ctlr;
@@ -108,7 +114,7 @@ ni_types! { ffi;
     ///
     /// The `NiUVController` block.
     NiUvController(NiUVController): NiTimeController => upcast_ni_uv_controller, downcast_ni_uv_controller;
-    /// Animates a camera's field of view.
+    /// Animates a camera's field of view with its [interpolator](View::interpolator).
     ///
     /// The `BSFrustumFOVController` block.
     BsFrustumFovController(BSFrustumFOVController): NiTimeController => upcast_bs_frustum_fov_controller, downcast_bs_frustum_fov_controller;
@@ -116,11 +122,12 @@ ni_types! { ffi;
     ///
     /// The `BSLagBoneController` block.
     BsLagBoneController(BSLagBoneController): NiTimeController => upcast_bs_lag_bone_controller, downcast_bs_lag_bone_controller;
-    /// Animates procedural lightning.
+    /// Animates procedural lightning, with nine [interpolators](View::lightning_interpolator) and
+    /// a [shader](View::lightning_shader).
     ///
     /// The `BSProceduralLightningController` block.
     BsProceduralLightningController(BSProceduralLightningController): NiTimeController => upcast_bs_procedural_lightning_controller, downcast_bs_procedural_lightning_controller;
-    /// Switches bone levels of detail.
+    /// Switches bone levels of detail, each a [node group](View::node_groups).
     ///
     /// The `NiBoneLODController` block.
     NiBoneLodController(NiBoneLODController): NiTimeController => upcast_ni_bone_lod_controller, downcast_ni_bone_lod_controller;
@@ -130,9 +137,10 @@ ni_types! { ffi;
     NiBsBoneLodController(NiBSBoneLODController): NiBoneLodController => upcast_ni_bs_bone_lod_controller, downcast_ni_bs_bone_lod_controller;
     /// Base class of controllers driven by interpolators.
     NiInterpController(NiInterpController): NiTimeController => upcast_ni_interp_controller, downcast_ni_interp_controller;
-    /// Morphs its target's vertices with [`NiMorphData`].
+    /// Morphs its target's vertices with [`NiMorphData`], from [`View::key_data`], and
+    /// [interpolators](View::morph_interpolators).
     NiGeomMorpherController(NiGeomMorpherController): NiInterpController => upcast_ni_geom_morpher_controller, downcast_ni_geom_morpher_controller;
-    /// Base class of controllers with one interpolator.
+    /// Base class of controllers with one interpolator, from [`View::interpolator`].
     NiSingleInterpController(NiSingleInterpController): NiInterpController => upcast_ni_single_interp_controller, downcast_ni_single_interp_controller;
     /// Rolls its target around its forward axis.
     NiRollController(NiRollController): NiSingleInterpController => upcast_ni_roll_controller, downcast_ni_roll_controller;
@@ -156,7 +164,7 @@ ni_types! { ffi;
     ///
     /// The `BSRefractionFirePeriodController` block.
     BsRefractionFirePeriodController(BSRefractionFirePeriodController): NiSingleInterpController => upcast_bs_refraction_fire_period_controller, downcast_bs_refraction_fire_period_controller;
-    /// Flips through a list of textures.
+    /// Flips through a list of [textures](View::sources).
     NiFlipController(NiFlipController): NiFloatInterpController => upcast_ni_flip_controller, downcast_ni_flip_controller;
     /// Animates a texture transform.
     NiTextureTransformController(NiTextureTransformController): NiFloatInterpController => upcast_ni_texture_transform_controller, downcast_ni_texture_transform_controller;
@@ -204,7 +212,8 @@ ni_types! { ffi;
     ///
     /// The `BSEffectShaderPropertyFloatController` block.
     BsEffectShaderPropertyFloatController(BSEffectShaderPropertyFloatController): NiFloatInterpController => upcast_bs_effect_shader_property_float_controller, downcast_bs_effect_shader_property_float_controller;
-    /// Animates the transforms of several objects.
+    /// Animates the transforms of several objects: its target and
+    /// [extra targets](View::extra_targets).
     NiMultiTargetTransformController(NiMultiTargetTransformController): NiInterpController => upcast_ni_multi_target_transform_controller, downcast_ni_multi_target_transform_controller;
     /// Base class of controllers that animate a particle modifier.
     NiPSysModifierCtlr(NiPSysModifierCtlr): NiSingleInterpController => upcast_ni_psys_modifier_ctlr, downcast_ni_psys_modifier_ctlr;
@@ -266,6 +275,10 @@ ni_types! { ffi;
     NiControllerSequence(NiControllerSequence): NiSequence => upcast_ni_controller_sequence, downcast_ni_controller_sequence;
     /// Plays animation sequences on an object tree.
     NiControllerManager(NiControllerManager): NiTimeController => upcast_ni_controller_manager, downcast_ni_controller_manager;
+    /// A Havok blend controller, found in skeletons.
+    ///
+    /// The `bhkBlendController` block.
+    BhkBlendController(bhkBlendController): NiTimeController => upcast_bhk_blend_controller, downcast_bhk_blend_controller;
 }
 
 /// How values between two keys are computed.
@@ -865,7 +878,8 @@ impl NiTransformInterpolator {
 }
 
 bitflags::bitflags! {
-    /// The flags of an [`NiPathInterpolator`]. Other bits are kept as stored.
+    /// The flags of an [`NiPathInterpolator`] or [`NiPathController`]. Other bits are kept as
+    /// stored.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
     pub struct PathFlags: u16 {
         /// The path's control points need updating.
@@ -897,8 +911,8 @@ impl NiPathInterpolator {
 }
 
 bitflags::bitflags! {
-    /// The flags of an [`NiLookAtInterpolator`]: which axis looks at the target (X when neither
-    /// axis flag is set). Other bits are kept as stored.
+    /// The flags of an [`NiLookAtInterpolator`] or [`NiLookAtController`]: which axis looks at
+    /// the target (X when neither axis flag is set). Other bits are kept as stored.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
     pub struct LookAtFlags: u16 {
         /// Look away from the target instead.
@@ -1139,10 +1153,20 @@ impl NiBSplineCompTransformInterpolator {
     }
 }
 
-/// An interpolator with a key data block: [`NiBoolInterpolator`] ([`NiBoolData`]),
-/// [`NiFloatInterpolator`] ([`NiFloatData`]), [`NiPoint3Interpolator`] ([`NiPosData`]),
-/// [`NiTransformInterpolator`] ([`NiTransformData`]), [`BsTreadTransfInterpolator`]
-/// ([`NiFloatData`]), or one of their subtypes.
+/// An interpolator or controller with a key data block.
+///
+/// Interpolators: [`NiBoolInterpolator`] ([`NiBoolData`]), [`NiFloatInterpolator`]
+/// ([`NiFloatData`]), [`NiPoint3Interpolator`] ([`NiPosData`]), [`NiTransformInterpolator`]
+/// ([`NiTransformData`]), [`BsTreadTransfInterpolator`] ([`NiFloatData`]), and their subtypes.
+///
+/// Controllers that keep their keys before 10.1.0.104, when [interpolators](View::interpolator)
+/// replaced them: [`NiKeyframeController`] ([`NiKeyframeData`]),
+/// [`NiMaterialColorController`] and [`NiLightColorController`] ([`NiPosData`]),
+/// [`NiVisController`] ([`NiVisData`]), [`NiAlphaController`] ([`NiFloatData`]), and their
+/// subtypes.
+///
+/// Controllers that keep their keys in every version: [`NiRollController`] ([`NiFloatData`]),
+/// [`NiUvController`] ([`NiUvData`]) and [`NiGeomMorpherController`] ([`NiMorphData`]).
 ///
 /// This trait is sealed.
 pub trait HasKeyData: NiType {
@@ -1171,10 +1195,40 @@ impl HasKeyData for BsRotAccumTransfInterpolator {
 impl HasKeyData for BsTreadTransfInterpolator {
     type Data = NiFloatData;
 }
+impl HasKeyData for NiKeyframeController {
+    type Data = NiKeyframeData;
+}
+impl HasKeyData for NiTransformController {
+    type Data = NiKeyframeData;
+}
+impl HasKeyData for NiMaterialColorController {
+    type Data = NiPosData;
+}
+impl HasKeyData for NiLightColorController {
+    type Data = NiPosData;
+}
+impl HasKeyData for NiVisController {
+    type Data = NiVisData;
+}
+impl HasKeyData for NiAlphaController {
+    type Data = NiFloatData;
+}
+impl HasKeyData for BsNiAlphaPropertyTestRefController {
+    type Data = NiFloatData;
+}
+impl HasKeyData for NiRollController {
+    type Data = NiFloatData;
+}
+impl HasKeyData for NiUvController {
+    type Data = NiUvData;
+}
+impl HasKeyData for NiGeomMorpherController {
+    type Data = NiMorphData;
+}
 
 /// Interpolator refs.
 impl<'a, T: NiType> View<'a, T> {
-    /// The interpolator's key data, or `None` if it has none.
+    /// The block's key data, or `None` if it has none.
     pub fn key_data(&self) -> Option<View<'a, T::Data>>
     where
         T: HasKeyData,
@@ -1183,26 +1237,26 @@ impl<'a, T: NiType> View<'a, T> {
     }
 
     /// The path interpolator's path, or `None` if it has none.
-    pub fn path_data<I>(&self) -> Option<View<'a, NiPosData>>
+    pub fn path_data(&self) -> Option<View<'a, NiPosData>>
     where
-        T: IsA<NiPathInterpolator, I>,
+        T: HasPath,
     {
         self.follow(RefKind::PathData)
     }
 
     /// The path interpolator's position along the path over time, as percentages, or `None` if
     /// it has none.
-    pub fn percent_data<I>(&self) -> Option<View<'a, NiFloatData>>
+    pub fn percent_data(&self) -> Option<View<'a, NiFloatData>>
     where
-        T: IsA<NiPathInterpolator, I>,
+        T: HasPath,
     {
         self.follow(RefKind::PercentData)
     }
 
     /// The node the look-at interpolator faces, or `None` if it has none.
-    pub fn look_at_node<I>(&self) -> Option<View<'a, NiNode>>
+    pub fn look_at_node(&self) -> Option<View<'a, NiNode>>
     where
-        T: IsA<NiLookAtInterpolator, I>,
+        T: LooksAt,
     {
         self.follow(RefKind::LookAtNode)
     }
@@ -1285,8 +1339,8 @@ impl<T: NiType> Edit<'_, T> {
         self.follow(RefKind::KeyData)
     }
 
-    /// Sets the interpolator's [key data](View::key_data), or clears it with `None`. Returns
-    /// `false`, changing nothing, unless `data` is the interpolator's data type.
+    /// Sets the block's [key data](View::key_data), or clears it with `None`. Returns `false`,
+    /// changing nothing, unless `data` is the block's [data type](HasKeyData::Data).
     pub fn set_key_data(&mut self, data: Option<Index>) -> bool
     where
         T: HasKeyData,
@@ -1295,43 +1349,43 @@ impl<T: NiType> Edit<'_, T> {
     }
 
     /// Like [`View::path_data`], for editing.
-    pub fn path_data<I>(&mut self) -> Option<Edit<'_, NiPosData>>
+    pub fn path_data(&mut self) -> Option<Edit<'_, NiPosData>>
     where
-        T: IsA<NiPathInterpolator, I>,
+        T: HasPath,
     {
         self.follow(RefKind::PathData)
     }
 
     /// Sets the [path](View::path_data), or clears it with `None`. Returns `false`, changing
     /// nothing, unless `data` is an [`NiPosData`].
-    pub fn set_path_data<I>(&mut self, data: Option<Index>) -> bool
+    pub fn set_path_data(&mut self, data: Option<Index>) -> bool
     where
-        T: IsA<NiPathInterpolator, I>,
+        T: HasPath,
     {
         self.set_ref(RefKind::PathData, data)
     }
 
     /// Like [`View::percent_data`], for editing.
-    pub fn percent_data<I>(&mut self) -> Option<Edit<'_, NiFloatData>>
+    pub fn percent_data(&mut self) -> Option<Edit<'_, NiFloatData>>
     where
-        T: IsA<NiPathInterpolator, I>,
+        T: HasPath,
     {
         self.follow(RefKind::PercentData)
     }
 
     /// Sets the [percent data](View::percent_data), or clears it with `None`. Returns `false`,
     /// changing nothing, unless `data` is an [`NiFloatData`].
-    pub fn set_percent_data<I>(&mut self, data: Option<Index>) -> bool
+    pub fn set_percent_data(&mut self, data: Option<Index>) -> bool
     where
-        T: IsA<NiPathInterpolator, I>,
+        T: HasPath,
     {
         self.set_ref(RefKind::PercentData, data)
     }
 
     /// Like [`View::look_at_node`], for editing.
-    pub fn look_at_node<I>(&mut self) -> Option<Edit<'_, NiNode>>
+    pub fn look_at_node(&mut self) -> Option<Edit<'_, NiNode>>
     where
-        T: IsA<NiLookAtInterpolator, I>,
+        T: LooksAt,
     {
         self.follow(RefKind::LookAtNode)
     }
@@ -1339,9 +1393,9 @@ impl<T: NiType> Edit<'_, T> {
     /// Sets the [look-at node](View::look_at_node), or clears it with `None`. Returns `false`,
     /// changing nothing, unless `node` is an [`NiNode`]. The
     /// [look-at name](NiLookAtInterpolator::look_at_name) isn't changed.
-    pub fn set_look_at_node<I>(&mut self, node: Option<Index>) -> bool
+    pub fn set_look_at_node(&mut self, node: Option<Index>) -> bool
     where
-        T: IsA<NiLookAtInterpolator, I>,
+        T: LooksAt,
     {
         self.set_ref(RefKind::LookAtNode, node)
     }
@@ -1514,4 +1568,970 @@ new_interpolator! {
     NiBlendFloatInterpolator => add_ni_blend_float_interpolator;
     NiBlendPoint3Interpolator => add_ni_blend_point3_interpolator;
     NiBlendTransformInterpolator => add_ni_blend_transform_interpolator;
+}
+
+/// How a controller maps time onto its keys, from its [flags](TimeControllerFlags).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
+#[repr(u32)]
+pub enum CycleType {
+    /// Starts over after the stop time.
+    Loop = 0,
+    /// Plays forward, then backward.
+    Reverse = 1,
+    /// Holds the last value after the stop time.
+    Clamp = 2,
+}
+
+/// When a controller's time starts, from its [flags](TimeControllerFlags).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
+#[repr(u32)]
+pub enum AnimType {
+    /// Application time.
+    AppTime = 0,
+    /// Time since the controller was started.
+    AppInit = 1,
+}
+
+/// The packed settings of an [`NiTimeController`].
+///
+/// Bits:
+/// - 0: [`AnimType`]
+/// - 1–2: [`CycleType`]
+/// - 3: active
+/// - 4: play backwards
+/// - 5: manager-controlled
+/// - 6: compute scaled time
+/// - 7: forced update
+///
+/// The `with_*` methods replace one setting and keep the others.
+///
+/// ```
+/// # use nifly::animation::{CycleType, TimeControllerFlags};
+/// let flags = TimeControllerFlags::DEFAULT.with_cycle_type(CycleType::Loop);
+/// assert!(flags.active());
+/// ```
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct TimeControllerFlags(u16);
+
+impl Default for TimeControllerFlags {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+
+impl TimeControllerFlags {
+    /// The flags of a new controller: active, and [`Clamp`](CycleType::Clamp).
+    pub const DEFAULT: Self = Self(0x000C);
+
+    const ANIM_TYPE: BitField = (0, 1);
+    const CYCLE_TYPE: BitField = (1, 2);
+    const ACTIVE: BitField = (3, 1);
+    const PLAY_BACKWARDS: BitField = (4, 1);
+    const MANAGER_CONTROLLED: BitField = (5, 1);
+    const COMPUTE_SCALED_TIME: BitField = (6, 1);
+    const FORCED_UPDATE: BitField = (7, 1);
+
+    pub const fn from_bits(bits: u16) -> Self {
+        Self(bits)
+    }
+
+    pub const fn bits(self) -> u16 {
+        self.0
+    }
+
+    fn field(self, field: BitField) -> u32 {
+        get_bits(self.0, field)
+    }
+
+    fn flag(self, field: BitField) -> bool {
+        self.field(field) != 0
+    }
+
+    fn with_field(self, field: BitField, value: u32) -> Self {
+        Self(set_bits(self.0, field, value))
+    }
+
+    pub fn anim_type(self) -> AnimType {
+        AnimType::try_from(self.field(Self::ANIM_TYPE)).expect("1 bit is always an anim type")
+    }
+
+    /// The cycle type. `None` if the bits hold 3.
+    pub fn cycle_type(self) -> Option<CycleType> {
+        CycleType::try_from(self.field(Self::CYCLE_TYPE)).ok()
+    }
+
+    /// Whether the controller runs.
+    pub fn active(self) -> bool {
+        self.flag(Self::ACTIVE)
+    }
+
+    pub fn play_backwards(self) -> bool {
+        self.flag(Self::PLAY_BACKWARDS)
+    }
+
+    /// Whether an [`NiControllerManager`] drives the controller.
+    pub fn manager_controlled(self) -> bool {
+        self.flag(Self::MANAGER_CONTROLLED)
+    }
+
+    pub fn compute_scaled_time(self) -> bool {
+        self.flag(Self::COMPUTE_SCALED_TIME)
+    }
+
+    pub fn forced_update(self) -> bool {
+        self.flag(Self::FORCED_UPDATE)
+    }
+
+    #[must_use]
+    pub fn with_anim_type(self, anim_type: AnimType) -> Self {
+        self.with_field(Self::ANIM_TYPE, anim_type.into())
+    }
+
+    #[must_use]
+    pub fn with_cycle_type(self, cycle_type: CycleType) -> Self {
+        self.with_field(Self::CYCLE_TYPE, cycle_type.into())
+    }
+
+    #[must_use]
+    pub fn with_active(self, on: bool) -> Self {
+        self.with_field(Self::ACTIVE, on.into())
+    }
+
+    #[must_use]
+    pub fn with_play_backwards(self, on: bool) -> Self {
+        self.with_field(Self::PLAY_BACKWARDS, on.into())
+    }
+
+    #[must_use]
+    pub fn with_manager_controlled(self, on: bool) -> Self {
+        self.with_field(Self::MANAGER_CONTROLLED, on.into())
+    }
+
+    #[must_use]
+    pub fn with_compute_scaled_time(self, on: bool) -> Self {
+        self.with_field(Self::COMPUTE_SCALED_TIME, on.into())
+    }
+
+    #[must_use]
+    pub fn with_forced_update(self, on: bool) -> Self {
+        self.with_field(Self::FORCED_UPDATE, on.into())
+    }
+}
+
+impl NiTimeController {
+    fields! {
+        flags, set_flags: TimeControllerFlags = controller_flags, set_controller_flags, TimeControllerFlags::from_bits, TimeControllerFlags::bits;
+        /// The speed of time for the controller: 1 is normal.
+        frequency, set_frequency: f32 = controller_frequency, set_controller_frequency, same, same;
+        /// The time offset.
+        phase, set_phase: f32 = controller_phase, set_controller_phase, same, same;
+        /// The time the animation starts, in seconds. A new controller has `f32::MAX`.
+        start_time, set_start_time: f32 = controller_start_time, set_controller_start_time, same, same;
+        /// The time the animation stops, in seconds. A new controller has `f32::MIN`.
+        stop_time, set_stop_time: f32 = controller_stop_time, set_controller_stop_time, same, same;
+    }
+}
+
+impl NiInterpController {
+    fields! {
+        /// Whether an [`NiControllerManager`] drives the controller. Saved only from 10.1.0.104
+        /// to 10.1.0.108.
+        manager_controlled, set_manager_controlled: bool = interp_controller_manager_controlled, set_interp_controller_manager_controlled, same, same;
+    }
+}
+
+/// Controller chains of named objects.
+impl<'a, T: NiType> View<'a, T> {
+    /// The object's first controller, or `None` if it has none.
+    pub fn controller<I>(&self) -> Option<View<'a, NiTimeController>>
+    where
+        T: IsA<NiObjectNet, I>,
+    {
+        self.follow(RefKind::Controller)
+    }
+
+    /// The object's controllers: the first, then each one's
+    /// [next controller](View::next_controller). Stops at an empty ref or a controller already
+    /// listed.
+    pub fn controllers<I>(&self) -> BlockIter<'a, NiTimeController, RefIndices>
+    where
+        T: IsA<NiObjectNet, I>,
+    {
+        self.follow_list(RefList::Controllers)
+    }
+}
+
+impl<T: NiType> Edit<'_, T> {
+    /// Like [`View::controller`], for editing.
+    pub fn controller<I>(&mut self) -> Option<Edit<'_, NiTimeController>>
+    where
+        T: IsA<NiObjectNet, I>,
+    {
+        self.follow(RefKind::Controller)
+    }
+
+    /// Sets the object's first controller, or removes it with `None`, keeping that controller's
+    /// next controllers. Returns `false`, changing nothing, unless `controller` is an
+    /// [`NiTimeController`].
+    pub fn set_controller<I>(&mut self, controller: Option<Index>) -> bool
+    where
+        T: IsA<NiObjectNet, I>,
+    {
+        self.set_ref(RefKind::Controller, controller)
+    }
+
+    /// Replaces the object's [controllers](View::controllers), linking each to the next. Their
+    /// [targets](View::controller_target) don't change. Returns `false`, changing nothing,
+    /// unless the blocks are distinct [`NiTimeController`]s.
+    pub fn set_controllers<I>(&mut self, controllers: &[Index]) -> bool
+    where
+        T: IsA<NiObjectNet, I>,
+    {
+        self.set_ref_list(RefList::Controllers, controllers)
+    }
+
+    /// Adds a new `C` with default settings to the end of the object's
+    /// [controllers](View::controllers), targeting the object, and returns its index.
+    ///
+    /// ```
+    /// # use nifly::{animation::{NiAlphaController, NiFloatInterpolator}, file::{NifFile, NifVersion}, nodes::NiNode};
+    /// let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
+    /// let mut root = nif.root_node_mut().unwrap();
+    /// let controller = root.add_controller::<NiAlphaController, _>();
+    /// let interpolator = nif.add_interpolator::<NiFloatInterpolator>();
+    /// assert!(nif.edit::<NiAlphaController>(controller).unwrap().set_interpolator(Some(interpolator)));
+    /// ```
+    pub fn add_controller<C: NewController, I>(&mut self) -> Index
+    where
+        T: IsA<NiObjectNet, I>,
+    {
+        let owner = self.index() as u32;
+        index_from_ffi(C::add(self.file_mut().inner.pin_mut(), owner)).expect("the owner is an NiObjectNet")
+    }
+}
+
+/// Controller refs.
+impl<'a, T: NiType> View<'a, T> {
+    /// The controller after this one in its object's chain, or `None` if it's the last.
+    pub fn next_controller<I>(&self) -> Option<View<'a, NiTimeController>>
+    where
+        T: IsA<NiTimeController, I>,
+    {
+        self.follow(RefKind::NextController)
+    }
+
+    /// The object the controller animates, or `None` if it has none.
+    pub fn controller_target<I>(&self) -> Option<View<'a, NiObjectNet>>
+    where
+        T: IsA<NiTimeController, I>,
+    {
+        self.follow(RefKind::ControllerTarget)
+    }
+
+    /// The controller's interpolator, or `None` if it has none. Saved from 10.1.0.104 on; older
+    /// controllers keep their keys in [key data](View::key_data).
+    pub fn interpolator(&self) -> Option<View<'a, NiInterpolator>>
+    where
+        T: HasInterpolator,
+    {
+        self.follow(RefKind::Interpolator)
+    }
+}
+
+impl<T: NiType> Edit<'_, T> {
+    /// Like [`View::next_controller`], for editing.
+    pub fn next_controller<I>(&mut self) -> Option<Edit<'_, NiTimeController>>
+    where
+        T: IsA<NiTimeController, I>,
+    {
+        self.follow(RefKind::NextController)
+    }
+
+    /// Sets the [next controller](View::next_controller), or ends the chain with `None`.
+    /// Returns `false`, changing nothing, unless `next` is an [`NiTimeController`] whose chain
+    /// doesn't lead back to this one.
+    pub fn set_next_controller<I>(&mut self, next: Option<Index>) -> bool
+    where
+        T: IsA<NiTimeController, I>,
+    {
+        self.set_ref(RefKind::NextController, next)
+    }
+
+    /// Like [`View::controller_target`], for editing.
+    pub fn controller_target<I>(&mut self) -> Option<Edit<'_, NiObjectNet>>
+    where
+        T: IsA<NiTimeController, I>,
+    {
+        self.follow(RefKind::ControllerTarget)
+    }
+
+    /// Sets the [target](View::controller_target), or clears it with `None`. Returns `false`,
+    /// changing nothing, unless `target` is an [`NiObjectNet`].
+    pub fn set_controller_target<I>(&mut self, target: Option<Index>) -> bool
+    where
+        T: IsA<NiTimeController, I>,
+    {
+        self.set_ref(RefKind::ControllerTarget, target)
+    }
+
+    /// Like [`View::interpolator`], for editing.
+    pub fn interpolator(&mut self) -> Option<Edit<'_, NiInterpolator>>
+    where
+        T: HasInterpolator,
+    {
+        self.follow(RefKind::Interpolator)
+    }
+
+    /// Sets the [interpolator](View::interpolator), or clears it with `None`. Returns `false`,
+    /// changing nothing, unless `interpolator` is an [`NiInterpolator`].
+    pub fn set_interpolator(&mut self, interpolator: Option<Index>) -> bool
+    where
+        T: HasInterpolator,
+    {
+        self.set_ref(RefKind::Interpolator, interpolator)
+    }
+}
+
+/// A controller [`Edit::add_controller`] can add.
+pub trait NewController: NiType + Sealed {
+    #[doc(hidden)]
+    fn add(file: Pin<&mut nifly_sys::nif_file::ffi::NifFile>, owner: u32) -> u32;
+}
+
+macro_rules! new_controller {
+    ($($t:ident => $add:ident;)*) => {$(
+        impl NewController for $t {
+            fn add(file: Pin<&mut nifly_sys::nif_file::ffi::NifFile>, owner: u32) -> u32 {
+                ffi::$add(file, owner)
+            }
+        }
+    )*};
+}
+
+new_controller! {
+    NiLookAtController => add_ni_look_at_controller;
+    NiPathController => add_ni_path_controller;
+    NiUvController => add_ni_uv_controller;
+    BsFrustumFovController => add_bs_frustum_fov_controller;
+    BsLagBoneController => add_bs_lag_bone_controller;
+    BsProceduralLightningController => add_bs_procedural_lightning_controller;
+    NiBoneLodController => add_ni_bone_lod_controller;
+    NiBsBoneLodController => add_ni_bs_bone_lod_controller;
+    NiGeomMorpherController => add_ni_geom_morpher_controller;
+    NiRollController => add_ni_roll_controller;
+    NiMaterialColorController => add_ni_material_color_controller;
+    NiLightColorController => add_ni_light_color_controller;
+    NiFloatExtraDataController => add_ni_float_extra_data_controller;
+    NiVisController => add_ni_vis_controller;
+    NiFlipController => add_ni_flip_controller;
+    NiTextureTransformController => add_ni_texture_transform_controller;
+    NiLightDimmerController => add_ni_light_dimmer_controller;
+    NiLightRadiusController => add_ni_light_radius_controller;
+    NiAlphaController => add_ni_alpha_controller;
+    BsNiAlphaPropertyTestRefController => add_bs_ni_alpha_property_test_ref_controller;
+    NiKeyframeController => add_ni_keyframe_controller;
+    NiTransformController => add_ni_transform_controller;
+    BsMaterialEmittanceMultController => add_bs_material_emittance_mult_controller;
+    BsRefractionStrengthController => add_bs_refraction_strength_controller;
+    BsRefractionFirePeriodController => add_bs_refraction_fire_period_controller;
+    BsLightingShaderPropertyColorController => add_bs_lighting_shader_property_color_controller;
+    BsLightingShaderPropertyFloatController => add_bs_lighting_shader_property_float_controller;
+    BsLightingShaderPropertyUShortController => add_bs_lighting_shader_property_u_short_controller;
+    BsEffectShaderPropertyColorController => add_bs_effect_shader_property_color_controller;
+    BsEffectShaderPropertyFloatController => add_bs_effect_shader_property_float_controller;
+    NiMultiTargetTransformController => add_ni_multi_target_transform_controller;
+    BhkBlendController => add_bhk_blend_controller;
+}
+
+/// An [`NiPathInterpolator`] or [`NiPathController`]: a block with path data refs.
+///
+/// This trait is sealed.
+pub trait HasPath: NiType {}
+
+impl HasPath for NiPathInterpolator {}
+impl HasPath for NiPathController {}
+
+/// An [`NiLookAtInterpolator`] or [`NiLookAtController`]: a block with a look-at node.
+///
+/// This trait is sealed.
+pub trait LooksAt: NiType {}
+
+impl LooksAt for NiLookAtInterpolator {}
+impl LooksAt for NiLookAtController {}
+
+/// A controller with one interpolator: an [`NiSingleInterpController`] or subtype, or a
+/// [`BsFrustumFovController`].
+///
+/// This trait is sealed.
+pub trait HasInterpolator: NiType {}
+
+macro_rules! has_interpolator {
+    ($($t:ident)*) => {$(impl HasInterpolator for $t {})*};
+}
+
+has_interpolator! {
+    NiSingleInterpController NiRollController NiPoint3InterpController NiMaterialColorController
+    NiLightColorController NiExtraDataController NiFloatExtraDataController NiBoolInterpController
+    NiVisController NiFloatInterpController BsRefractionFirePeriodController NiFlipController
+    NiTextureTransformController NiLightDimmerController NiLightRadiusController NiAlphaController
+    BsNiAlphaPropertyTestRefController NiKeyframeController NiTransformController
+    BsMaterialEmittanceMultController BsRefractionStrengthController
+    BsLightingShaderPropertyColorController BsLightingShaderPropertyFloatController
+    BsLightingShaderPropertyUShortController BsEffectShaderPropertyColorController
+    BsEffectShaderPropertyFloatController NiPSysModifierCtlr NiPSysModifierBoolCtlr
+    NiPSysModifierActiveCtlr NiPSysModifierFloatCtlr NiPSysEmitterLifeSpanCtlr
+    NiPSysEmitterSpeedCtlr NiPSysEmitterInitialRadiusCtlr NiPSysEmitterDeclinationCtlr
+    NiPSysGravityStrengthCtlr NiPSysEmitterDeclinationVarCtlr NiPSysFieldMagnitudeCtlr
+    NiPSysFieldAttenuationCtlr NiPSysFieldMaxDistanceCtlr NiPSysAirFieldAirFrictionCtlr
+    NiPSysAirFieldInheritVelocityCtlr NiPSysAirFieldSpreadCtlr NiPSysInitialRotSpeedCtlr
+    NiPSysInitialRotSpeedVarCtlr NiPSysInitialRotAngleCtlr NiPSysInitialRotAngleVarCtlr
+    NiPSysEmitterPlanarAngleCtlr NiPSysEmitterPlanarAngleVarCtlr NiPSysRotDampeningCtlr
+    BsFrustumFovController
+}
+
+impl NiLookAtController {
+    fields! {
+        /// Saved from 10.1.0.0 on.
+        look_at_flags, set_look_at_flags: LookAtFlags = look_at_controller_flags, set_look_at_controller_flags, LookAtFlags::from_bits_retain, |f: LookAtFlags| f.bits();
+    }
+}
+
+impl NiPathController {
+    fields! {
+        /// Saved from 10.1.0.0 on.
+        path_flags, set_path_flags: PathFlags = path_controller_flags, set_path_controller_flags, PathFlags::from_bits_retain, |f: PathFlags| f.bits();
+        /// Which way to bank: 1 or -1.
+        bank_direction, set_bank_direction: i32 = path_controller_bank_direction, set_path_controller_bank_direction, same, same;
+        /// In radians.
+        max_bank_angle, set_max_bank_angle: f32 = path_controller_max_bank_angle, set_path_controller_max_bank_angle, same, same;
+        smoothing, set_smoothing: f32 = path_controller_smoothing, set_path_controller_smoothing, same, same;
+        /// The axis to face along the path when following it: 0 X, 1 Y, 2 Z.
+        follow_axis, set_follow_axis: u16 = path_controller_follow_axis, set_path_controller_follow_axis, same, same;
+    }
+}
+
+impl NiUvController {
+    fields! {
+        /// The texture coordinate set to animate.
+        uv_set, set_uv_set: u16 = uv_controller_uv_set, set_uv_controller_uv_set, same, same;
+    }
+}
+
+impl BsLagBoneController {
+    fields! {
+        /// How fast the bone returns to rest.
+        linear_velocity, set_linear_velocity: f32 = lag_bone_linear_velocity, set_lag_bone_linear_velocity, same, same;
+        /// How much the bone lags in rotation.
+        linear_rotation, set_linear_rotation: f32 = lag_bone_linear_rotation, set_lag_bone_linear_rotation, same, same;
+        /// How far the bone can trail.
+        max_distance, set_max_distance: f32 = lag_bone_max_distance, set_lag_bone_max_distance, same, same;
+    }
+}
+
+impl BsProceduralLightningController {
+    fields! {
+        subdivisions, set_subdivisions: u16 = lightning_subdivisions, set_lightning_subdivisions, same, same;
+        branch_count, set_branch_count: u16 = lightning_branch_count, set_lightning_branch_count, same, same;
+        branch_count_variation, set_branch_count_variation: u16 = lightning_branch_variation, set_lightning_branch_variation, same, same;
+        /// How far the bolt reaches.
+        length, set_length: f32 = lightning_length, set_lightning_length, same, same;
+        length_variation, set_length_variation: f32 = lightning_length_variation, set_lightning_length_variation, same, same;
+        width, set_width: f32 = lightning_width, set_lightning_width, same, same;
+        /// The width of forks, relative to their parent.
+        child_width_multiplier, set_child_width_multiplier: f32 = lightning_child_width_multiplier, set_lightning_child_width_multiplier, same, same;
+        /// How far the bolt arcs: 0 is straight.
+        arc_offset, set_arc_offset: f32 = lightning_arc_offset, set_lightning_arc_offset, same, same;
+        fade_main_bolt, set_fade_main_bolt: bool = lightning_fade_main_bolt, set_lightning_fade_main_bolt, same, same;
+        fade_child_bolts, set_fade_child_bolts: bool = lightning_fade_child_bolts, set_lightning_fade_child_bolts, same, same;
+        animate_arc_offset, set_animate_arc_offset: bool = lightning_animate_arc_offset, set_lightning_animate_arc_offset, same, same;
+    }
+}
+
+/// Which color of a material an [`NiMaterialColorController`] animates.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
+#[repr(u16)]
+pub enum MaterialColor {
+    Ambient = 0,
+    Diffuse = 1,
+    Specular = 2,
+    SelfIllumination = 3,
+}
+
+/// Which color of a light an [`NiLightColorController`] animates.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
+#[repr(u16)]
+pub enum LightColor {
+    Diffuse = 0,
+    Ambient = 1,
+}
+
+impl NiMaterialColorController {
+    /// The color to animate, saved from 10.1.0.0 on. `None` if the stored value is 4 or more.
+    pub fn target_color(&self) -> Option<MaterialColor> {
+        let point3: &NiPoint3InterpController = self.upcast_ref();
+        MaterialColor::try_from(ffi::point3_controller_target_color(&point3.0)).ok()
+    }
+
+    /// Sets [`target_color`](Self::target_color).
+    pub fn set_target_color(self: Pin<&mut Self>, color: MaterialColor) {
+        ffi::set_point3_controller_target_color(self.upcast_mut().ffi_mut(), color.into());
+    }
+}
+
+impl NiLightColorController {
+    /// The color to animate, saved from 10.1.0.0 on. `None` if the stored value is 2 or more.
+    pub fn target_color(&self) -> Option<LightColor> {
+        let point3: &NiPoint3InterpController = self.upcast_ref();
+        LightColor::try_from(ffi::point3_controller_target_color(&point3.0)).ok()
+    }
+
+    /// Sets [`target_color`](Self::target_color).
+    pub fn set_target_color(self: Pin<&mut Self>, color: LightColor) {
+        ffi::set_point3_controller_target_color(self.upcast_mut().ffi_mut(), color.into());
+    }
+}
+
+impl NiFlipController {
+    /// The map whose texture flips. `None` if the stored value is 12 or more.
+    pub fn texture_map(&self) -> Option<TextureMap> {
+        TextureMap::try_from(ffi::flip_texture_slot(&self.0)).ok()
+    }
+
+    /// Sets [`texture_map`](Self::texture_map).
+    pub fn set_texture_map(self: Pin<&mut Self>, map: TextureMap) {
+        ffi::set_flip_texture_slot(self.ffi_mut(), map.into());
+    }
+
+    fields! {
+        /// Saved only before 10.1.0.104.
+        accum_time, set_accum_time: f32 = flip_accum_time, set_flip_accum_time, same, same;
+        /// The time between flips, saved only before 10.1.0.104.
+        delta, set_delta: f32 = flip_delta, set_flip_delta, same, same;
+    }
+}
+
+/// The part of a texture transform an [`NiTextureTransformController`] animates.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
+#[repr(u32)]
+pub enum TransformMember {
+    TranslateU = 0,
+    TranslateV = 1,
+    Rotate = 2,
+    ScaleU = 3,
+    ScaleV = 4,
+}
+
+impl NiTextureTransformController {
+    /// The map whose transform is animated. `None` for a fixed map whose stored value is 12 or
+    /// more.
+    pub fn map(&self) -> Option<MapSlot> {
+        let slot = ffi::texture_transform_slot(&self.0);
+        if ffi::texture_transform_shader_map(&self.0) {
+            usize::try_from(slot).ok().map(MapSlot::Shader)
+        } else {
+            TextureMap::try_from(slot).ok().map(MapSlot::Map)
+        }
+    }
+
+    /// Sets [`map`](Self::map). Returns `false`, changing nothing, for a shader map past
+    /// `u32::MAX`.
+    pub fn set_map(mut self: Pin<&mut Self>, map: impl Into<MapSlot>) -> bool {
+        let (shader, slot) = match map.into() {
+            MapSlot::Map(map) => (false, map.into()),
+            MapSlot::Shader(i) => match u32::try_from(i) {
+                Ok(i) => (true, i),
+                Err(_) => return false,
+            },
+        };
+        ffi::set_texture_transform_shader_map(self.as_mut().ffi_mut(), shader);
+        ffi::set_texture_transform_slot(self.ffi_mut(), slot);
+        true
+    }
+
+    /// The part of the transform to animate. `None` if the stored value is 5 or more.
+    pub fn operation(&self) -> Option<TransformMember> {
+        TransformMember::try_from(ffi::texture_transform_operation(&self.0)).ok()
+    }
+
+    /// Sets [`operation`](Self::operation).
+    pub fn set_operation(self: Pin<&mut Self>, operation: TransformMember) {
+        ffi::set_texture_transform_operation(self.ffi_mut(), operation.into());
+    }
+}
+
+impl NiFloatExtraDataController {
+    /// The name of the [`NiFloatExtraData`](crate::extra_data::NiFloatExtraData) to animate.
+    /// Saved from 10.2.0.0 on.
+    pub fn extra_data_name(&self) -> &BStr {
+        ffi::float_extra_data_controller_name(&self.0).as_bstr()
+    }
+
+    /// Sets [`extra_data_name`](Self::extra_data_name).
+    pub fn set_extra_data_name(self: Pin<&mut Self>, name: impl AsRef<[u8]>) {
+        ffi::set_float_extra_data_controller_name(self.ffi_mut(), name.as_ref());
+    }
+}
+
+/// Which float of a [`BsLightingShaderProperty`](crate::shaders::BsLightingShaderProperty) a
+/// [`BsLightingShaderPropertyFloatController`] animates.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
+#[repr(u32)]
+pub enum LightingShaderControlledFloat {
+    RefractionStrength = 0,
+    /// Found in files; meaning unknown.
+    Unknown3 = 3,
+    /// Found in files; meaning unknown.
+    Unknown4 = 4,
+    EnvironmentMapScale = 8,
+    Glossiness = 9,
+    SpecularStrength = 10,
+    EmissiveMultiple = 11,
+    Alpha = 12,
+    /// Found in files; meaning unknown.
+    Unknown13 = 13,
+    /// Found in files; meaning unknown.
+    Unknown14 = 14,
+    UOffset = 20,
+    UScale = 21,
+    VOffset = 22,
+    VScale = 23,
+}
+
+/// Which color of a [`BsLightingShaderProperty`](crate::shaders::BsLightingShaderProperty) a
+/// [`BsLightingShaderPropertyColorController`] animates.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
+#[repr(u32)]
+pub enum LightingShaderControlledColor {
+    Specular = 0,
+    Emissive = 1,
+}
+
+/// Which float of a [`BsEffectShaderProperty`](crate::shaders::BsEffectShaderProperty) a
+/// [`BsEffectShaderPropertyFloatController`] animates.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
+#[repr(u32)]
+pub enum EffectShaderControlledVariable {
+    EmissiveMultiple = 0,
+    /// In degrees.
+    FalloffStartAngle = 1,
+    /// In degrees.
+    FalloffStopAngle = 2,
+    FalloffStartOpacity = 3,
+    FalloffStopOpacity = 4,
+    Alpha = 5,
+    UOffset = 6,
+    UScale = 7,
+    VOffset = 8,
+    VScale = 9,
+    /// Found in files; meaning unknown.
+    Unknown11 = 11,
+    /// Found in files; meaning unknown.
+    Unknown12 = 12,
+    /// Found in files; meaning unknown.
+    Unknown13 = 13,
+    /// Found in files; meaning unknown.
+    Unknown14 = 14,
+}
+
+/// Which color of a [`BsEffectShaderProperty`](crate::shaders::BsEffectShaderProperty) a
+/// [`BsEffectShaderPropertyColorController`] animates.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, IntEnum)]
+#[repr(u32)]
+pub enum EffectShaderControlledColor {
+    Emissive = 0,
+}
+
+/// A typed getter and setter over a `u32` field shim; values outside `$ty` read as `None`.
+macro_rules! enum_field {
+    ($(#[$doc:meta])* $get:ident, $set:ident: $ty:ty = $ffi_get:ident, $ffi_set:ident) => {
+        $(#[$doc])*
+        pub fn $get(&self) -> Option<$ty> {
+            <$ty>::try_from(ffi::$ffi_get(&self.0)).ok()
+        }
+
+        #[doc = concat!("Sets [`", stringify!($get), "`](Self::", stringify!($get), ").")]
+        pub fn $set(self: Pin<&mut Self>, value: $ty) {
+            ffi::$ffi_set(self.ffi_mut(), value.into());
+        }
+    };
+}
+
+impl BsLightingShaderPropertyFloatController {
+    enum_field! {
+        /// The float to animate, or `None` for a value it doesn't list.
+        controlled_variable, set_controlled_variable: LightingShaderControlledFloat = lighting_float_controller_variable, set_lighting_float_controller_variable
+    }
+}
+
+impl BsLightingShaderPropertyUShortController {
+    fields! {
+        /// The value to animate; its meaning is unknown.
+        controlled_variable, set_controlled_variable: u32 = lighting_ushort_controller_variable, set_lighting_ushort_controller_variable, same, same;
+    }
+}
+
+impl BsLightingShaderPropertyColorController {
+    enum_field! {
+        /// The color to animate, or `None` for a value it doesn't list.
+        controlled_color, set_controlled_color: LightingShaderControlledColor = lighting_color_controller_color, set_lighting_color_controller_color
+    }
+}
+
+impl BsEffectShaderPropertyFloatController {
+    enum_field! {
+        /// The float to animate, or `None` for a value it doesn't list.
+        controlled_variable, set_controlled_variable: EffectShaderControlledVariable = effect_float_controller_variable, set_effect_float_controller_variable
+    }
+}
+
+impl BsEffectShaderPropertyColorController {
+    enum_field! {
+        /// The color to animate, or `None` for a value it doesn't list.
+        controlled_color, set_controlled_color: EffectShaderControlledColor = effect_color_controller_color, set_effect_color_controller_color
+    }
+}
+
+bitflags::bitflags! {
+    /// The flags of an [`NiGeomMorpherController`], saved from 10.0.1.2 on. Other bits are kept
+    /// as stored.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+    pub struct GeomMorpherFlags: u16 {
+        /// Recompute normals as the vertices morph.
+        const UPDATE_NORMALS = 1;
+        const _ = !0;
+    }
+}
+
+impl NiGeomMorpherController {
+    fields! {
+        morpher_flags, set_morpher_flags: GeomMorpherFlags = geom_morpher_flags, set_geom_morpher_flags, GeomMorpherFlags::from_bits_retain, |f: GeomMorpherFlags| f.bits();
+        /// Update even when the target isn't visible.
+        always_update, set_always_update: bool = geom_morpher_always_update, set_geom_morpher_always_update, same, same;
+    }
+
+    /// Values of unknown meaning, saved from 10.2.0.0 to 20.0.0.5 in Bethesda files.
+    pub fn unknown_ints(&self) -> Vec<u32> {
+        ffi::geom_morpher_unknown_ints(&self.0)
+    }
+
+    /// Sets [`unknown_ints`](Self::unknown_ints).
+    pub fn set_unknown_ints(self: Pin<&mut Self>, ints: &[u32]) {
+        ffi::set_geom_morpher_unknown_ints(self.ffi_mut(), ints);
+    }
+}
+
+impl NiBoneLodController {
+    fields! {
+        /// The current level of detail.
+        lod, set_lod: u32 = bone_lod_lod, set_bone_lod_lod, same, same;
+    }
+
+    /// The number of levels of detail, kept as the number of
+    /// [node groups](crate::handle::View::node_groups).
+    pub fn lod_count(&self) -> u32 {
+        ffi::bone_lod_controller_count(&self.0)
+    }
+}
+
+impl BhkBlendController {
+    fields! {
+        /// Usually 0.
+        keys, set_keys: u32 = blend_controller_keys, set_blend_controller_keys, same, same;
+    }
+}
+
+/// One of the nine interpolators of a [`BsProceduralLightningController`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum LightningInterpolator {
+    Generation,
+    Mutation,
+    Subdivision,
+    BranchCount,
+    BranchCountVariation,
+    Length,
+    LengthVariation,
+    Width,
+    ArcOffset,
+}
+
+impl LightningInterpolator {
+    fn ref_kind(self) -> RefKind {
+        match self {
+            Self::Generation => RefKind::LightningGeneration,
+            Self::Mutation => RefKind::LightningMutation,
+            Self::Subdivision => RefKind::LightningSubdivision,
+            Self::BranchCount => RefKind::LightningBranches,
+            Self::BranchCountVariation => RefKind::LightningBranchVariation,
+            Self::Length => RefKind::LightningLength,
+            Self::LengthVariation => RefKind::LightningLengthVariation,
+            Self::Width => RefKind::LightningWidth,
+            Self::ArcOffset => RefKind::LightningArcOffset,
+        }
+    }
+}
+
+/// An interpolator of an [`NiGeomMorpherController`], one per morph, with its weight.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct MorphWeight {
+    pub interpolator: Option<Index>,
+    /// Saved from 20.1.0.3 on.
+    pub weight: f32,
+}
+
+/// Controller type refs.
+impl<'a, T: NiType> View<'a, T> {
+    /// One of the lightning controller's interpolators, or `None` if it has none.
+    pub fn lightning_interpolator<I>(&self, which: LightningInterpolator) -> Option<View<'a, NiInterpolator>>
+    where
+        T: IsA<BsProceduralLightningController, I>,
+    {
+        self.follow(which.ref_kind())
+    }
+
+    /// The shader the lightning controller's bolts use, or `None` if it has none.
+    pub fn lightning_shader<I>(&self) -> Option<View<'a, BsShaderProperty>>
+    where
+        T: IsA<BsProceduralLightningController, I>,
+    {
+        self.follow(RefKind::LightningShader)
+    }
+
+    /// The flip controller's textures. Skips empty refs.
+    pub fn sources<I>(&self) -> BlockIter<'a, NiSourceTexture, RefIndices>
+    where
+        T: IsA<NiFlipController, I>,
+    {
+        self.follow_list(RefList::FlipSources)
+    }
+
+    /// The objects a multi-target controller animates, besides its target. Empty refs are
+    /// `None`.
+    pub fn extra_targets<I>(&self) -> Vec<Option<Index>>
+    where
+        T: IsA<NiMultiTargetTransformController, I>,
+    {
+        nif_ffi::block_ref_list(&self.file().inner, self.index() as u32, RefList::ExtraTargets)
+            .into_iter()
+            .map(index_from_ffi)
+            .collect()
+    }
+
+    /// The geometry morpher's interpolators, one per morph. Saved from 10.1.0.106 on; the
+    /// weights only from 20.1.0.3.
+    pub fn morph_interpolators<I>(&self) -> Vec<MorphWeight>
+    where
+        T: IsA<NiGeomMorpherController, I>,
+    {
+        ffi::morph_weights(&self.file().inner, self.index() as u32)
+            .into_iter()
+            .map(|w| MorphWeight { interpolator: index_from_ffi(w.interpolator), weight: w.weight })
+            .collect()
+    }
+
+    /// The bone LOD controller's node groups, one per level of detail. Skips empty refs.
+    pub fn node_groups<I>(&self) -> Vec<Vec<Index>>
+    where
+        T: IsA<NiBoneLodController, I>,
+    {
+        let lod: &NiBoneLodController = self.get().upcast_ref();
+        ffi::bone_lod_groups(&lod.0)
+            .into_iter()
+            .map(|g| g.nodes.into_iter().filter_map(index_from_ffi).collect())
+            .collect()
+    }
+}
+
+impl<T: NiType> Edit<'_, T> {
+    /// Like [`View::lightning_interpolator`], for editing.
+    pub fn lightning_interpolator<I>(&mut self, which: LightningInterpolator) -> Option<Edit<'_, NiInterpolator>>
+    where
+        T: IsA<BsProceduralLightningController, I>,
+    {
+        self.follow(which.ref_kind())
+    }
+
+    /// Sets one of the [lightning interpolators](View::lightning_interpolator), or clears it
+    /// with `None`. Returns `false`, changing nothing, unless `interpolator` is an
+    /// [`NiInterpolator`].
+    pub fn set_lightning_interpolator<I>(&mut self, which: LightningInterpolator, interpolator: Option<Index>) -> bool
+    where
+        T: IsA<BsProceduralLightningController, I>,
+    {
+        self.set_ref(which.ref_kind(), interpolator)
+    }
+
+    /// Like [`View::lightning_shader`], for editing.
+    pub fn lightning_shader<I>(&mut self) -> Option<Edit<'_, BsShaderProperty>>
+    where
+        T: IsA<BsProceduralLightningController, I>,
+    {
+        self.follow(RefKind::LightningShader)
+    }
+
+    /// Sets the [lightning shader](View::lightning_shader), or clears it with `None`. Returns
+    /// `false`, changing nothing, unless `shader` is a [`BsShaderProperty`].
+    pub fn set_lightning_shader<I>(&mut self, shader: Option<Index>) -> bool
+    where
+        T: IsA<BsProceduralLightningController, I>,
+    {
+        self.set_ref(RefKind::LightningShader, shader)
+    }
+
+    /// Replaces the flip controller's [textures](View::sources). Returns `false`, changing
+    /// nothing, unless each is an [`NiSourceTexture`].
+    pub fn set_sources<I>(&mut self, sources: &[Index]) -> bool
+    where
+        T: IsA<NiFlipController, I>,
+    {
+        self.set_ref_list(RefList::FlipSources, sources)
+    }
+
+    /// Replaces the [extra targets](View::extra_targets). Returns `false`, changing nothing,
+    /// unless each is empty or an [`NiAvObject`](crate::objects::NiAvObject) and there are at
+    /// most 65535.
+    pub fn set_extra_targets<I>(&mut self, targets: &[Option<Index>]) -> bool
+    where
+        T: IsA<NiMultiTargetTransformController, I>,
+    {
+        let Some(targets) = targets.iter().map(|&t| optional_index_to_ffi(t)).collect::<Option<Vec<_>>>() else {
+            return false;
+        };
+        let owner = self.index() as u32;
+        nif_ffi::set_block_ref_list(self.file_mut().inner.pin_mut(), owner, RefList::ExtraTargets, &targets)
+    }
+
+    /// Replaces the [morph interpolators](View::morph_interpolators). Returns `false`, changing
+    /// nothing, unless each interpolator is empty or an [`NiInterpolator`].
+    pub fn set_morph_interpolators<I>(&mut self, interpolators: &[MorphWeight]) -> bool
+    where
+        T: IsA<NiGeomMorpherController, I>,
+    {
+        let Some(weights) = interpolators
+            .iter()
+            .map(|w| Some(ffi::MorphWeightFfi { interpolator: optional_index_to_ffi(w.interpolator)?, weight: w.weight }))
+            .collect::<Option<Vec<_>>>()
+        else {
+            return false;
+        };
+        let owner = self.index() as u32;
+        ffi::set_morph_weights(self.file_mut().inner.pin_mut(), owner, &weights)
+    }
+
+    /// Replaces the [node groups](View::node_groups) and sets the
+    /// [LOD count](NiBoneLodController::lod_count) to their number. Returns `false`, changing
+    /// nothing, unless each node is an [`NiNode`].
+    pub fn set_node_groups<I>(&mut self, groups: &[Vec<Index>]) -> bool
+    where
+        T: IsA<NiBoneLodController, I>,
+    {
+        let Some(groups) = groups
+            .iter()
+            .map(|g| Some(ffi::NodeGroupFfi { nodes: g.iter().map(|&i| block_index_to_ffi(i)).collect::<Option<_>>()? }))
+            .collect::<Option<Vec<_>>>()
+        else {
+            return false;
+        };
+        let owner = self.index() as u32;
+        ffi::set_bone_lod_groups(self.file_mut().inner.pin_mut(), owner, &groups)
+    }
 }

@@ -54,6 +54,19 @@ pub mod ffi {
         ease_spinner: f32,
     }
 
+    /// A `MorphWeight` of an `NiGeomMorpherController`.
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    struct MorphWeightFfi {
+        interpolator: u32,
+        weight: f32,
+    }
+
+    /// One `NiBoneLODController` node group.
+    #[derive(Debug, Clone, PartialEq)]
+    struct NodeGroupFfi {
+        nodes: Vec<u32>,
+    }
+
     /// A `BSTreadTransform`.
     #[derive(Debug, Clone, PartialEq)]
     struct TreadFfi {
@@ -170,6 +183,7 @@ pub mod ffi {
         type BSAnimNotes;
         type NiControllerSequence;
         type NiControllerManager;
+        type bhkBlendController;
     }
 
     #[namespace = "nifly"]
@@ -396,6 +410,8 @@ pub mod ffi {
         fn downcast_ni_controller_sequence(obj: &NiObject) -> *const NiControllerSequence;
         fn upcast_ni_controller_manager(obj: &NiControllerManager) -> &NiTimeController;
         fn downcast_ni_controller_manager(obj: &NiObject) -> *const NiControllerManager;
+        fn upcast_bhk_blend_controller(obj: &bhkBlendController) -> &NiTimeController;
+        fn downcast_bhk_blend_controller(obj: &NiObject) -> *const bhkBlendController;
 
         // Key groups. Setters return false, changing nothing, if the group has keys but its
         // interpolation isn't linear, quadratic, TBC or constant, or if it has none and the
@@ -605,5 +621,140 @@ pub mod ffi {
         fn add_ni_blend_float_interpolator(file: Pin<&mut NifFile>) -> u32;
         fn add_ni_blend_point3_interpolator(file: Pin<&mut NifFile>) -> u32;
         fn add_ni_blend_transform_interpolator(file: Pin<&mut NifFile>) -> u32;
+        fn controller_flags(obj: &NiTimeController) -> u16;
+        fn set_controller_flags(obj: Pin<&mut NiTimeController>, value: u16);
+        fn controller_frequency(obj: &NiTimeController) -> f32;
+        fn set_controller_frequency(obj: Pin<&mut NiTimeController>, value: f32);
+        fn controller_phase(obj: &NiTimeController) -> f32;
+        fn set_controller_phase(obj: Pin<&mut NiTimeController>, value: f32);
+        fn controller_start_time(obj: &NiTimeController) -> f32;
+        fn set_controller_start_time(obj: Pin<&mut NiTimeController>, value: f32);
+        fn controller_stop_time(obj: &NiTimeController) -> f32;
+        fn set_controller_stop_time(obj: Pin<&mut NiTimeController>, value: f32);
+        fn interp_controller_manager_controlled(obj: &NiInterpController) -> bool;
+        fn set_interp_controller_manager_controlled(obj: Pin<&mut NiInterpController>, value: bool);
+        fn look_at_controller_flags(obj: &NiLookAtController) -> u16;
+        fn set_look_at_controller_flags(obj: Pin<&mut NiLookAtController>, value: u16);
+        fn path_controller_flags(obj: &NiPathController) -> u16;
+        fn set_path_controller_flags(obj: Pin<&mut NiPathController>, value: u16);
+        fn path_controller_bank_direction(obj: &NiPathController) -> i32;
+        fn set_path_controller_bank_direction(obj: Pin<&mut NiPathController>, value: i32);
+        fn path_controller_max_bank_angle(obj: &NiPathController) -> f32;
+        fn set_path_controller_max_bank_angle(obj: Pin<&mut NiPathController>, value: f32);
+        fn path_controller_smoothing(obj: &NiPathController) -> f32;
+        fn set_path_controller_smoothing(obj: Pin<&mut NiPathController>, value: f32);
+        fn path_controller_follow_axis(obj: &NiPathController) -> u16;
+        fn set_path_controller_follow_axis(obj: Pin<&mut NiPathController>, value: u16);
+        fn uv_controller_uv_set(obj: &NiUVController) -> u16;
+        fn set_uv_controller_uv_set(obj: Pin<&mut NiUVController>, value: u16);
+        fn lag_bone_linear_velocity(obj: &BSLagBoneController) -> f32;
+        fn set_lag_bone_linear_velocity(obj: Pin<&mut BSLagBoneController>, value: f32);
+        fn lag_bone_linear_rotation(obj: &BSLagBoneController) -> f32;
+        fn set_lag_bone_linear_rotation(obj: Pin<&mut BSLagBoneController>, value: f32);
+        fn lag_bone_max_distance(obj: &BSLagBoneController) -> f32;
+        fn set_lag_bone_max_distance(obj: Pin<&mut BSLagBoneController>, value: f32);
+        fn lightning_subdivisions(obj: &BSProceduralLightningController) -> u16;
+        fn set_lightning_subdivisions(obj: Pin<&mut BSProceduralLightningController>, value: u16);
+        fn lightning_branch_count(obj: &BSProceduralLightningController) -> u16;
+        fn set_lightning_branch_count(obj: Pin<&mut BSProceduralLightningController>, value: u16);
+        fn lightning_branch_variation(obj: &BSProceduralLightningController) -> u16;
+        fn set_lightning_branch_variation(obj: Pin<&mut BSProceduralLightningController>, value: u16);
+        fn lightning_length(obj: &BSProceduralLightningController) -> f32;
+        fn set_lightning_length(obj: Pin<&mut BSProceduralLightningController>, value: f32);
+        fn lightning_length_variation(obj: &BSProceduralLightningController) -> f32;
+        fn set_lightning_length_variation(obj: Pin<&mut BSProceduralLightningController>, value: f32);
+        fn lightning_width(obj: &BSProceduralLightningController) -> f32;
+        fn set_lightning_width(obj: Pin<&mut BSProceduralLightningController>, value: f32);
+        fn lightning_child_width_multiplier(obj: &BSProceduralLightningController) -> f32;
+        fn set_lightning_child_width_multiplier(obj: Pin<&mut BSProceduralLightningController>, value: f32);
+        fn lightning_arc_offset(obj: &BSProceduralLightningController) -> f32;
+        fn set_lightning_arc_offset(obj: Pin<&mut BSProceduralLightningController>, value: f32);
+        fn lightning_fade_main_bolt(obj: &BSProceduralLightningController) -> bool;
+        fn set_lightning_fade_main_bolt(obj: Pin<&mut BSProceduralLightningController>, value: bool);
+        fn lightning_fade_child_bolts(obj: &BSProceduralLightningController) -> bool;
+        fn set_lightning_fade_child_bolts(obj: Pin<&mut BSProceduralLightningController>, value: bool);
+        fn lightning_animate_arc_offset(obj: &BSProceduralLightningController) -> bool;
+        fn set_lightning_animate_arc_offset(obj: Pin<&mut BSProceduralLightningController>, value: bool);
+        fn point3_controller_target_color(obj: &NiPoint3InterpController) -> u16;
+        fn set_point3_controller_target_color(obj: Pin<&mut NiPoint3InterpController>, value: u16);
+        fn flip_texture_slot(obj: &NiFlipController) -> u32;
+        fn set_flip_texture_slot(obj: Pin<&mut NiFlipController>, value: u32);
+        fn flip_accum_time(obj: &NiFlipController) -> f32;
+        fn set_flip_accum_time(obj: Pin<&mut NiFlipController>, value: f32);
+        fn flip_delta(obj: &NiFlipController) -> f32;
+        fn set_flip_delta(obj: Pin<&mut NiFlipController>, value: f32);
+        fn texture_transform_shader_map(obj: &NiTextureTransformController) -> bool;
+        fn set_texture_transform_shader_map(obj: Pin<&mut NiTextureTransformController>, value: bool);
+        fn texture_transform_slot(obj: &NiTextureTransformController) -> u32;
+        fn set_texture_transform_slot(obj: Pin<&mut NiTextureTransformController>, value: u32);
+        fn texture_transform_operation(obj: &NiTextureTransformController) -> u32;
+        fn set_texture_transform_operation(obj: Pin<&mut NiTextureTransformController>, value: u32);
+        fn lighting_color_controller_color(obj: &BSLightingShaderPropertyColorController) -> u32;
+        fn set_lighting_color_controller_color(obj: Pin<&mut BSLightingShaderPropertyColorController>, value: u32);
+        fn lighting_float_controller_variable(obj: &BSLightingShaderPropertyFloatController) -> u32;
+        fn set_lighting_float_controller_variable(obj: Pin<&mut BSLightingShaderPropertyFloatController>, value: u32);
+        fn lighting_ushort_controller_variable(obj: &BSLightingShaderPropertyUShortController) -> u32;
+        fn set_lighting_ushort_controller_variable(obj: Pin<&mut BSLightingShaderPropertyUShortController>, value: u32);
+        fn effect_color_controller_color(obj: &BSEffectShaderPropertyColorController) -> u32;
+        fn set_effect_color_controller_color(obj: Pin<&mut BSEffectShaderPropertyColorController>, value: u32);
+        fn effect_float_controller_variable(obj: &BSEffectShaderPropertyFloatController) -> u32;
+        fn set_effect_float_controller_variable(obj: Pin<&mut BSEffectShaderPropertyFloatController>, value: u32);
+        fn geom_morpher_flags(obj: &NiGeomMorpherController) -> u16;
+        fn set_geom_morpher_flags(obj: Pin<&mut NiGeomMorpherController>, value: u16);
+        fn geom_morpher_always_update(obj: &NiGeomMorpherController) -> bool;
+        fn set_geom_morpher_always_update(obj: Pin<&mut NiGeomMorpherController>, value: bool);
+        fn bone_lod_lod(obj: &NiBoneLODController) -> u32;
+        fn set_bone_lod_lod(obj: Pin<&mut NiBoneLODController>, value: u32);
+        fn blend_controller_keys(obj: &bhkBlendController) -> u32;
+        fn set_blend_controller_keys(obj: Pin<&mut bhkBlendController>, value: u32);
+        fn bone_lod_controller_count(obj: &NiBoneLODController) -> u32;
+        fn float_extra_data_controller_name(obj: &NiFloatExtraDataController) -> &[u8];
+        fn set_float_extra_data_controller_name(obj: Pin<&mut NiFloatExtraDataController>, name: &[u8]);
+        fn geom_morpher_unknown_ints(obj: &NiGeomMorpherController) -> Vec<u32>;
+        fn set_geom_morpher_unknown_ints(obj: Pin<&mut NiGeomMorpherController>, ints: &[u32]);
+        /// The interpolators of the `NiGeomMorpherController` at `owner`, from the list the file
+        /// version saves, with weights kept in memory before 20.1.0.3 (or 0).
+        fn morph_weights(file: &NifFile, owner: u32) -> Vec<MorphWeightFfi>;
+        /// Replaces both interpolator lists. False, changing nothing, unless each interpolator
+        /// is empty or an `NiInterpolator`.
+        fn set_morph_weights(file: Pin<&mut NifFile>, owner: u32, weights: &[MorphWeightFfi]) -> bool;
+        fn bone_lod_groups(obj: &NiBoneLODController) -> Vec<NodeGroupFfi>;
+        /// Replaces the node groups and sets the LOD count to their number. False, changing
+        /// nothing, unless each node is an `NiNode`.
+        fn set_bone_lod_groups(file: Pin<&mut NifFile>, owner: u32, groups: &[NodeGroupFfi]) -> bool;
+        /// Adds a controller to the end of the chain of the `NiObjectNET` at `owner`, targeting
+        /// it. `NIF_NPOS`, adding nothing, if `owner` isn't one.
+        fn add_ni_look_at_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_path_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_uv_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_frustum_fov_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_lag_bone_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_procedural_lightning_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_bone_lod_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_bs_bone_lod_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_geom_morpher_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_roll_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_material_color_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_light_color_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_float_extra_data_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bhk_blend_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_vis_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_flip_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_texture_transform_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_light_dimmer_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_light_radius_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_alpha_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_ni_alpha_property_test_ref_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_keyframe_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_transform_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_material_emittance_mult_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_refraction_strength_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_refraction_fire_period_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_lighting_shader_property_color_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_lighting_shader_property_float_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_lighting_shader_property_u_short_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_effect_shader_property_color_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_bs_effect_shader_property_float_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_multi_target_transform_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
     }
 }

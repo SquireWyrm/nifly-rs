@@ -10,7 +10,7 @@
 //!
 //! | Type | [`View`] | [`Edit`] |
 //! |---|---|---|
-//! | [`NiObjectNet`](crate::objects::NiObjectNet) and subtypes | `extra_data`, `extra_data_chain`, `controller` | `assign_extra_data`, `set_extra_data`, `set_extra_data_chain`, `controller`, `set_controller` |
+//! | [`NiObjectNet`](crate::objects::NiObjectNet) and subtypes | `extra_data`, `extra_data_chain`, `controller`, `controllers` | `assign_extra_data`, `set_extra_data`, `set_extra_data_chain`, `controller`, `set_controller`, `set_controllers`, `add_controller` |
 //! | [`NiAvObject`](crate::objects::NiAvObject) and subtypes | `parent`, `properties`, `collision` | `parent`, `set_parent`, `add_property`, `set_properties`, `collision`, `set_collision`, `assign_collision` |
 //! | [`NiNode`](crate::nodes::NiNode) and subtypes | `children`, `children_of`, `effects` | `set_children`, `add_child`, `add_child_of`, `clone_node`, `set_effects`, `add_effect` |
 //! | [`NiGeometryData`](crate::geometry::NiGeometryData) and subtypes | `additional_data` | `additional_data`, `assign_additional_data`, `set_additional_data`, `remove_additional_data`, `set_uv_sets`, `set_data_raw_flags` |
@@ -47,11 +47,19 @@
 //! | [`NiTexturingProperty`](crate::shaders::NiTexturingProperty) | `map_source` | `map_source`, `set_map_source` |
 //! | [`NiSourceTexture`](crate::shaders::NiSourceTexture) | `pixel_data` | `pixel_data`, `assign_pixel_data`, `set_pixel_data` |
 //! | [`TextureRenderData`](crate::shaders::TextureRenderData) | `palette` | `palette`, `assign_palette`, `set_palette` |
-//! | Key-based interpolators ([`HasKeyData`](crate::animation::HasKeyData)) | `key_data` | `key_data`, `set_key_data` |
-//! | [`NiPathInterpolator`](crate::animation::NiPathInterpolator) | `path_data`, `percent_data` | `path_data`, `set_path_data`, `percent_data`, `set_percent_data` |
-//! | [`NiLookAtInterpolator`](crate::animation::NiLookAtInterpolator) | `look_at_node`, `look_at_translation`, `look_at_roll`, `look_at_scale` | the same, and `set_` forms |
+//! | Key-based interpolators and old controllers ([`HasKeyData`](crate::animation::HasKeyData)) | `key_data` | `key_data`, `set_key_data` |
+//! | [`NiPathInterpolator`](crate::animation::NiPathInterpolator), [`NiPathController`](crate::animation::NiPathController) ([`HasPath`](crate::animation::HasPath)) | `path_data`, `percent_data` | `path_data`, `set_path_data`, `percent_data`, `set_percent_data` |
+//! | [`NiLookAtInterpolator`](crate::animation::NiLookAtInterpolator), [`NiLookAtController`](crate::animation::NiLookAtController) ([`LooksAt`](crate::animation::LooksAt)) | `look_at_node` | `look_at_node`, `set_look_at_node` |
+//! | [`NiLookAtInterpolator`](crate::animation::NiLookAtInterpolator) | `look_at_translation`, `look_at_roll`, `look_at_scale` | the same, and `set_` forms |
 //! | [`NiBlendInterpolator`](crate::animation::NiBlendInterpolator) and subtypes | `single_interpolator`, `blend_items` | `single_interpolator`, `set_single_interpolator`, `set_blend_items` |
 //! | [`NiBSplineInterpolator`](crate::animation::NiBSplineInterpolator) and subtypes | `spline_data`, `spline_basis` | the same, and `set_` forms |
+//! | [`NiTimeController`](crate::animation::NiTimeController) and subtypes | `next_controller`, `controller_target` | the same, and `set_` forms |
+//! | [`NiSingleInterpController`](crate::animation::NiSingleInterpController) and subtypes, [`BsFrustumFovController`](crate::animation::BsFrustumFovController) ([`HasInterpolator`](crate::animation::HasInterpolator)) | `interpolator` | `interpolator`, `set_interpolator` |
+//! | [`BsProceduralLightningController`](crate::animation::BsProceduralLightningController) | `lightning_interpolator`, `lightning_shader` | the same, and `set_` forms |
+//! | [`NiFlipController`](crate::animation::NiFlipController) | `sources` | `set_sources` |
+//! | [`NiMultiTargetTransformController`](crate::animation::NiMultiTargetTransformController) | `extra_targets` | `set_extra_targets` |
+//! | [`NiGeomMorpherController`](crate::animation::NiGeomMorpherController) | `morph_interpolators` | `set_morph_interpolators` |
+//! | [`NiBoneLodController`](crate::animation::NiBoneLodController) and subtypes | `node_groups` | `set_node_groups` |
 //!
 //! ```
 //! # use nifly::{file::NifFile, nodes::NiNode};
