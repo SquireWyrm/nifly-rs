@@ -1,4 +1,5 @@
 
+pub mod animation;
 pub mod collision;
 pub mod effects;
 pub mod extra_data;

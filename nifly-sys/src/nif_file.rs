@@ -173,6 +173,28 @@ pub mod ffi {
         WrappedEntityA,
         /// The second entity, like `WrappedEntityA`.
         WrappedEntityB,
+        /// A key-based interpolator's `dataRef` (`NiBoolData`, `NiFloatData`, `NiPosData` or
+        /// `NiTransformData` by type), or a `BSTreadTransfInterpolator`'s (`NiFloatData`).
+        KeyData,
+        /// `NiPathInterpolator`'s `pathDataRef` (`NiPosData`).
+        PathData,
+        /// `NiPathInterpolator`'s `percentDataRef` (`NiFloatData`).
+        PercentData,
+        /// `NiLookAtInterpolator::lookAtRef` (`NiNode`), a pointer.
+        LookAtNode,
+        /// `NiLookAtInterpolator::translateInterpRef` (`NiPoint3Interpolator`).
+        LookAtTranslation,
+        /// `NiLookAtInterpolator::rollInterpRef` (`NiFloatInterpolator`).
+        LookAtRoll,
+        /// `NiLookAtInterpolator::scaleInterpRef` (`NiFloatInterpolator`).
+        LookAtScale,
+        /// `NiBlendInterpolator::singleInterpolatorRef` (`NiInterpolator` that doesn't use the
+        /// owner).
+        SingleInterpolator,
+        /// `NiBSplineInterpolator::splineDataRef` (`NiBSplineData`).
+        SplineData,
+        /// `NiBSplineInterpolator::basisDataRef` (`NiBSplineBasisData`).
+        SplineBasis,
     }
 
     /// A list of block refs, for `block_ref_list` and `set_block_ref_list`.
@@ -938,6 +960,15 @@ pub mod ffi {
             target: u32,
             name: &[u8],
             large_ref: bool,
+        ) -> u32;
+        /// Key i is `bytes` split into `lengths`, at `times[i]`.
+        fn assign_text_key_extra_data(
+            file: Pin<&mut NifFile>,
+            target: u32,
+            name: &[u8],
+            bytes: &[u8],
+            lengths: &[usize],
+            times: &[f32],
         ) -> u32;
         /// Bone i is `bytes` split into `lengths`, at `distances[i]`.
         fn assign_bone_lod_extra_data(

@@ -96,6 +96,8 @@ ni_types! { ffi;
     BsDistantObjectLargeRefExtraData(BSDistantObjectLargeRefExtraData): NiExtraData => upcast_bs_distant_object_large_ref_extra_data, downcast_bs_distant_object_large_ref_extra_data;
     /// Translations for named bones.
     BoneTranslations(BoneTranslations): NiExtraData => upcast_bone_translations, downcast_bone_translations;
+    /// Named points in an animation's time, such as "start" and "end".
+    NiTextKeyExtraData(NiTextKeyExtraData): NiExtraData => upcast_ni_text_key_extra_data, downcast_ni_text_key_extra_data;
 
     /// Base class of Bethesda's unnamed extra data (Fallout 4 and later). Unlike
     /// [`NiExtraData`], it has no name.
@@ -618,6 +620,27 @@ impl BsDecalPlacementVectorExtraData {
     }
 }
 
+impl NiTextKeyExtraData {
+    pub fn text_keys(&self) -> Vec<TextKey> {
+        (0..ffi::text_key_count(&self.0))
+            .map(|i| TextKey { time: ffi::text_key_time(&self.0, i), text: ffi::text_key_text(&self.0, i).into() })
+            .collect()
+    }
+
+    pub fn set_text_keys(self: Pin<&mut Self>, keys: &[TextKey]) {
+        let (bytes, lengths) = joined(keys.iter().map(|k| &k.text));
+        let times: Vec<f32> = keys.iter().map(|k| k.time).collect();
+        ffi::set_text_keys(self.ffi_mut(), &bytes, &lengths, &times);
+    }
+}
+
+/// A named point in an animation's time, in an [`NiTextKeyExtraData`].
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct TextKey {
+    pub time: f32,
+    pub text: BString,
+}
+
 impl BsBoneLodExtraData {
     pub fn bone_lods(&self) -> Vec<BoneLod> {
         (0..ffi::bone_lod_count(&self.0))
@@ -813,6 +836,7 @@ impl BsCollisionQueryProxyExtraData {
 /// | [`ExtraWArray`] | [`BsWArray`] | given |
 /// | [`ExtraDecalPlacement`] | [`BsDecalPlacementVectorExtraData`] | given |
 /// | [`ExtraBoneLods`] | [`BsBoneLodExtraData`] | given |
+/// | [`ExtraTextKeys`] | [`NiTextKeyExtraData`] | given |
 /// | [`ExtraDistantObject`] | [`BsDistantObjectExtraData`] | given |
 /// | [`ExtraDistantObjectLargeRef`] | [`BsDistantObjectLargeRefExtraData`] | given |
 /// | [`ExtraBoneTranslations`] | [`BoneTranslations`] | given |
@@ -1128,6 +1152,10 @@ pub struct ExtraWArray<N: AsRef<[u8]>, V: AsRef<[u32]>>(pub N, pub V);
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ExtraDecalPlacement<N: AsRef<[u8]>, B: IntoIterator<Item: AsRef<[DecalPoint]>>>(pub N, pub f32, pub B);
 
+/// An [`NiTextKeyExtraData`] named `.0` with the text keys `.1`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ExtraTextKeys<N: AsRef<[u8]>, K: AsRef<[TextKey]>>(pub N, pub K);
+
 /// A [`BsBoneLodExtraData`] named `.0` with the bone LODs `.1`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ExtraBoneLods<N: AsRef<[u8]>, L: AsRef<[BoneLod]>>(pub N, pub L);
@@ -1217,6 +1245,16 @@ impl<N: AsRef<[u8]>, B: IntoIterator<Item: AsRef<[DecalPoint]>>> IntoExtraData f
             &points,
             &normals,
         )
+    }
+}
+
+impl<N: AsRef<[u8]>, K: AsRef<[TextKey]>> Sealed for ExtraTextKeys<N, K> {}
+impl<N: AsRef<[u8]>, K: AsRef<[TextKey]>> IntoExtraData for ExtraTextKeys<N, K> {
+    fn assign(self, file: Pin<&mut nif_ffi::NifFile>, target: u32) -> u32 {
+        let keys = self.1.as_ref();
+        let (bytes, lengths) = joined(keys.iter().map(|k| &k.text));
+        let times: Vec<f32> = keys.iter().map(|k| k.time).collect();
+        nif_ffi::assign_text_key_extra_data(file, target, self.0.as_ref(), &bytes, &lengths, &times)
     }
 }
 

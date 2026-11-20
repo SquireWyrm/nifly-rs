@@ -37,6 +37,7 @@ It holds meshes extracted from Skyrim and is gitignored for legal reasons. Never
 | Shapes | `geometry.rs` |
 | Shaders, materials and textures | `shaders.rs` |
 | Collision | `collision.rs` |
+| Animation | `animation.rs` |
 
 - Put a new method in its topic's block.
 - Each block opens with a `# Heading` doc comment, which rustdoc shows as a section.
@@ -48,7 +49,7 @@ It holds meshes extracted from Skyrim and is gitignored for legal reasons. Never
 **Bridges and shims (`nifly-sys`).**
 - One bridge per area in `nifly-sys/src/*.rs`. Every bridge file must be listed in `bridge_files` in `nifly-sys/build.rs`.
 - Types shared across bridges are aliased (`type NiShape = crate::geometry::ffi::NiShape;`).
-- Shims are header-only `inline` functions in `nifly-sys/include/*_shim.h`, namespace `nifly_rs`. The only `.cpp` files are `src/read_bridge.cpp` and `src/write_bridge.cpp`.
+- Shims are header-only `inline` functions in `nifly-sys/include/*_shim.h`, namespace `nifly_rs`. The only `.cpp` files are `src/read_bridge.cpp`, `src/write_bridge.cpp` and `src/private_access.cpp`, which reaches private fields that have no accessors (`NiPathInterpolator`) through explicit template instantiation, once for the whole program.
 - nifly methods that are non-const but only read are wrapped with `const_cast`.
 - Lists of pointers become count + getter shims or `rust::Vec`. Strings become `rust::Slice<const uint8_t>`, or `UniquePtr<CxxVector<CxxString>>` for lists.
 - Upstream methods that are templates (e.g. `FindBlockByName<T>`) can't be bound and are reimplemented in Rust.
@@ -123,4 +124,6 @@ Public docs in `src/` describe the bindings' own behaviour, as if nifly and the 
 - `BSPackedCombinedSharedGeomDataExtra` reads each object's vertices and triangles, which only the baked `BSPackedCombinedGeomDataExtra` stores. `load_nif` registers `PackedSharedGeomDataFactory` and `assign_packed_shared_geom` creates `PackedSharedGeomData`s, which use the shared layout (`extra_data_shim.h`).
 - Writing an Oblivion file clears each `NiGeometryData`'s tangent flag in memory, so the next save would drop the tangents' `NiBinaryExtraData`. `save_nif` undoes it with `TangentFlagRestore` (`nif_file_shim.h`).
 - `BSGeometry` mesh data is written with positions as 16-bit fractions of its `scale`, which nifly doesn't update, and writing drops the second UV set and cuts the first to 65535 entries. `load_nif` registers `GeometryFactory`, whose `Geometry`s write internal meshes with `write_mesh_data` (`mesh_writer.h`), also used for external `.mesh` files; `save_nif` widens `scale` for the save where needed (`MeshScaleRestore`, `fit_mesh_scale` in `nif_file_shim.h`).
+- A string reference read from a file keeps its string table index, so an empty string saves as an empty entry; a new one with empty text saves as no string. List setters keep the old reference where the text is unchanged (`set_text_keys`, `set_morphs`).
+- `NiBlendInterpolator` doesn't list its items' interpolator refs as child refs, so saving would drop those interpolators and renumbering blocks would leave the refs stale. `load_nif` registers `BlendInterpolatorFactory`, and the add shims create `BlendInterpolator`s, which list them (`animation_shim.h`).
 - `NiSpotLight` reads and writes its inner angle in every version, but files store it only from 20.2.0.5. `load_nif` registers `SpotLightFactory` and the shims create `SpotLight`s, which sync it by version (`effects_shim.h`).

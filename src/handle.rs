@@ -47,6 +47,11 @@
 //! | [`NiTexturingProperty`](crate::shaders::NiTexturingProperty) | `map_source` | `map_source`, `set_map_source` |
 //! | [`NiSourceTexture`](crate::shaders::NiSourceTexture) | `pixel_data` | `pixel_data`, `assign_pixel_data`, `set_pixel_data` |
 //! | [`TextureRenderData`](crate::shaders::TextureRenderData) | `palette` | `palette`, `assign_palette`, `set_palette` |
+//! | Key-based interpolators ([`HasKeyData`](crate::animation::HasKeyData)) | `key_data` | `key_data`, `set_key_data` |
+//! | [`NiPathInterpolator`](crate::animation::NiPathInterpolator) | `path_data`, `percent_data` | `path_data`, `set_path_data`, `percent_data`, `set_percent_data` |
+//! | [`NiLookAtInterpolator`](crate::animation::NiLookAtInterpolator) | `look_at_node`, `look_at_translation`, `look_at_roll`, `look_at_scale` | the same, and `set_` forms |
+//! | [`NiBlendInterpolator`](crate::animation::NiBlendInterpolator) and subtypes | `single_interpolator`, `blend_items` | `single_interpolator`, `set_single_interpolator`, `set_blend_items` |
+//! | [`NiBSplineInterpolator`](crate::animation::NiBSplineInterpolator) and subtypes | `spline_data`, `spline_basis` | the same, and `set_` forms |
 //!
 //! ```
 //! # use nifly::{file::NifFile, nodes::NiNode};

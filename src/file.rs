@@ -163,6 +163,8 @@ pub type Index = usize;
 ///   [`clone_shape_from`](Self::clone_shape_from).
 /// - **Shaders, materials and textures:** [`add_source_texture`](Self::add_source_texture).
 /// - **Collision:** [`add_action`](Self::add_action).
+/// - **Animation:** [`add_animation_data`](Self::add_animation_data),
+///   [`add_interpolator`](Self::add_interpolator).
 ///
 /// Methods returning a block have a `_mut` form taking a block [`Index`]. It returns
 /// `Pin<&mut T>`, for the block's setters, or an [`Edit`] where the shared form returns a

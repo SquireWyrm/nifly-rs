@@ -37,6 +37,7 @@ pub mod ffi {
         type BSDistantObjectExtraData;
         type BSDistantObjectLargeRefExtraData;
         type BoneTranslations;
+        type NiTextKeyExtraData;
 
         // Derive from BSExtraData : NiObject, not NiExtraData.
         type BSExtraData;
@@ -198,6 +199,8 @@ pub mod ffi {
         fn set_behavior_graph_file(obj: Pin<&mut BSBehaviorGraphExtraData>, graph_file: &[u8]);
         fn set_behavior_graph_controls_base_skeleton(obj: Pin<&mut BSBehaviorGraphExtraData>, controls: bool);
         fn set_bone_lods(obj: Pin<&mut BSBoneLODExtraData>, bytes: &[u8], lengths: &[usize], distances: &[u32]);
+        /// Key i is `bytes` split into `lengths`, at `times[i]`.
+        fn set_text_keys(obj: Pin<&mut NiTextKeyExtraData>, bytes: &[u8], lengths: &[usize], times: &[f32]);
         /// Keeps the stored count in step.
         fn set_bone_translations(
             obj: Pin<&mut BoneTranslations>,
@@ -247,6 +250,8 @@ pub mod ffi {
         fn downcast_bs_distant_object_large_ref_extra_data(obj: &NiObject) -> *const BSDistantObjectLargeRefExtraData;
         fn upcast_bone_translations(obj: &BoneTranslations) -> &NiExtraData;
         fn downcast_bone_translations(obj: &NiObject) -> *const BoneTranslations;
+        fn upcast_ni_text_key_extra_data(obj: &NiTextKeyExtraData) -> &NiExtraData;
+        fn downcast_ni_text_key_extra_data(obj: &NiObject) -> *const NiTextKeyExtraData;
 
         fn color_extra_data_value(obj: &NiColorExtraData) -> Float4;
         fn vector_extra_data_value(obj: &NiVectorExtraData) -> Float4;
@@ -263,6 +268,11 @@ pub mod ffi {
         /// 0 and empty if `index` is out of range.
         fn bone_lod_distance(obj: &BSBoneLODExtraData, index: usize) -> u32;
         fn bone_lod_bone(obj: &BSBoneLODExtraData, index: usize) -> &[u8];
+        fn text_key_count(obj: &NiTextKeyExtraData) -> usize;
+        /// Panics if `index` is out of range.
+        fn text_key_time(obj: &NiTextKeyExtraData, index: usize) -> f32;
+        /// Panics if `index` is out of range.
+        fn text_key_text(obj: &NiTextKeyExtraData, index: usize) -> &[u8];
         fn distant_object_flags(obj: &BSDistantObjectExtraData) -> u32;
         fn distant_object_large_ref(obj: &BSDistantObjectLargeRefExtraData) -> bool;
         fn bone_translation_count(obj: &BoneTranslations) -> usize;

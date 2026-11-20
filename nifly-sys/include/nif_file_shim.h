@@ -18,6 +18,7 @@
 #include "NifFile.hpp"
 #include "Object3d.hpp"
 #include "Particles.hpp"
+#include "animation_shim.h"
 #include "bhk.hpp"
 #include "collision_shim.h"
 #include "effects_shim.h"
@@ -87,8 +88,8 @@ struct FactoryAccess: nifly::NiFactoryRegister {
 };
 
 // Swaps in SourceTextureFactory, SpotLightFactory (effects_shim.h),
-// PackedSharedGeomDataFactory (extra_data_shim.h) and GeometryFactory
-// (mesh_writer.h).
+// PackedSharedGeomDataFactory (extra_data_shim.h), GeometryFactory
+// (mesh_writer.h) and BlendInterpolatorFactory (animation_shim.h).
 inline void register_factories() {
     static const bool registered = [] {
         auto& regs =
@@ -103,6 +104,14 @@ inline void register_factories() {
             std::make_unique<PackedSharedGeomDataFactory>();
         regs[nifly::BSGeometry::BlockName] =
             std::make_unique<GeometryFactory>();
+        regs[nifly::NiBlendBoolInterpolator::BlockName] = std::make_unique<
+            BlendInterpolatorFactory<nifly::NiBlendBoolInterpolator>>();
+        regs[nifly::NiBlendFloatInterpolator::BlockName] = std::make_unique<
+            BlendInterpolatorFactory<nifly::NiBlendFloatInterpolator>>();
+        regs[nifly::NiBlendPoint3Interpolator::BlockName] = std::make_unique<
+            BlendInterpolatorFactory<nifly::NiBlendPoint3Interpolator>>();
+        regs[nifly::NiBlendTransformInterpolator::BlockName] = std::make_unique<
+            BlendInterpolatorFactory<nifly::NiBlendTransformInterpolator>>();
         return true;
     }();
     (void)registered;
@@ -921,6 +930,25 @@ inline uint32_t assign_bs_bound(
             set_bound_center(d, center);
             set_bound_half_extents(d, half_extents);
         }
+    );
+}
+
+inline uint32_t assign_text_key_extra_data(
+    nifly::NifFile& file,
+    uint32_t target,
+    rust::Slice<const uint8_t> name,
+    rust::Slice<const uint8_t> bytes,
+    rust::Slice<const size_t> lengths,
+    rust::Slice<const float> times
+) {
+    return assign_extra_data<nifly::NiTextKeyExtraData>(
+        file,
+        target,
+        name,
+        NIFLY_RS_ASSIGN(
+            NiTextKeyExtraData,
+            set_text_keys(d, bytes, lengths, times)
+        )
     );
 }
 
@@ -3923,6 +3951,60 @@ inline RefSlot find_ref(nifly::NiObject& obj, RefKind kind) {
                 obj,
                 [](auto& o) { return &o.dataRef; }
             );
+        case RefKind::KeyData:
+            if (auto i = dynamic_cast<NiBoolInterpolator*>(&obj))
+                return {&i->dataRef, &is_a<NiBoolData>};
+            if (auto i = dynamic_cast<NiFloatInterpolator*>(&obj))
+                return {&i->dataRef, &is_a<NiFloatData>};
+            if (auto i = dynamic_cast<NiPoint3Interpolator*>(&obj))
+                return {&i->dataRef, &is_a<NiPosData>};
+            if (auto i = dynamic_cast<NiTransformInterpolator*>(&obj))
+                return {&i->dataRef, &is_a<NiTransformData>};
+            if (auto i = dynamic_cast<BSTreadTransfInterpolator*>(&obj))
+                return {&i->dataRef, &is_a<NiFloatData>};
+            return {};
+        case RefKind::PathData:
+            if (auto i = dynamic_cast<NiPathInterpolator*>(&obj))
+                return {&path_data_field(*i), &is_a<NiPosData>};
+            return {};
+        case RefKind::PercentData:
+            if (auto i = dynamic_cast<NiPathInterpolator*>(&obj))
+                return {&path_percent_field(*i), &is_a<NiFloatData>};
+            return {};
+        case RefKind::LookAtNode:
+            return ref_slot<NiLookAtInterpolator, NiNode>(obj, [](auto& o) {
+                return &o.lookAtRef;
+            });
+        case RefKind::LookAtTranslation:
+            return ref_slot<NiLookAtInterpolator, NiPoint3Interpolator>(
+                obj,
+                [](auto& o) { return &o.translateInterpRef; }
+            );
+        case RefKind::LookAtRoll:
+            return ref_slot<NiLookAtInterpolator, NiFloatInterpolator>(
+                obj,
+                [](auto& o) { return &o.rollInterpRef; }
+            );
+        case RefKind::LookAtScale:
+            return ref_slot<NiLookAtInterpolator, NiFloatInterpolator>(
+                obj,
+                [](auto& o) { return &o.scaleInterpRef; }
+            );
+        case RefKind::SingleInterpolator:
+            return ref_slot<NiBlendInterpolator, NiInterpolator>(
+                obj,
+                [](auto& o) { return &o.singleInterpolatorRef; }
+            );
+        case RefKind::SplineData:
+            return ref_slot<NiBSplineInterpolator, NiBSplineData>(
+                obj,
+                [](auto& o) { return &o.splineDataRef; }
+            );
+        case RefKind::SplineBasis:
+            return ref_slot<NiBSplineInterpolator, NiBSplineBasisData>(
+                obj,
+                [](auto& o) { return &o.basisDataRef; }
+            );
         default:
             return {};
     }
@@ -3998,6 +4080,9 @@ inline bool set_block_ref(
         if (!block || !slot.target_ok(block))
             return false;
         if (kind == RefKind::HavokShape && in_shape_tree(hdr, target, owner))
+            return false;
+        if (kind == RefKind::SingleInterpolator
+            && interpolator_uses(hdr, target, owner))
             return false;
     }
     slot.ref->index = target;

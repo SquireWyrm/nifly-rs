@@ -470,6 +470,7 @@ NIFLY_RS_EXTRA_DATA(
     bs_distant_object_large_ref_extra_data
 )
 NIFLY_RS_EXTRA_DATA(BoneTranslations, NiExtraData, bone_translations)
+NIFLY_RS_EXTRA_DATA(NiTextKeyExtraData, NiExtraData, ni_text_key_extra_data)
 
 inline Float4 color_extra_data_value(const nifly::NiColorExtraData& obj) {
     const auto& c = obj.colorData;
@@ -923,6 +924,46 @@ inline void set_behavior_graph_controls_base_skeleton(
 
 // Bone i is `bytes` split into `lengths`, as in set_strings_extra_data, at
 // `distances[i]`.
+inline size_t text_key_count(const nifly::NiTextKeyExtraData& obj) {
+    return obj.textKeys.size();
+}
+
+inline float text_key_time(const nifly::NiTextKeyExtraData& obj, size_t index) {
+    if (index >= obj.textKeys.size())
+        throw std::out_of_range("text key index");
+    return obj.textKeys.data()[index].time;
+}
+
+inline rust::Slice<const uint8_t>
+text_key_text(const nifly::NiTextKeyExtraData& obj, size_t index) {
+    if (index >= obj.textKeys.size())
+        throw std::out_of_range("text key index");
+    return extra_bytes(obj.textKeys.data()[index].value.get());
+}
+
+// Key i is `bytes` split into `lengths`, as in set_strings_extra_data, at
+// `times[i]`. A key whose text is unchanged keeps its string reference, so an
+// empty text stays an empty string rather than becoming no string.
+inline void set_text_keys(
+    nifly::NiTextKeyExtraData& d,
+    rust::Slice<const uint8_t> bytes,
+    rust::Slice<const size_t> lengths,
+    rust::Slice<const float> times
+) {
+    std::vector<nifly::NiTextKey> old(d.textKeys.begin(), d.textKeys.end());
+    d.textKeys.clear();
+    auto texts = split_strings(bytes, lengths);
+    for (size_t i = 0; i < std::min(texts.size(), times.size()); i++) {
+        nifly::NiTextKey key;
+        if (i < old.size() && old[i].value.get() == texts[i])
+            key.value = old[i].value;
+        else
+            key.value.get() = texts[i];
+        key.time = times[i];
+        d.textKeys.push_back(key);
+    }
+}
+
 inline void set_bone_lods(
     nifly::BSBoneLODExtraData& d,
     rust::Slice<const uint8_t> bytes,
