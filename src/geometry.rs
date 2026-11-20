@@ -468,13 +468,13 @@ pub struct DataChannel {
     pub offset: u32,
     /// Bit 0 keeps the data; bits 1–2 are how often it changes (0 may change, 1 never, 2
     /// every frame).
-    pub flags: u8,
+    pub raw_flags: u8,
 }
 
 impl Default for DataChannel {
-    /// All zero, except flags of 2: data that never changes.
+    /// All zero, except raw flags of 2: data that never changes.
     fn default() -> Self {
-        Self { data_type: 0, unit_size: 0, total_size: 0, stride: 0, block: 0, offset: 0, flags: 2 }
+        Self { data_type: 0, unit_size: 0, total_size: 0, stride: 0, block: 0, offset: 0, raw_flags: 2 }
     }
 }
 
@@ -487,7 +487,7 @@ impl DataChannel {
             stride: c.stride,
             block: c.block,
             offset: c.offset,
-            flags: c.flags,
+            raw_flags: c.flags,
         }
     }
 
@@ -499,7 +499,7 @@ impl DataChannel {
             stride: self.stride,
             block: self.block,
             offset: self.offset,
-            flags: self.flags,
+            flags: self.raw_flags,
         }
     }
 }
@@ -689,7 +689,7 @@ impl BsMeshLodTriShape {
 /// triangles.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct GeometrySegment {
-    pub flags: u8,
+    pub raw_flags: u8,
     /// Where the segment starts in the triangle index list: 3 × its first triangle.
     pub index: u32,
     pub triangle_count: u32,
@@ -697,11 +697,11 @@ pub struct GeometrySegment {
 
 impl GeometrySegment {
     fn from_ffi(s: ffi::GeometrySegment) -> Self {
-        Self { flags: s.flags, index: s.index, triangle_count: s.triangle_count }
+        Self { raw_flags: s.flags, index: s.index, triangle_count: s.triangle_count }
     }
 
     fn to_ffi(self) -> ffi::GeometrySegment {
-        ffi::GeometrySegment { flags: self.flags, index: self.index, triangle_count: self.triangle_count }
+        ffi::GeometrySegment { flags: self.raw_flags, index: self.index, triangle_count: self.triangle_count }
     }
 }
 
@@ -725,7 +725,7 @@ pub struct MeshInfo {
     /// The number of triangle indices: 3 per triangle.
     pub index_count: u32,
     pub vertex_count: u32,
-    pub flags: u32,
+    pub raw_flags: u32,
 }
 
 impl BsGeometry {
@@ -789,13 +789,13 @@ impl BsGeometry {
         ffi::bs_geometry_mesh_info(&self.0, index, &mut out).then_some(MeshInfo {
             index_count: out[0],
             vertex_count: out[1],
-            flags: out[2],
+            raw_flags: out[2],
         })
     }
 
     /// Sets the [mesh info](Self::mesh_info). Returns `false` if `index` is out of range.
     pub fn set_mesh_info(self: Pin<&mut Self>, index: usize, info: MeshInfo) -> bool {
-        ffi::set_bs_geometry_mesh_info(self.ffi_mut(), index, &[info.index_count, info.vertex_count, info.flags])
+        ffi::set_bs_geometry_mesh_info(self.ffi_mut(), index, &[info.index_count, info.vertex_count, info.raw_flags])
     }
 
     /// Adds an empty mesh at the end. Returns `false`, changing nothing, if there are already 4.

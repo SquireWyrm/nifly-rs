@@ -54,13 +54,13 @@ fn convex_shapes() {
     let spheres = [BoundingSphere::new(Vec3::new(1.0, 0.0, 0.0), 0.5), BoundingSphere::new(Vec3::ZERO, 1.0)];
     let mut m = nif.block_of_mut::<BhkMultiSphereShape>(multi).unwrap();
     m.as_mut().set_spheres(&spheres);
-    m.set_shape_property(CInfoProperty { data: 1, size: 2, capacity_and_flags: 3 });
+    m.set_shape_property(CInfoProperty { data: 1, size: 2, capacity_and_raw_flags: 3 });
     let vertices = [[0.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]];
     let normals = [[0.0, 0.0, 1.0, -0.5]];
     let mut h = nif.block_of_mut::<BhkConvexVerticesShape>(hull).unwrap();
     h.as_mut().set_vertices(&vertices);
     h.as_mut().set_normals(&normals);
-    h.set_vertices_property(CInfoProperty { data: 4, size: 5, capacity_and_flags: 6 });
+    h.set_vertices_property(CInfoProperty { data: 4, size: 5, capacity_and_raw_flags: 6 });
 
     let saved = reload(&mut nif);
     let shapes: Vec<_> = saved.view::<BhkListShape>(list).unwrap().sub_shapes().indices().collect();
@@ -77,7 +77,7 @@ fn convex_shapes() {
     assert_eq!((m.spheres(), m.shape_property().size), (spheres.to_vec(), 2));
     let h = saved.block_of::<BhkConvexVerticesShape>(hull).unwrap();
     assert_eq!((h.vertices(), h.normals()), (vertices.to_vec(), normals.to_vec()));
-    assert_eq!(h.vertices_property().capacity_and_flags, 6);
+    assert_eq!(h.vertices_property().capacity_and_raw_flags, 6);
 }
 
 #[test]
@@ -105,7 +105,7 @@ fn list_shapes() {
     let mut edit = nif.edit::<BhkListShape>(list).unwrap();
     let cube = edit.add_sub_shape::<BhkBoxShape>().unwrap();
     let convex = edit.add_sub_shape::<BhkConvexListShape>().unwrap();
-    let filter = HavokFilter { layer: 9, flags_and_parts: 0, group: 1 };
+    let filter = HavokFilter { layer: 9, raw_flags_and_parts: 0, group: 1 };
     assert_eq!(edit.block().filters(), [HavokFilter::default(); 2], "one default filter per added shape");
     assert!(!edit.block().set_filters(&[filter]), "not one per sub-shape");
     assert!(edit.block().set_filters(&[filter, filter]));
@@ -126,11 +126,11 @@ fn list_shapes() {
     c.as_mut().set_unknown_float(0.5);
     c.as_mut().set_use_cached_aabb(true);
     c.as_mut().set_closest_point_min_distance(0.25);
-    c.set_child_shape_property(CInfoProperty { data: 0, size: 0, capacity_and_flags: 7 });
+    c.set_child_shape_property(CInfoProperty { data: 0, size: 0, capacity_and_raw_flags: 7 });
     let mut l = nif.block_of_mut::<BhkListShape>(list).unwrap();
     l.as_mut().set_material(11);
-    l.as_mut().set_child_shape_property(CInfoProperty { data: 1, size: 0, capacity_and_flags: 0 });
-    l.set_child_filter_property(CInfoProperty { data: 2, size: 0, capacity_and_flags: 0 });
+    l.as_mut().set_child_shape_property(CInfoProperty { data: 1, size: 0, capacity_and_raw_flags: 0 });
+    l.set_child_filter_property(CInfoProperty { data: 2, size: 0, capacity_and_raw_flags: 0 });
 
     let saved = reload(&mut nif);
     let l = saved.view::<BhkListShape>(list).unwrap();
@@ -141,7 +141,7 @@ fn list_shapes() {
     assert_eq!(c.sub_shapes().indices().collect::<Vec<_>>(), [cube, sphere]);
     assert_eq!((c.material(), c.radius(), c.unknown_int(), c.unknown_float()), (3, 0.05, 4, 0.5));
     assert_eq!((c.use_cached_aabb(), c.closest_point_min_distance()), (true, 0.25));
-    assert_eq!(c.child_shape_property().capacity_and_flags, 7);
+    assert_eq!(c.child_shape_property().capacity_and_raw_flags, 7);
 }
 
 #[test]
@@ -239,7 +239,7 @@ fn compressed_mesh() {
 fn packed_mesh_by_version() {
     let vertices = [Vec3::ZERO, Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0)];
     let triangle = PackedTriangle { triangle: [0, 1, 2], welding_info: 3, normal: Vec3::new(0.0, 0.0, 1.0) };
-    let part = SubPart { filter: HavokFilter { layer: 2, flags_and_parts: 0, group: 0 }, vertex_count: 3, material: 6 };
+    let part = SubPart { filter: HavokFilter { layer: 2, raw_flags_and_parts: 0, group: 0 }, vertex_count: 3, material: 6 };
 
     for version in [NifVersion::OBLIVION, NifVersion::FALLOUT_3] {
         let (mut nif, body) = with_body(version);

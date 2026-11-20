@@ -109,15 +109,15 @@ fn sse_segments() {
     let mut nif = load("SubIndex_SE");
     let index = nif.blocks_of::<BsSubIndexTriShape>().indices().next().unwrap();
     let block = nif.block_of::<BsSubIndexTriShape>(index).unwrap();
-    assert_eq!(block.sse_segments(), [GeometrySegment { flags: 1, index: 0, triangle_count: 1 }]);
+    assert_eq!(block.sse_segments(), [GeometrySegment { raw_flags: 1, index: 0, triangle_count: 1 }]);
     let count = nif.view::<NiShape>(index).unwrap().triangles().unwrap().len() as u32;
 
     let segments = [
-        GeometrySegment { flags: 0, index: 0, triangle_count: 1 },
-        GeometrySegment { flags: 2, index: 3, triangle_count: count - 1 },
+        GeometrySegment { raw_flags: 0, index: 0, triangle_count: 1 },
+        GeometrySegment { raw_flags: 2, index: 3, triangle_count: count - 1 },
     ];
     let mut block = nif.block_of_mut::<BsSubIndexTriShape>(index).unwrap();
-    assert!(!block.as_mut().set_sse_segments(&[GeometrySegment { flags: 0, index: 3, triangle_count: count }]));
+    assert!(!block.as_mut().set_sse_segments(&[GeometrySegment { raw_flags: 0, index: 3, triangle_count: count }]));
     assert!(block.set_sse_segments(&segments));
     let saved = reload(&mut nif);
     assert_eq!(saved.block_of::<BsSubIndexTriShape>(index).unwrap().sse_segments(), segments);

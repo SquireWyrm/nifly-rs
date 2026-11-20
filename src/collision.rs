@@ -467,23 +467,23 @@ new_collision_object! {
 pub struct HavokFilter {
     pub layer: u8,
     /// Flags in the top three bits, and a body part number in the rest.
-    pub flags_and_parts: u8,
+    pub raw_flags_and_parts: u8,
     pub group: u16,
 }
 
 impl Default for HavokFilter {
     fn default() -> Self {
-        Self { layer: 1, flags_and_parts: 0, group: 0 }
+        Self { layer: 1, raw_flags_and_parts: 0, group: 0 }
     }
 }
 
 impl HavokFilter {
     fn from_ffi(f: ffi::HavokFilterFfi) -> Self {
-        Self { layer: f.layer, flags_and_parts: f.flags_and_parts, group: f.group }
+        Self { layer: f.layer, raw_flags_and_parts: f.flags_and_parts, group: f.group }
     }
 
     fn to_ffi(self) -> ffi::HavokFilterFfi {
-        ffi::HavokFilterFfi { layer: self.layer, flags_and_parts: self.flags_and_parts, group: self.group }
+        ffi::HavokFilterFfi { layer: self.layer, flags_and_parts: self.raw_flags_and_parts, group: self.group }
     }
 }
 
@@ -492,16 +492,16 @@ impl HavokFilter {
 pub struct CInfoProperty {
     pub data: u32,
     pub size: u32,
-    pub capacity_and_flags: u32,
+    pub capacity_and_raw_flags: u32,
 }
 
 impl CInfoProperty {
     fn from_ffi(p: ffi::CInfoPropertyFfi) -> Self {
-        Self { data: p.data, size: p.size, capacity_and_flags: p.capacity_and_flags }
+        Self { data: p.data, size: p.size, capacity_and_raw_flags: p.capacity_and_flags }
     }
 
     fn to_ffi(self) -> ffi::CInfoPropertyFfi {
-        ffi::CInfoPropertyFfi { data: self.data, size: self.size, capacity_and_flags: self.capacity_and_flags }
+        ffi::CInfoPropertyFfi { data: self.data, size: self.size, capacity_and_flags: self.capacity_and_raw_flags }
     }
 }
 

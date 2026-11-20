@@ -27,7 +27,7 @@ fn first_data(nif: &NifFile) -> usize {
 
 fn channels() -> Vec<DataChannel> {
     let position = DataChannel { data_type: 7, unit_size: 12, total_size: 36, stride: 16, ..DataChannel::default() };
-    vec![position, DataChannel { unit_size: 4, total_size: 12, offset: 12, flags: 3, ..position }]
+    vec![position, DataChannel { unit_size: 4, total_size: 12, offset: 12, raw_flags: 3, ..position }]
 }
 
 fn blocks() -> Vec<Option<AdditionalDataBlock>> {

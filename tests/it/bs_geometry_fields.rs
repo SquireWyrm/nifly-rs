@@ -29,7 +29,7 @@ fn shape_fields() {
     let mut nif = upstream("TestNifFile_SF");
     let index = nif.blocks_of::<BsGeometry>().indices().next().unwrap();
     let sphere = BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0);
-    let info = MeshInfo { index_count: 30, vertex_count: 12, flags: 64 };
+    let info = MeshInfo { index_count: 30, vertex_count: 12, raw_flags: 64 };
     let count = geometry(&nif, index).mesh_count();
     assert!(!geometry(&nif, index).has_internal_geometry());
 

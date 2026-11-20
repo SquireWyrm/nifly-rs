@@ -61,7 +61,7 @@ fn with_objects(objects: &[PackedGeomObject]) -> (NifFile, Index) {
 fn objects_survive_save() {
     let (mut nif, block) = with_objects(&[object(), PackedGeomObject::default()]);
     let totals =
-        PackedGeomTotals { vertex_desc: 0x0001_2345_6789_ABCD, vertex_count: 100, triangle_count: 75, flags_1: 1, flags_2: 2 };
+        PackedGeomTotals { vertex_desc: 0x0001_2345_6789_ABCD, vertex_count: 100, triangle_count: 75, raw_flags_1: 1, raw_flags_2: 2 };
     nif.block_of_mut::<BsPackedCombinedSharedGeomDataExtra>(block).unwrap().set_totals(totals);
 
     let saved = reload(&mut nif);
@@ -125,7 +125,7 @@ fn needs_an_object_target() {
 fn totals_at_creation() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
     let root = nif.root_node().unwrap().index();
-    let totals = PackedGeomTotals { vertex_desc: 7, vertex_count: 3, triangle_count: 1, flags_1: 4, flags_2: 5 };
+    let totals = PackedGeomTotals { vertex_desc: 7, vertex_count: 3, triangle_count: 1, raw_flags_1: 4, raw_flags_2: 5 };
     let block =
         nif.edit::<NiAvObject>(root).unwrap().assign_extra_data(ExtraPackedSharedGeom("", totals, [object()])).unwrap();
     let saved = reload(&mut nif);

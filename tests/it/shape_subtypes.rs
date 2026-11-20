@@ -160,8 +160,8 @@ fn segmented_tri_shape() {
     assert!(nif.block_of::<BsSegmentedTriShape>(shape).unwrap().segments().is_empty());
 
     let segments = [
-        GeometrySegment { flags: 1, index: 0, triangle_count: 1 },
-        GeometrySegment { flags: 0, index: 3, triangle_count: 1 },
+        GeometrySegment { raw_flags: 1, index: 0, triangle_count: 1 },
+        GeometrySegment { raw_flags: 0, index: 3, triangle_count: 1 },
     ];
     assert!(nif.block_of_mut::<BsSegmentedTriShape>(shape).unwrap().set_segments(&segments));
     let saved = reload(&mut nif);
@@ -169,8 +169,8 @@ fn segmented_tri_shape() {
 
     // Past the last triangle.
     let mut s = nif.block_of_mut::<BsSegmentedTriShape>(shape).unwrap();
-    assert!(!s.as_mut().set_segments(&[GeometrySegment { flags: 0, index: 3, triangle_count: 2 }]));
-    assert!(!s.as_mut().set_segments(&[GeometrySegment { flags: 0, index: u32::MAX, triangle_count: u32::MAX }]));
+    assert!(!s.as_mut().set_segments(&[GeometrySegment { raw_flags: 0, index: 3, triangle_count: 2 }]));
+    assert!(!s.as_mut().set_segments(&[GeometrySegment { raw_flags: 0, index: u32::MAX, triangle_count: u32::MAX }]));
     assert_eq!(s.segments(), segments);
 }
 

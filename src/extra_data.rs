@@ -344,18 +344,18 @@ pub struct PackedGeomTotals {
     pub vertex_desc: u64,
     pub vertex_count: u32,
     pub triangle_count: u32,
-    pub flags_1: u32,
-    pub flags_2: u32,
+    pub raw_flags_1: u32,
+    pub raw_flags_2: u32,
 }
 
 impl PackedGeomTotals {
     fn from_ffi(h: types_ffi::PackedGeomHeader) -> Self {
         let types_ffi::PackedGeomHeader { vertex_desc, vertex_count, triangle_count, flags_1, flags_2 } = h;
-        Self { vertex_desc, vertex_count, triangle_count, flags_1, flags_2 }
+        Self { vertex_desc, vertex_count, triangle_count, raw_flags_1: flags_1, raw_flags_2: flags_2 }
     }
 
     fn to_ffi(self) -> types_ffi::PackedGeomHeader {
-        let Self { vertex_desc, vertex_count, triangle_count, flags_1, flags_2 } = self;
+        let Self { vertex_desc, vertex_count, triangle_count, raw_flags_1: flags_1, raw_flags_2: flags_2 } = self;
         types_ffi::PackedGeomHeader { vertex_desc, vertex_count, triangle_count, flags_1, flags_2 }
     }
 }

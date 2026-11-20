@@ -30,8 +30,8 @@ fn world_object_fields() {
     let body = first::<BhkRigidBody>(&nif);
     let shape = nif.view::<BhkRigidBody>(body).unwrap().shape().unwrap().index();
     assert!(nif.view::<BhkMoppBvTreeShape>(shape).is_some());
-    let filter = HavokFilter { layer: 5, flags_and_parts: 0x81, group: 7 };
-    let property = CInfoProperty { data: 1, size: 2, capacity_and_flags: 3 };
+    let filter = HavokFilter { layer: 5, raw_flags_and_parts: 0x81, group: 7 };
+    let property = CInfoProperty { data: 1, size: 2, capacity_and_raw_flags: 3 };
 
     let mut edit = nif.edit::<BhkRigidBody>(body).unwrap();
     assert!(!edit.set_shape(Some(body)), "not a shape");
@@ -56,7 +56,7 @@ fn world_object_fields() {
 #[test]
 fn rigid_body_fields() {
     let (mut nif, body) = with_body::<BhkRigidBody>(NifVersion::SKYRIM_SE);
-    let filter = HavokFilter { layer: 1, flags_and_parts: 2, group: 3 };
+    let filter = HavokFilter { layer: 1, raw_flags_and_parts: 2, group: 3 };
     let inertia = [[1.0, 0.0, 0.0, 0.0], [0.0, 2.0, 0.0, 0.0], [0.0, 0.0, 3.0, 0.0]];
     let mut b = nif.block_of_mut::<BhkRigidBody>(body).unwrap();
     b.as_mut().set_collision_response(CollisionResponse::Reporting);
