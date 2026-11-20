@@ -606,6 +606,24 @@ impl<'a> View<'a, NiShape> {
             .collect()
     }
 
+    /// The most bones a vertex of the shape can be weighted to: 8 for a [`BsGeometry`], 4 for
+    /// other shapes.
+    ///
+    /// [`BsGeometry`]: crate::geometry::BsGeometry
+    pub fn max_weights_per_vertex(&self) -> usize {
+        nif_ffi::shape_max_bones_per_vertex(&self.file().inner, self.get().as_ffi()).into()
+    }
+
+    /// How many bones each vertex's weights hold, which
+    /// [`Edit::set_vertex_weights`] takes at most: for a [`BsGeometry`], its first mesh's
+    /// [count](crate::geometry::BsGeometryMeshData::weights_per_vertex), or 4 if that mesh has
+    /// no weights yet; 4 for other shapes.
+    ///
+    /// [`BsGeometry`]: crate::geometry::BsGeometry
+    pub fn weights_per_vertex(&self) -> usize {
+        nif_ffi::shape_bones_per_vertex(&self.file().inner, self.get().as_ffi()).into()
+    }
+
     /// Vertex weights for one of the shape's bones, sorted by vertex index. Only vertices with a
     /// non-zero weight are included. Empty if the shape isn't skinned or `bone_index` is out of range.
     ///
@@ -874,7 +892,7 @@ impl Edit<'_, NiShape> {
     /// Only shapes that store weights per vertex are supported: a skinned [`BsTriShape`], which
     /// holds up to 4 weights per vertex, and a [`BsGeometry`] mesh. Returns `false`, changing
     /// nothing, if the shape isn't one, `vertex` is out of range, there are more pairs than the
-    /// vertex holds, a bone isn't in the bone list (a [`BsTriShape`] stores at most 256), or a
+    /// vertex holds ([`weights_per_vertex`](View::weights_per_vertex)), a bone isn't in the bone list (a [`BsTriShape`] stores at most 256), or a
     /// weight is negative or not finite. Use [`set_bone_weights`](Self::set_bone_weights)
     /// for other shapes.
     ///

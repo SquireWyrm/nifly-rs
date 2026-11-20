@@ -197,6 +197,48 @@ fn weights_per_vertex() {
 }
 
 #[test]
+fn shape_weights_per_vertex() {
+    let other = upstream("TestNifFile_Skinned_SE");
+    let shape = other.shapes().views().next().unwrap();
+    assert_eq!(
+        (shape.max_weights_per_vertex(), shape.weights_per_vertex()),
+        (4, 4)
+    );
+
+    let (mut nif, index) = internal();
+    let view = nif.view::<NiShape>(index).unwrap();
+    assert_eq!(view.max_weights_per_vertex(), 8);
+    let n = geometry(&nif, index).mesh(0).unwrap().vertex_count();
+    let mesh = nif
+        .block_of_mut::<BsGeometry>(index)
+        .unwrap()
+        .mesh_mut(0)
+        .unwrap();
+    assert!(mesh.set_skin_weights::<Vec<MeshWeight>>(&[]));
+    assert_eq!(
+        nif.view::<NiShape>(index).unwrap().weights_per_vertex(),
+        4,
+        "4 without weights"
+    );
+    let mesh = nif
+        .block_of_mut::<BsGeometry>(index)
+        .unwrap()
+        .mesh_mut(0)
+        .unwrap();
+    assert!(mesh.set_skin_weights(&vec![
+        vec![
+            MeshWeight {
+                bone: 0,
+                weight: 65535
+            };
+            6
+        ];
+        n
+    ]));
+    assert_eq!(nif.view::<NiShape>(index).unwrap().weights_per_vertex(), 6);
+}
+
+#[test]
 fn replace_vertices_and_triangles() {
     let (mut nif, index) = internal();
     let block = nif.block_of_mut::<BsGeometry>(index).unwrap();

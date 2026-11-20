@@ -55,6 +55,8 @@ These are on handles of exactly [`NiShape`], so [`upcast`](crate::handle::View::
   - [`skin_instance`](crate::handle::View::skin_instance)
   - [`bone_ids`](crate::handle::View::bone_ids)
   - [`bone_list`](crate::handle::View::bone_list)
+  - [`max_weights_per_vertex`](crate::handle::View::max_weights_per_vertex)
+  - [`weights_per_vertex`](crate::handle::View::weights_per_vertex)
   - [`bone_weights`](crate::handle::View::bone_weights)
   - [`partitions`](crate::handle::View::partitions)
   - [`transform_global_to_skin`](crate::handle::View::transform_global_to_skin)

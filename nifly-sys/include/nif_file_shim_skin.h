@@ -586,6 +586,22 @@ inline bool delete_partitions(
     return true;
 }
 
+// NifFile::GetShapeMaxBonesPerVertex.
+inline uint8_t shape_max_bones_per_vertex(
+    const nifly::NifFile& file,
+    const nifly::NiShape& shape
+) {
+    return file.GetShapeMaxBonesPerVertex(const_cast<nifly::NiShape*>(&shape));
+}
+
+// NifFile::GetShapeBonesPerVertex. A BSGeometry's count is its first mesh's.
+inline uint8_t shape_bones_per_vertex(
+    const nifly::NifFile& file,
+    const nifly::NiShape& shape
+) {
+    return file.GetShapeBonesPerVertex(const_cast<nifly::NiShape*>(&shape));
+}
+
 inline rust::Vec<VertexWeight> shape_bone_weights(
     const nifly::NifFile& file,
     const nifly::NiShape& shape,

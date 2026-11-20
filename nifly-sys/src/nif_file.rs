@@ -273,8 +273,8 @@ pub mod ffi {
         // with validation
         // ClearShapeVertWeights: reimplemented as `Edit::clear_vertex_weights` (shim), on a shape
         // index, with validation
-        // GetShapeMaxBonesPerVertex: not bound
-        // GetShapeBonesPerVertex: not bound
+        // GetShapeMaxBonesPerVertex: bound as `View::max_weights_per_vertex` (shim)
+        // GetShapeBonesPerVertex: bound as `View::weights_per_vertex` (shim)
         // SetShapeBonesPerVertex: reimplemented as `BsGeometryMeshData::set_weights_per_vertex`
         //   (shim), on the mesh data rather than the selected mesh, with validation
         // GetShapeSegments: bound as `View::segments` (shim), flattened
@@ -1027,6 +1027,11 @@ pub mod ffi {
         fn assign_palette(file: Pin<&mut NifFile>, data: u32, rgba: &[u8], has_alpha: bool) -> u32;
 
         fn shape_bone_ids(file: &NifFile, shape: &NiShape) -> Vec<u32>;
+
+        /// `NifFile::GetShapeMaxBonesPerVertex`.
+        fn shape_max_bones_per_vertex(file: &NifFile, shape: &NiShape) -> u8;
+        /// `NifFile::GetShapeBonesPerVertex`.
+        fn shape_bones_per_vertex(file: &NifFile, shape: &NiShape) -> u8;
 
         /// `NifFile::GetShapeBoneWeights`, sorted by vertex. `bone_index` is the position in the
         /// shape's bone list. Empty if the shape isn't skinned or the index is out of range.
