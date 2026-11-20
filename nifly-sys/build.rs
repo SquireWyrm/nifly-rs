@@ -50,6 +50,9 @@ fn main() {
         .std("c++17")
         .flag_if_supported("/bigobj")
         .flag_if_supported("/EHsc")
+        // As nifly's own build: no fused multiply-adds, which round differently, so computed
+        // values such as bounds match across compilers. MSVC doesn't fuse by default.
+        .flag_if_supported("-ffp-contract=off")
         .compile("nifly-bridge");
 
     build_deps::rerun_if_changed_paths("src/*").unwrap();

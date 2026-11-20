@@ -182,8 +182,8 @@ shape_bone_ids(const nifly::NifFile& file, const nifly::NiShape& shape) {
 // NifFile::SetShapeVertWeights, reimplemented on the shape at `shape_index`:
 // upstream looks the shape up by name, which finds the wrong one when names
 // repeat. Upstream also silently ignores shapes without
-// per-vertex weights and out-of-range vertices, and truncates extra weights
-// after normalizing over all of them. This returns false, changing nothing,
+// per-vertex weights and out-of-range vertices, and drops extra weights. This
+// returns false, changing nothing,
 // unless the shape is a skinned BSTriShape or a BSGeometry mesh with weights,
 // the vertex exists, there are at most as many weights as the vertex holds,
 // every bone is a position in the skin instance's bone list that fits the

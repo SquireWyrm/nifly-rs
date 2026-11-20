@@ -173,24 +173,24 @@ adjusted value without storing it, as `write_mesh_data` does with the mesh scale
 [x-sequence]: https://github.com/niftools/nifxml/blob/292bb9403cbf4052c58d66e80906b6bde1700779/nif.xml#L4208-L4209
 [x-anim-note]: https://github.com/niftools/nifxml/blob/292bb9403cbf4052c58d66e80906b6bde1700779/nif.xml#L6898-L6900
 [x-shader-type]: https://github.com/niftools/nifxml/blob/292bb9403cbf4052c58d66e80906b6bde1700779/nif.xml#L1429-L1438
-[src-tex]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Objects.cpp#L281-L288
-[spot]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Objects.cpp#L391
-[packed]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/ExtraData.cpp#L293-L294
-[packed-data]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/ExtraData.cpp#L128-L134
-[geom-scale]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Geometry.cpp#L1650-L1652
-[geom-cap]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Geometry.cpp#L1656-L1660
-[geom-pos]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Geometry.cpp#L1681-L1683
-[geom-uv]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Geometry.cpp#L1693-L1709
-[tangent]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Geometry.cpp#L55-L57
-[float-ctrl]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Animation.cpp#L459-L461
-[blend]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Animation.cpp#L739-L749
-[sequence]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Animation.cpp#L945-L953
-[anim-note]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Animation.cpp#L983-L986
-[emitter]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Particles.cpp#L962
-[rotation]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Particles.cpp#L524-L533
-[mesh-psys]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Particles.cpp#L372-L375
-[shader-type]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Shaders.cpp#L412-L421
-[shader-fields]: https://github.com/ousnius/nifly/blob/40584be62399c64a3cb54fd2a68466e739932f39/src/Shaders.cpp#L534
+[src-tex]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Objects.cpp#L281-L288
+[spot]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Objects.cpp#L391
+[packed]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/ExtraData.cpp#L293-L294
+[packed-data]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/ExtraData.cpp#L128-L134
+[geom-scale]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Geometry.cpp#L1650-L1652
+[geom-cap]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Geometry.cpp#L1656-L1660
+[geom-pos]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Geometry.cpp#L1681-L1683
+[geom-uv]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Geometry.cpp#L1693-L1709
+[tangent]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Geometry.cpp#L55-L57
+[float-ctrl]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Animation.cpp#L459-L461
+[blend]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Animation.cpp#L739-L749
+[sequence]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Animation.cpp#L945-L953
+[anim-note]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Animation.cpp#L983-L986
+[emitter]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Particles.cpp#L962
+[rotation]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Particles.cpp#L524-L533
+[mesh-psys]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Particles.cpp#L372-L375
+[shader-type]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Shaders.cpp#L412-L421
+[shader-fields]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Shaders.cpp#L534
 
 ## Documentation and tests
 

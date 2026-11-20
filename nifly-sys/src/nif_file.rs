@@ -273,6 +273,9 @@ pub mod ffi {
         // with validation
         // ClearShapeVertWeights: reimplemented as `Edit::clear_vertex_weights` (shim), on a shape
         // index, with validation
+        // GetShapeMaxBonesPerVertex: not bound
+        // GetShapeBonesPerVertex: not bound
+        // SetShapeBonesPerVertex: not bound
         // GetShapeSegments: bound as `View::segments` (shim), flattened
         // SetShapeSegments: bound as `Edit::set_segments` (shim), flattened, with validation
         // GetShapePartitions: reimplemented as `View::partitions` (shim), on a copy of the partition
