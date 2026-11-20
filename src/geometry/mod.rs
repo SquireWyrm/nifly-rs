@@ -1,4 +1,41 @@
 //! `NiShape`, the base class of all geometry, and its subclasses.
+//!
+//! # Type hierarchy
+//!
+//! <!-- type-hierarchy:start -->
+//!
+//! - [`objects::NiAvObject`](crate::objects::NiAvObject)
+//!   - [`NiShape`]
+//!     - [`BsTriShape`]
+//!       - [`BsSubIndexTriShape`]
+//!       - [`BsMeshLodTriShape`]
+//!       - [`BsDynamicTriShape`]
+//!     - [`BsGeometry`]
+//!     - [`NiGeometry`]
+//!       - [`NiTriBasedGeom`]
+//!         - [`NiTriShape`]
+//!           - [`NiScreenElements`]
+//!           - [`BsSegmentedTriShape`]
+//!         - [`NiTriStrips`]
+//!         - [`NiLines`]
+//!         - [`BsLodTriShape`]
+//!       - [`NiParticles`]
+//!         - [`NiAutoNormalParticles`]
+//!         - [`NiParticleMeshes`]
+//!         - [`NiRotatingParticles`]
+//! - [`objects::NiObject`](crate::objects::NiObject)
+//!   - [`NiGeometryData`]
+//!     - [`NiTriBasedGeomData`]
+//!       - [`NiTriShapeData`]
+//!         - [`NiScreenElementsData`]
+//!       - [`NiTriStripsData`]
+//!     - [`NiLinesData`]
+//!     - [`BsGeometryMeshData`]
+//!   - [`AdditionalGeomData`]
+//!     - [`NiAdditionalGeometryData`]
+//!     - [`BsPackedAdditionalGeometryData`]
+//!
+//! <!-- type-hierarchy:end -->
 
 use std::{collections::HashSet, io, pin::Pin};
 

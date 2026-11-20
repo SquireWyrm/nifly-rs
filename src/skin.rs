@@ -1,4 +1,19 @@
 //! Skinning blocks: skin instances, skin data and partitions.
+//!
+//! # Type hierarchy
+//!
+//! <!-- type-hierarchy:start -->
+//!
+//! - [`objects::NiObject`](crate::objects::NiObject)
+//!   - [`NiSkinData`]
+//!   - [`NiSkinPartition`]
+//!   - [`NiBoneContainer`]
+//!     - [`NiSkinInstance`]
+//!       - [`BsDismemberSkinInstance`]
+//!     - [`BsSkinInstance`]
+//!   - [`BsSkinBoneData`]
+//!
+//! <!-- type-hierarchy:end -->
 
 use std::collections::BTreeMap;
 

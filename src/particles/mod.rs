@@ -9,6 +9,84 @@
 //! [`NiParticles`] shape, also added with
 //! [`Edit::add_particle_system`], and an [`NiParticleSystemController`] that emits the particles
 //! and runs chains of [`NiParticleModifier`]s, added with [`Edit::add_particle_modifier`].
+//!
+//! # Type hierarchy
+//!
+//! <!-- type-hierarchy:start -->
+//!
+//! - [`geometry::NiGeometryData`](crate::geometry::NiGeometryData)
+//!   - [`NiParticlesData`]
+//!     - [`NiAutoNormalParticlesData`]
+//!     - [`NiRotatingParticlesData`]
+//!       - [`NiParticleMeshesData`]
+//!       - [`NiPSysData`]
+//!         - [`NiMeshPSysData`]
+//!         - [`BsStripPSysData`]
+//! - [`objects::NiObject`](crate::objects::NiObject)
+//!   - [`NiPSysEmitterCtlrData`]
+//!   - [`NiPSysModifier`]
+//!     - [`BsPSysStripUpdateModifier`]
+//!     - [`NiPSysSpawnModifier`]
+//!     - [`NiPSysAgeDeathModifier`]
+//!     - [`BsPSysLodModifier`]
+//!     - [`BsPSysSimpleColorModifier`]
+//!     - [`NiPSysRotationModifier`]
+//!     - [`BsPSysScaleModifier`]
+//!     - [`NiPSysGravityModifier`]
+//!     - [`NiPSysPositionModifier`]
+//!     - [`NiPSysBoundUpdateModifier`]
+//!     - [`NiPSysDragModifier`]
+//!     - [`BsPSysInheritVelocityModifier`]
+//!     - [`BsPSysSubTexModifier`]
+//!     - [`NiPSysBombModifier`]
+//!     - [`NiPSysColorModifier`]
+//!     - [`NiPSysGrowFadeModifier`]
+//!     - [`NiPSysMeshUpdateModifier`]
+//!     - [`NiPSysFieldModifier`]
+//!       - [`NiPSysVortexFieldModifier`]
+//!       - [`NiPSysGravityFieldModifier`]
+//!       - [`NiPSysDragFieldModifier`]
+//!       - [`NiPSysTurbulenceFieldModifier`]
+//!       - [`NiPSysAirFieldModifier`]
+//!       - [`NiPSysRadialFieldModifier`]
+//!     - [`BsWindModifier`]
+//!     - [`BsPSysRecycleBoundModifier`]
+//!     - [`BsPSysHavokUpdateModifier`]
+//!     - [`BsParentVelocityModifier`]
+//!     - [`NiPSysColliderManager`]
+//!     - [`NiPSysEmitter`]
+//!       - [`NiPSysVolumeEmitter`]
+//!         - [`NiPSysSphereEmitter`]
+//!         - [`NiPSysCylinderEmitter`]
+//!         - [`NiPSysBoxEmitter`]
+//!         - [`BsPSysArrayEmitter`]
+//!       - [`NiPSysMeshEmitter`]
+//!   - [`NiPSysCollider`]
+//!     - [`NiPSysSphericalCollider`]
+//!     - [`NiPSysPlanarCollider`]
+//!   - [`NiParticleModifier`]
+//!     - [`NiGravity`]
+//!     - [`NiParticleGrowFade`]
+//!     - [`NiParticleColorModifier`]
+//!     - [`NiParticleRotation`]
+//!     - [`NiParticleBomb`]
+//!     - [`NiParticleMeshModifier`]
+//!     - [`NiParticleCollider`]
+//!       - [`NiPlanarCollider`]
+//!       - [`NiSphericalCollider`]
+//!   - [`NiEmitterModifier`]
+//! - [`objects::NiAvObject`](crate::objects::NiAvObject)
+//!   - [`NiParticleSystem`]
+//!     - [`NiMeshParticleSystem`]
+//!     - [`BsStripParticleSystem`]
+//! - [`animation::NiPSysModifierCtlr`](crate::animation::NiPSysModifierCtlr)
+//!   - [`NiPSysEmitterCtlr`]
+//!     - [`BsPSysMultiTargetEmitterCtlr`]
+//! - [`animation::NiTimeController`](crate::animation::NiTimeController)
+//!   - [`NiParticleSystemController`]
+//!     - [`NiBspArrayController`]
+//!
+//! <!-- type-hierarchy:end -->
 
 use std::pin::Pin;
 

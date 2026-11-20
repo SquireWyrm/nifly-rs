@@ -15,6 +15,8 @@ cargo nextest run set_shape_order::         # one test module (tests/it/<name>.r
 cargo nextest run shader::shader_hierarchy  # one test
 cargo test --doc                            # doc tests, which nextest skips
 cargo clippy --all-targets                  # the build.rs `&bridge_files` warning is known
+RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace
+UPDATE_HIERARCHY=1 cargo nextest run type_hierarchy::   # regenerate the module type hierarchies
 ./scripts/format.ps1 [-Check]               # clang-format the shims (non-vendored C/C++)
 cargo run --example stats assets/Suzanne.nif
 cargo run --release --example check_assets [-- --verbose] [path]   # defaults to external_assets/
@@ -64,6 +66,7 @@ It holds meshes extracted from Skyrim and is gitignored for legal reasons. Never
 - A sealed `NiType` impl supports `NiObject::downcast::<T>()` and `NifFile::blocks_of::<T>()` through a `dynamic_cast` `downcast_*` shim.
 - The C++ side generates those shims with per-module macros (`NIFLY_RS_NODE`, `NIFLY_RS_SHADER`).
 - Rust names treat acronyms as words: `BSFadeNode` → `BsFadeNode`, `NiAVObject` → `NiAvObject`.
+- Each module's docs end with a `# Type hierarchy` section: nested lists of links generated from the `ni_types!` entries between `type-hierarchy` markers. `tests/it/type_hierarchy.rs` fails when they're stale; rerun it with `UPDATE_HIERARCHY=1` after adding types.
 
 **Math types.** `object3d::{Vec3, Matrix3, Transform}` are plain Rust types with their own math, unlike the block types, which wrap C++ objects. They convert to and from the bridge's shared structs with crate-private `to_ffi`/`from_ffi` at each call. The `mint` feature adds conversions for `Vec3` and `Matrix3`.
 

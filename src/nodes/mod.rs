@@ -2,6 +2,50 @@
 //!
 //! Each type derefs to its direct base class, so base-class methods are available
 //! on every subclass. Use [`NiObject::downcast`](crate::objects::NiObject::downcast) to go the other way.
+//!
+//! # Type hierarchy
+//!
+//! <!-- type-hierarchy:start -->
+//!
+//! - [`objects::NiAvObject`](crate::objects::NiAvObject)
+//!   - [`NiNode`]
+//!     - [`BsFadeNode`]
+//!     - [`RootCollisionNode`]
+//!     - [`AvoidNode`]
+//!     - [`NiBsAnimationNode`]
+//!     - [`NiBsParticleNode`]
+//!     - [`BsValueNode`]
+//!     - [`BsLeafAnimNode`]
+//!     - [`BsTreeNode`]
+//!     - [`BsOrderedNode`]
+//!     - [`BsMultiBoundNode`]
+//!       - [`BsDistantObjectInstancedNode`]
+//!     - [`BsRangeNode`]
+//!       - [`BsDebrisNode`]
+//!       - [`BsBlastNode`]
+//!         - [`BsDamageStage`]
+//!     - [`BsWeakReferenceNode`]
+//!     - [`BsFaceGenNiNode`]
+//!     - [`NiBillboardNode`]
+//!     - [`NiSwitchNode`]
+//!       - [`NiLodNode`]
+//!     - [`NiBone`]
+//!     - [`NiSortAdjustNode`]
+//!     - [`BsMasterParticleSystem`]
+//!   - [`NiCamera`]
+//! - [`objects::NiObject`](crate::objects::NiObject)
+//!   - [`NiLodData`]
+//!     - [`NiRangeLodData`]
+//!     - [`NiScreenLodData`]
+//!   - [`BsMultiBound`]
+//!   - [`BsMultiBoundData`]
+//!     - [`BsMultiBoundObb`]
+//!     - [`BsMultiBoundAabb`]
+//!     - [`BsMultiBoundSphere`]
+//!   - [`NiAvObjectPalette`]
+//!     - [`NiDefaultAvObjectPalette`]
+//!
+//! <!-- type-hierarchy:end -->
 
 use std::pin::Pin;
 

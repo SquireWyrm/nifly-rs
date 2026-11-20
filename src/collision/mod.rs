@@ -4,12 +4,76 @@
 //! ([`View::body`]), usually a [`BhkRigidBody`], which has a [`BhkShape`]. Add one with
 //! [`Edit::assign_collision`].
 //!
-//! ```text
-//! NiAvObject -> BhkCollisionObject -> BhkRigidBody -> BhkMoppBvTreeShape -> BhkCompressedMeshShape
-//! ```
-//!
 //! Havok values are stored as they are: positions are in Havok units, which are game units
 //! divided by 69.99 in Skyrim and by 7 in Oblivion and Fallout 3.
+//!
+//! # Type hierarchy
+//!
+//! <!-- type-hierarchy:start -->
+//!
+//! - [`objects::NiObject`](crate::objects::NiObject)
+//!   - [`NiCollisionObject`]
+//!     - [`NiCollisionData`]
+//!     - [`BhkNiCollisionObject`]
+//!       - [`BhkCollisionObject`]
+//!         - [`BhkNpCollisionObject`]
+//!         - [`BhkBlendCollisionObject`]
+//!       - [`BhkPCollisionObject`]
+//!         - [`BhkSpCollisionObject`]
+//!   - [`BhkRefObject`]
+//!     - [`BhkSerializable`]
+//!       - [`BhkShape`]
+//!         - [`BhkHeightFieldShape`]
+//!           - [`BhkPlaneShape`]
+//!         - [`BhkSphereRepShape`]
+//!           - [`BhkConvexShape`]
+//!             - [`BhkConvexVerticesShape`]
+//!             - [`BhkBoxShape`]
+//!             - [`BhkSphereShape`]
+//!             - [`BhkCylinderShape`]
+//!             - [`BhkCapsuleShape`]
+//!           - [`BhkMultiSphereShape`]
+//!         - [`BhkConvexListShape`]
+//!         - [`BhkTransformShape`]
+//!           - [`BhkConvexTransformShape`]
+//!         - [`BhkBvTreeShape`]
+//!           - [`BhkMoppBvTreeShape`]
+//!         - [`BhkNiTriStripsShape`]
+//!         - [`BhkShapeCollection`]
+//!           - [`BhkListShape`]
+//!           - [`HkPackedNiTriStripsData`]
+//!           - [`BhkPackedNiTriStripsShape`]
+//!         - [`BhkCompressedMeshShape`]
+//!       - [`BhkLiquidAction`]
+//!       - [`BhkOrientHingedBodyAction`]
+//!       - [`BhkWorldObject`]
+//!         - [`BhkPhantom`]
+//!           - [`BhkShapePhantom`]
+//!             - [`BhkSimpleShapePhantom`]
+//!             - [`BhkAabbPhantom`]
+//!         - [`BhkEntity`]
+//!           - [`BhkRigidBody`]
+//!             - [`BhkRigidBodyT`]
+//!       - [`BhkConstraint`]
+//!         - [`BhkHingeConstraint`]
+//!         - [`BhkLimitedHingeConstraint`]
+//!         - [`BhkBreakableConstraint`]
+//!         - [`BhkRagdollConstraint`]
+//!         - [`BhkStiffSpringConstraint`]
+//!         - [`BhkPrismaticConstraint`]
+//!         - [`BhkMalleableConstraint`]
+//!         - [`BhkBallAndSocketConstraint`]
+//!       - [`BhkBallSocketConstraintChain`]
+//!     - [`BhkCompressedMeshShapeData`]
+//!   - [`BhkPoseArray`]
+//!   - [`BhkRagdollTemplateData`]
+//! - [`extra_data::BsExtraData`](crate::extra_data::BsExtraData)
+//!   - [`BhkPhysicsSystem`]
+//!   - [`BhkRagdollSystem`]
+//! - [`extra_data::NiExtraData`](crate::extra_data::NiExtraData)
+//!   - [`BhkRagdollTemplate`]
+//!
+//! <!-- type-hierarchy:end -->
 
 use std::pin::Pin;
 

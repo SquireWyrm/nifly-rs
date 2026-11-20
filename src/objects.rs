@@ -15,6 +15,40 @@
 //! [`NifFile`](crate::file::NifFile), so they can't outlive the file or
 //! observe it being mutated. Blocks can't be moved out of the file: swapping
 //! two blocks with [`std::mem::swap`] does nothing.
+//!
+//! # Type hierarchy
+//!
+//! <!-- type-hierarchy:start -->
+//!
+//! - [`NiObject`]
+//!   - [`NiObjectNet`]
+//!     - [`NiAvObject`]
+//!       - [`effects::NiDynamicEffect`](crate::effects::NiDynamicEffect)
+//!       - [`geometry::NiShape`](crate::geometry::NiShape)
+//!       - [`nodes::NiNode`](crate::nodes::NiNode)
+//!       - [`particles::NiParticleSystem`](crate::particles::NiParticleSystem)
+//!     - [`shaders::NiProperty`](crate::shaders::NiProperty)
+//!     - [`shaders::NiTexture`](crate::shaders::NiTexture)
+//!   - [`animation::NiKeyframeData`](crate::animation::NiKeyframeData)
+//!   - [`animation::NiInterpolator`](crate::animation::NiInterpolator)
+//!   - [`animation::NiTimeController`](crate::animation::NiTimeController)
+//!   - [`animation::NiSequence`](crate::animation::NiSequence)
+//!   - [`collision::NiCollisionObject`](crate::collision::NiCollisionObject)
+//!   - [`collision::BhkRefObject`](crate::collision::BhkRefObject)
+//!   - [`extra_data::NiExtraData`](crate::extra_data::NiExtraData)
+//!   - [`extra_data::BsExtraData`](crate::extra_data::BsExtraData)
+//!   - [`geometry::NiGeometryData`](crate::geometry::NiGeometryData)
+//!   - [`geometry::AdditionalGeomData`](crate::geometry::AdditionalGeomData)
+//!   - [`nodes::NiLodData`](crate::nodes::NiLodData)
+//!   - [`nodes::BsMultiBoundData`](crate::nodes::BsMultiBoundData)
+//!   - [`nodes::NiAvObjectPalette`](crate::nodes::NiAvObjectPalette)
+//!   - [`particles::NiPSysModifier`](crate::particles::NiPSysModifier)
+//!   - [`particles::NiPSysCollider`](crate::particles::NiPSysCollider)
+//!   - [`particles::NiParticleModifier`](crate::particles::NiParticleModifier)
+//!   - [`shaders::TextureRenderData`](crate::shaders::TextureRenderData)
+//!   - [`skin::NiBoneContainer`](crate::skin::NiBoneContainer)
+//!
+//! <!-- type-hierarchy:end -->
 
 use std::{
     ops::{Deref, DerefMut},

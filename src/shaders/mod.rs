@@ -1,8 +1,51 @@
 //! Properties and shaders: `NiProperty`, `NiShader` and its subclasses.
 //!
-//! ```text
-//! BsLightingShaderProperty -> BsShaderProperty -> NiShadeProperty -> NiShader -> NiProperty -> NiObjectNet
-//! ```
+//! # Type hierarchy
+//!
+//! <!-- type-hierarchy:start -->
+//!
+//! - [`objects::NiObjectNet`](crate::objects::NiObjectNet)
+//!   - [`NiProperty`]
+//!     - [`NiShader`]
+//!       - [`NiShadeProperty`]
+//!         - [`BsShaderProperty`]
+//!           - [`WaterShaderProperty`]
+//!           - [`HairShaderProperty`]
+//!           - [`DistantLodShaderProperty`]
+//!           - [`BsDistantTreeShaderProperty`]
+//!           - [`TallGrassShaderProperty`]
+//!           - [`VolumetricFogShaderProperty`]
+//!           - [`BsLightingShaderProperty`]
+//!           - [`BsEffectShaderProperty`]
+//!           - [`BsWaterShaderProperty`]
+//!           - [`BsSkyShaderProperty`]
+//!           - [`BsShaderLightingProperty`]
+//!             - [`SkyShaderProperty`]
+//!             - [`TileShaderProperty`]
+//!             - [`BsShaderNoLightingProperty`]
+//!             - [`BsShaderPpLightingProperty`]
+//!               - [`Lighting30ShaderProperty`]
+//!       - [`NiMaterialProperty`]
+//!     - [`NiAlphaProperty`]
+//!     - [`NiStencilProperty`]
+//!     - [`NiTexturingProperty`]
+//!     - [`NiSpecularProperty`]
+//!     - [`NiVertexColorProperty`]
+//!     - [`NiDitherProperty`]
+//!     - [`NiFogProperty`]
+//!     - [`NiWireframeProperty`]
+//!     - [`NiZBufferProperty`]
+//!   - [`NiTexture`]
+//!     - [`NiSourceTexture`]
+//!       - [`NiSourceCubeMap`]
+//! - [`objects::NiObject`](crate::objects::NiObject)
+//!   - [`TextureRenderData`]
+//!     - [`NiPixelData`]
+//!     - [`NiPersistentSrcTextureRendererData`]
+//!   - [`NiPalette`]
+//!   - [`BsShaderTextureSet`]
+//!
+//! <!-- type-hierarchy:end -->
 
 use std::pin::Pin;
 

@@ -4,9 +4,20 @@
 //! it affects ([`View::affected_nodes`]). Effects are also scene objects with a transform, usually
 //! a node's children. Add one with [`Edit::add_effect`].
 //!
-//! ```text
-//! NiSpotLight -> NiPointLight -> NiLight -> NiDynamicEffect -> NiAvObject
-//! ```
+//! # Type hierarchy
+//!
+//! <!-- type-hierarchy:start -->
+//!
+//! - [`objects::NiAvObject`](crate::objects::NiAvObject)
+//!   - [`NiDynamicEffect`]
+//!     - [`NiTextureEffect`]
+//!     - [`NiLight`]
+//!       - [`NiAmbientLight`]
+//!       - [`NiDirectionalLight`]
+//!       - [`NiPointLight`]
+//!         - [`NiSpotLight`]
+//!
+//! <!-- type-hierarchy:end -->
 
 use std::pin::Pin;
 

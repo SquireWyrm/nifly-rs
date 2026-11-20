@@ -112,6 +112,7 @@ mod transform_shape;
 mod tri_shape_fields;
 mod triangulate_shape;
 mod trim_texture_paths;
+mod type_hierarchy;
 mod update_partition_flags;
 mod update_skin_partitions;
 mod vertex_arrays;

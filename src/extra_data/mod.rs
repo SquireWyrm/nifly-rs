@@ -12,6 +12,48 @@
 //!
 //! Most extra data derives from [`NiExtraData`] and has a name. Fallout 4's cloth and collision
 //! query proxy data derive from [`BsExtraData`] instead and have none.
+//!
+//! # Type hierarchy
+//!
+//! <!-- type-hierarchy:start -->
+//!
+//! - [`objects::NiObject`](crate::objects::NiObject)
+//!   - [`NiExtraData`]
+//!     - [`NiStringExtraData`]
+//!     - [`NiIntegerExtraData`]
+//!       - [`BsxFlags`]
+//!     - [`NiFloatExtraData`]
+//!       - [`BsDecalPlacementVectorExtraData`]
+//!     - [`NiBooleanExtraData`]
+//!     - [`NiIntegersExtraData`]
+//!     - [`NiBinaryExtraData`]
+//!     - [`NiFloatsExtraData`]
+//!     - [`NiStringsExtraData`]
+//!     - [`SkinAttach`]
+//!     - [`BsPackedCombinedSharedGeomDataExtra`]
+//!     - [`BsFurnitureMarker`]
+//!       - [`BsFurnitureMarkerNode`]
+//!     - [`BsConnectPointParents`]
+//!     - [`BsConnectPointChildren`]
+//!     - [`BsInvMarker`]
+//!     - [`BsBound`]
+//!     - [`BsBehaviorGraphExtraData`]
+//!     - [`NiColorExtraData`]
+//!     - [`NiVectorExtraData`]
+//!     - [`NiVertWeightsExtraData`]
+//!     - [`BsEyeCenterExtraData`]
+//!     - [`BsPositionData`]
+//!     - [`BsWArray`]
+//!     - [`BsBoneLodExtraData`]
+//!     - [`BsDistantObjectExtraData`]
+//!     - [`BsDistantObjectLargeRefExtraData`]
+//!     - [`BoneTranslations`]
+//!     - [`NiTextKeyExtraData`]
+//!   - [`BsExtraData`]
+//!     - [`BsClothExtraData`]
+//!     - [`BsCollisionQueryProxyExtraData`]
+//!
+//! <!-- type-hierarchy:end -->
 
 use std::pin::Pin;
 
