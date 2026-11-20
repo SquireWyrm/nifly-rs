@@ -2,6 +2,15 @@
 name = "nifly"
 version = "0.1.0"
 edition = "2024"
+description = "Read, edit and write NIF files from Bethesda's games, Morrowind to Starfield"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/SquireWyrm/nifly-rs"
+readme = "README.md"
+keywords = ["nif", "bethesda", "skyrim", "gamebryo", "mesh"]
+categories = ["game-development", "parser-implementations"]
+# The tests need nifly's test files, which nifly-sys doesn't ship, so they stay in the repository.
+# `docs/types` is read by `include_str!` when compiling.
+include = ["/src/**", "/docs/types/**", "/examples/**", "/README.md", "/LICENSE"]
 
 [dependencies]
 bitflags = "2.13"
@@ -12,6 +21,10 @@ mint = { version = "0.5.9", optional = true }
 nifly-sys = { version = "0.1.0", path = "nifly-sys" }
 ref-cast = "1.0.27"
 thiserror = "2.0.21"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [workspace]
 members = ["nifly-sys"]

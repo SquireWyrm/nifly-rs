@@ -2,6 +2,20 @@
 name = "nifly-sys"
 version = "0.1.0"
 edition = "2024"
+description = "Raw cxx bindings to the nifly C++ NIF library, built from source"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/SquireWyrm/nifly-rs"
+# The vendored nifly is a git submodule, which packaging leaves out unless listed here.
+include = [
+    "/build.rs",
+    "/src/**",
+    "/include/**",
+    "/vendor/nifly/src/**",
+    "/vendor/nifly/include/**",
+    "/vendor/nifly/external/**",
+    "/vendor/nifly/LICENSE",
+    "/vendor/nifly/README.md",
+]
 
 [dependencies]
 cxx = "1.0"
