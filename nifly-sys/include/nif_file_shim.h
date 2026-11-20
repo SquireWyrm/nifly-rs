@@ -352,72 +352,6 @@ class TangentFlagRestore {
     std::unordered_set<const nifly::NiGeometryData*> with_tangents;
 };
 
-// Mesh positions are saved as 16-bit fractions of `scale` (times havokScale),
-// and upstream doesn't update `scale` when they change: positions outside the
-// old range wrap around, and with no scale (0) no vertices are written. Widens
-// it when needed, keeping it otherwise so unchanged data saves as read.
-inline void fit_mesh_scale(nifly::BSGeometryMeshData& data) {
-    float extent = 0.0f;
-    for (const auto& v : data.vertices)
-        extent =
-            std::max({extent, std::abs(v.x), std::abs(v.y), std::abs(v.z)});
-    // BSGeometryMeshData::havokScale, which is private.
-    constexpr float havok_scale = 69.969f;
-    float needed = extent / havok_scale;
-    if (needed > data.scale)
-        data.scale = needed;
-    if (data.scale <= 0.0f && !data.vertices.empty())
-        data.scale = 1.0f;
-}
-
-// Fits the scale of internal BSGeometry meshes for the save (see
-// fit_mesh_scale), restoring it afterwards. Shapes are looked up again on
-// restore, since optimizing may delete some.
-class MeshScaleRestore {
-  public:
-    explicit MeshScaleRestore(nifly::NifFile& file) : file(file) {
-        for (auto shape : file.GetShapes()) {
-            auto g = dynamic_cast<nifly::BSGeometry*>(shape);
-            if (!g || !g->HasInternalGeomData())
-                continue;
-            for (uint8_t i = 0; i < g->MeshCount(); i++) {
-                auto& data = g->SelectMesh(i)->meshData;
-                const float old = data.scale;
-                if (data.version <= 2)
-                    fit_mesh_scale(data);
-                if (data.scale != old)
-                    scales[g].emplace_back(i, old);
-            }
-            g->ReleaseMesh();
-        }
-    }
-
-    ~MeshScaleRestore() {
-        if (scales.empty())
-            return;
-        for (auto shape : file.GetShapes()) {
-            auto g = dynamic_cast<nifly::BSGeometry*>(shape);
-            auto found = scales.find(g);
-            if (!g || found == scales.end())
-                continue;
-            for (auto [i, scale] : found->second)
-                if (auto mesh = g->SelectMesh(i))
-                    mesh->meshData.scale = scale;
-            g->ReleaseMesh();
-        }
-    }
-
-    MeshScaleRestore(const MeshScaleRestore&) = delete;
-    MeshScaleRestore& operator=(const MeshScaleRestore&) = delete;
-
-  private:
-    nifly::NifFile& file;
-    std::unordered_map<
-        const nifly::BSGeometry*,
-        std::vector<std::pair<uint8_t, float>>>
-        scales;
-};
-
 // NifFile::Save through a RustOStream. Writer errors
 // propagate as the rust::Error thrown by the streambuf; otherwise returns
 // nifly's code (0 = success, 1 = stream not writable).
@@ -429,7 +363,6 @@ inline int32_t save_nif(
     LightingTypeRestore restore(nif);
     SourceTextureRestore restore_textures(nif);
     TangentFlagRestore restore_tangents(nif);
-    MeshScaleRestore restore_scales(nif);
     write_bridge::RustOStream out(writer);
     out.exceptions(std::ios::badbit);
     nifly::NifSaveOptions nifly_options;

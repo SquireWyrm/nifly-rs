@@ -85,9 +85,8 @@ inline int32_t load_external_mesh(
     return 0;
 }
 
-// NifFile::SaveExternalShapeData into `out`, from a copy of the mesh data:
-// writing updates the data's counters, and this shouldn't change the file. The
-// copy's position scale is widened first if the positions need it.
+// NifFile::SaveExternalShapeData into `out`, written with write_mesh_data,
+// which changes nothing in the file.
 // Returns false, writing nothing, unless the shape is a BSGeometry with external
 // mesh `index`.
 inline bool save_external_mesh(
@@ -99,11 +98,6 @@ inline bool save_external_mesh(
         return false;
     auto geom =
         static_cast<nifly::BSGeometry*>(const_cast<nifly::NiShape*>(&shape));
-    auto copy = geom->SelectMesh(static_cast<uint8_t>(index))->meshData.Clone();
-    geom->ReleaseMesh();
-
-    fit_mesh_scale(*copy);
-
     std::ostringstream buffer;
     nifly::NiOStream stream(&buffer, nullptr);
     nifly::NiStreamReversible sync(
@@ -111,7 +105,11 @@ inline bool save_external_mesh(
         &stream,
         nifly::NiStreamReversible::Mode::Writing
     );
-    write_mesh_data(*copy, sync);
+    write_mesh_data(
+        geom->SelectMesh(static_cast<uint8_t>(index))->meshData,
+        sync
+    );
+    geom->ReleaseMesh();
     const std::string bytes = buffer.str();
     out.reserve(bytes.size());
     for (char c : bytes)

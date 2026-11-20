@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -10,12 +11,31 @@
 
 namespace nifly_rs {
 
+// BSGeometryMeshData::havokScale, which is private.
+constexpr float havok_scale = 69.969f;
+
+// The position scale write_mesh_data writes. Positions are saved as 16-bit
+// fractions of `scale` (times havokScale), and upstream doesn't update `scale`
+// when they change: positions outside its range overflow, and with no scale (0)
+// no vertices are written. This widens it where needed and keeps it otherwise,
+// so unchanged data saves as read.
+inline float fitted_mesh_scale(const nifly::BSGeometryMeshData& d) {
+    float extent = 0.0f;
+    for (const auto& v : d.vertices)
+        extent =
+            std::max({extent, std::abs(v.x), std::abs(v.y), std::abs(v.z)});
+    float scale = std::max(d.scale, extent / havok_scale);
+    if (scale <= 0.0f && !d.vertices.empty())
+        scale = 1.0f;
+    return scale;
+}
+
 // Writes a BSGeometryMeshData as BSGeometryMeshData::Sync does, with two
 // differences. Upstream calls SetUVs(true) while writing, which drops the
 // second UV set (it's written as zeros and lost in memory) and cuts the first
 // to 65535 entries. And it resizes normals and tangents to the 16-bit vertex
 // count first; this writes the arrays as they are, so data saves as read.
-// Nothing in `d` changes.
+// Positions are written with fitted_mesh_scale. Nothing in `d` changes.
 inline void write_mesh_data(
     const nifly::BSGeometryMeshData& d,
     nifly::NiStreamReversible& s
@@ -29,16 +49,15 @@ inline void write_mesh_data(
     for (auto t : d.tris)
         s.Sync(t);
 
-    put(d.scale);
-    if (d.scale <= 0.0f)
+    const float scale = fitted_mesh_scale(d);
+    put(scale);
+    if (scale <= 0.0f)
         return;
 
     put(d.nWeightsPerVert);
 
     put(static_cast<uint32_t>(d.vertices.size()));
-    // BSGeometryMeshData::havokScale, which is private.
-    constexpr float havok_scale = 69.969f;
-    const float range = d.scale * havok_scale;
+    const float range = scale * havok_scale;
     for (const auto& v : d.vertices)
         for (float c : {v.x, v.y, v.z})
             put(static_cast<int16_t>(
