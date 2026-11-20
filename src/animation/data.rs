@@ -264,4 +264,6 @@ new_animation_data! {
     NiBSplineData => add_ni_bspline_data;
     NiBSplineBasisData => add_ni_bspline_basis_data;
     NiStringPalette => add_ni_string_palette;
+    BsAnimNote => add_bs_anim_note;
+    BsAnimNotes => add_bs_anim_notes;
 }

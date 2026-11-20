@@ -373,6 +373,7 @@ new_controller! {
     BsEffectShaderPropertyFloatController => add_bs_effect_shader_property_float_controller;
     NiMultiTargetTransformController => add_ni_multi_target_transform_controller;
     BhkBlendController => add_bhk_blend_controller;
+    NiControllerManager => add_ni_controller_manager;
 }
 
 /// An [`NiPathInterpolator`] or [`NiPathController`]: a block with path data refs.

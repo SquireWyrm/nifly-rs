@@ -2,7 +2,8 @@
 //!
 //! Data blocks hold [`KeyGroup`]s: keys of a value over time, and how values between them are
 //! interpolated. Interpolators read data blocks, and controllers use interpolators to animate
-//! their target.
+//! their target. Sequences name the controllers and interpolators of one animation, and a
+//! controller manager plays sequences.
 
 use std::pin::Pin;
 
@@ -261,24 +262,38 @@ ni_types! { ffi;
     NiPSysEmitterPlanarAngleVarCtlr(NiPSysEmitterPlanarAngleVarCtlr): NiPSysModifierFloatCtlr => upcast_ni_psys_emitter_planar_angle_var_ctlr, downcast_ni_psys_emitter_planar_angle_var_ctlr;
     /// Animates particles' rotation dampening.
     NiPSysRotDampeningCtlr(NiPSysRotDampeningCtlr): NiPSysModifierFloatCtlr => upcast_ni_psys_rot_dampening_ctlr, downcast_ni_psys_rot_dampening_ctlr;
-    /// A named animation: controlled blocks and their interpolators.
+    /// A named animation: the objects it animates, with their controllers and interpolators.
+    ///
+    /// Through handles: [controlled blocks](View::controlled_blocks) and
+    /// [text keys](View::text_key_data). [`NifFile::add_sequence`] adds one.
     NiSequence(NiSequence): NiObject => upcast_ni_sequence, downcast_ni_sequence;
     /// A note in an animation, such as a grab or look-at event.
     ///
     /// The `BSAnimNote` block.
     BsAnimNote(BSAnimNote): NiObject => upcast_bs_anim_note, downcast_bs_anim_note;
-    /// A list of [`BsAnimNote`]s.
+    /// A list of [`BsAnimNote`]s, from [`View::notes`].
     ///
     /// The `BSAnimNotes` block.
     BsAnimNotes(BSAnimNotes): NiObject => upcast_bs_anim_notes, downcast_bs_anim_notes;
-    /// An animation sequence played by an [`NiControllerManager`].
+    /// An animation sequence, played by an [`NiControllerManager`] or stored alone in a `.kf`
+    /// file.
+    ///
+    /// Through handles: the [manager](View::sequence_manager),
+    /// [string palette](View::string_palette) and notes ([`View::anim_notes`],
+    /// [`View::anim_note_arrays`]).
     NiControllerSequence(NiControllerSequence): NiSequence => upcast_ni_controller_sequence, downcast_ni_controller_sequence;
     /// Plays animation sequences on an object tree.
+    ///
+    /// Through handles: the [sequences](View::sequences), added with [`Edit::add_sequence`], and
+    /// the [object palette](View::object_palette).
     NiControllerManager(NiControllerManager): NiTimeController => upcast_ni_controller_manager, downcast_ni_controller_manager;
     /// A Havok blend controller, found in skeletons.
     ///
     /// The `bhkBlendController` block.
     BhkBlendController(bhkBlendController): NiTimeController => upcast_bhk_blend_controller, downcast_bhk_blend_controller;
+    /// The root of a Morrowind `.kf` file, holding its text keys as extra data and its
+    /// controllers.
+    NiSequenceStreamHelper(NiSequenceStreamHelper): NiObjectNet => upcast_ni_sequence_stream_helper, downcast_ni_sequence_stream_helper;
 }
 
 /// Getter and setter pairs for key groups.
@@ -322,6 +337,13 @@ impl NifFile {
     pub fn add_interpolator<T: NewInterpolator>(&mut self) -> Index {
         index_from_ffi(T::add(self.inner.pin_mut())).expect("adding a block succeeds")
     }
+
+    /// Adds a new `T` named `name` and returns its index. An [`NiControllerSequence`] has weight
+    /// and frequency 1 and loops. Nothing refers to it, so it suits the root of a `.kf` file;
+    /// [`Edit::add_sequence`] adds one to a manager.
+    pub fn add_sequence<T: NewSequence>(&mut self, name: impl AsRef<[u8]>) -> Index {
+        index_from_ffi(T::add(self.inner.pin_mut(), name.as_ref())).expect("adding a block succeeds")
+    }
 }
 
 pub(crate) fn same<T>(x: T) -> T {
@@ -342,6 +364,7 @@ mod interpolators;
 mod interpolator_refs;
 mod controllers;
 mod controller_types;
+mod sequences;
 
 pub use self::keys::*;
 pub use self::data::*;
@@ -349,3 +372,4 @@ pub use self::interpolators::*;
 pub use self::interpolator_refs::*;
 pub use self::controllers::*;
 pub use self::controller_types::*;
+pub use self::sequences::*;

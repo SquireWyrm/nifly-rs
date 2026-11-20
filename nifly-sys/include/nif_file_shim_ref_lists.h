@@ -140,6 +140,18 @@ block_ref_list(const nifly::NifFile& file, uint32_t owner, RefList list) {
                     NiEmitterModifier,
                     NiEmitterModifier>(hdr, c->emitterModifierRef.index);
             break;
+        case RefList::Sequences:
+            if (auto m = dynamic_cast<NiControllerManager*>(obj))
+                return ref_array(m->controllerSequenceRefs);
+            break;
+        case RefList::AnimNoteArrays:
+            if (auto seq = dynamic_cast<NiControllerSequence*>(obj))
+                return ref_array(seq->animNotesRefs);
+            break;
+        case RefList::AnimNoteList:
+            if (auto notes = dynamic_cast<BSAnimNotes*>(obj))
+                return ref_array(notes->animNoteRefs);
+            break;
         case RefList::Controllers:
             if (auto net = dynamic_cast<NiObjectNET*>(obj)) {
                 rust::Vec<uint32_t> out;
@@ -409,6 +421,29 @@ inline bool set_block_ref_list(
             return set_particle_modifier_chain<
                 NiParticleModifier,
                 NiParticleModifier>(hdr, c->particleModifierRef, targets);
+        }
+        case RefList::Sequences: {
+            auto m = dynamic_cast<NiControllerManager*>(obj);
+            if (!m || !all_are<NiControllerSequence>(hdr, targets))
+                return false;
+            set_ref_array(m->controllerSequenceRefs, targets);
+            return true;
+        }
+        case RefList::AnimNoteArrays: {
+            auto seq = dynamic_cast<NiControllerSequence*>(obj);
+            if (!seq || targets.size() > UINT16_MAX
+                || !all_are<BSAnimNotes>(hdr, targets))
+                return false;
+            set_ref_array(seq->animNotesRefs, targets);
+            return true;
+        }
+        case RefList::AnimNoteList: {
+            auto notes = dynamic_cast<BSAnimNotes*>(obj);
+            if (!notes || targets.size() > UINT16_MAX
+                || !all_are<BSAnimNote>(hdr, targets))
+                return false;
+            set_ref_array(notes->animNoteRefs, targets);
+            return true;
         }
         case RefList::Controllers: {
             auto net = dynamic_cast<NiObjectNET*>(obj);

@@ -77,6 +77,7 @@ mod reorder_shape_triangles;
 mod replace_shape_bone;
 mod root_translation;
 mod save;
+mod sequences;
 mod set_bone_weights;
 mod set_name;
 mod set_parent_node;

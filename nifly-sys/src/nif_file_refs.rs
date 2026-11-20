@@ -166,6 +166,17 @@ pub mod ffi {
         ContainerNode,
         /// `NiParticles::dataRef` (`NiParticlesData`).
         ParticlesData,
+        /// The text keys (`NiTextKeyExtraData`) of an `NiControllerSequence` (`textKeyRef`) or a
+        /// plain `NiSequence` (the old field, `Sequence::textKeyRef`).
+        SequenceTextKeys,
+        /// `NiControllerSequence::managerRef` (`NiControllerManager`), a pointer.
+        SequenceManager,
+        /// `NiControllerSequence::stringPaletteRef` (`NiStringPalette`).
+        SequencePalette,
+        /// `NiControllerSequence::animNotesRef` (`BSAnimNotes`).
+        AnimNotes,
+        /// `NiControllerManager::objectPaletteRef` (`NiDefaultAVObjectPalette`).
+        ObjectPalette,
     }
 
     /// A list of block refs, for `block_ref_list` and `set_block_ref_list`.
@@ -223,6 +234,12 @@ pub mod ffi {
         /// `NiParticleSystemController::emitterModifierRef` and each
         /// `NiEmitterModifier::nextModifierRef` after it (`NiEmitterModifier`).
         EmitterModifiers,
+        /// `NiControllerManager::controllerSequenceRefs` (`NiControllerSequence`).
+        Sequences,
+        /// `NiControllerSequence::animNotesRefs` (`BSAnimNotes`), at most 65535.
+        AnimNoteArrays,
+        /// `BSAnimNotes::animNoteRefs` (`BSAnimNote`), at most 65535.
+        AnimNoteList,
     }
 
     #[namespace = "nifly"]

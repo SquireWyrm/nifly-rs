@@ -439,6 +439,11 @@ NIFLY_RS_ANIMATION(BSAnimNotes, NiObject, bs_anim_notes)
 NIFLY_RS_ANIMATION(NiControllerSequence, NiSequence, ni_controller_sequence)
 NIFLY_RS_ANIMATION(NiControllerManager, NiTimeController, ni_controller_manager)
 NIFLY_RS_ANIMATION(bhkBlendController, NiTimeController, bhk_blend_controller)
+NIFLY_RS_ANIMATION(
+    NiSequenceStreamHelper,
+    NiObjectNET,
+    ni_sequence_stream_helper
+)
 
 // Key values as four floats.
 inline std::array<float, 4> key_value(float v) {
@@ -678,4 +683,5 @@ void quat_transform_from_ffi(T& t, const QuatTransformFfi& f) {
 #include "animation_shim_data.h"
 #include "animation_shim_interpolators.h"
 #include "animation_shim_controllers.h"
+#include "animation_shim_sequences.h"
 // clang-format on

@@ -75,6 +75,21 @@ pub mod ffi {
         transform_2: QuatTransformFfi,
     }
 
+    /// A `ControllerLink` of an `NiSequence`, with its strings read by version.
+    #[derive(Debug, Clone, PartialEq)]
+    struct ControlledBlockFfi {
+        interpolator: u32,
+        controller: u32,
+        blend_interpolator: u32,
+        blend_index: u16,
+        priority: u8,
+        node_name: Vec<u8>,
+        property_type: Vec<u8>,
+        controller_type: Vec<u8>,
+        controller_id: Vec<u8>,
+        interpolator_id: Vec<u8>,
+    }
+
     #[namespace = "nifly"]
     unsafe extern "C++" {
         include!("Animation.hpp");
@@ -184,6 +199,7 @@ pub mod ffi {
         type NiControllerSequence;
         type NiControllerManager;
         type bhkBlendController;
+        type NiSequenceStreamHelper;
     }
 
     #[namespace = "nifly"]
@@ -191,6 +207,7 @@ pub mod ffi {
         include!("NifFile.hpp");
 
         type NiObject = crate::objects::ffi::NiObject;
+        type NiObjectNET = crate::objects::ffi::NiObjectNET;
         type NifFile = crate::nif_file::ffi::NifFile;
     }
 
@@ -412,6 +429,8 @@ pub mod ffi {
         fn downcast_ni_controller_manager(obj: &NiObject) -> *const NiControllerManager;
         fn upcast_bhk_blend_controller(obj: &bhkBlendController) -> &NiTimeController;
         fn downcast_bhk_blend_controller(obj: &NiObject) -> *const bhkBlendController;
+        fn upcast_ni_sequence_stream_helper(obj: &NiSequenceStreamHelper) -> &NiObjectNET;
+        fn downcast_ni_sequence_stream_helper(obj: &NiObject) -> *const NiSequenceStreamHelper;
 
         // Key groups. Setters return false, changing nothing, if the group has keys but its
         // interpolation isn't linear, quadratic, TBC or constant, or if it has none and the
@@ -756,5 +775,56 @@ pub mod ffi {
         fn add_bs_effect_shader_property_color_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_bs_effect_shader_property_float_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
         fn add_ni_multi_target_transform_controller(file: Pin<&mut NifFile>, owner: u32) -> u32;
+        fn add_ni_controller_manager(file: Pin<&mut NifFile>, owner: u32) -> u32;
+
+        // Sequences.
+        fn sequence_name(obj: &NiSequence) -> &[u8];
+        fn set_sequence_name(obj: Pin<&mut NiSequence>, name: &[u8]);
+        /// A controller sequence's accumulation root name, or a plain sequence's old one.
+        fn sequence_accum_root_name(obj: &NiSequence) -> &[u8];
+        fn set_sequence_accum_root_name(obj: Pin<&mut NiSequence>, name: &[u8]);
+        fn sequence_array_grow_by(obj: &NiSequence) -> u32;
+        fn set_sequence_array_grow_by(obj: Pin<&mut NiSequence>, value: u32);
+        fn sequence_weight(obj: &NiControllerSequence) -> f32;
+        fn set_sequence_weight(obj: Pin<&mut NiControllerSequence>, value: f32);
+        fn sequence_cycle_type(obj: &NiControllerSequence) -> u32;
+        fn set_sequence_cycle_type(obj: Pin<&mut NiControllerSequence>, value: u32);
+        fn sequence_frequency(obj: &NiControllerSequence) -> f32;
+        fn set_sequence_frequency(obj: Pin<&mut NiControllerSequence>, value: f32);
+        fn sequence_phase(obj: &NiControllerSequence) -> f32;
+        fn set_sequence_phase(obj: Pin<&mut NiControllerSequence>, value: f32);
+        fn sequence_start_time(obj: &NiControllerSequence) -> f32;
+        fn set_sequence_start_time(obj: Pin<&mut NiControllerSequence>, value: f32);
+        fn sequence_stop_time(obj: &NiControllerSequence) -> f32;
+        fn set_sequence_stop_time(obj: Pin<&mut NiControllerSequence>, value: f32);
+        fn sequence_play_backwards(obj: &NiControllerSequence) -> bool;
+        fn set_sequence_play_backwards(obj: Pin<&mut NiControllerSequence>, value: bool);
+        fn manager_cumulative(obj: &NiControllerManager) -> bool;
+        fn set_manager_cumulative(obj: Pin<&mut NiControllerManager>, value: bool);
+        fn anim_note_type(obj: &BSAnimNote) -> u32;
+        fn set_anim_note_type(obj: Pin<&mut BSAnimNote>, value: u32);
+        fn anim_note_time(obj: &BSAnimNote) -> f32;
+        fn set_anim_note_time(obj: Pin<&mut BSAnimNote>, value: f32);
+        fn anim_note_arm(obj: &BSAnimNote) -> u32;
+        fn set_anim_note_arm(obj: Pin<&mut BSAnimNote>, value: u32);
+        fn anim_note_gain(obj: &BSAnimNote) -> f32;
+        fn set_anim_note_gain(obj: Pin<&mut BSAnimNote>, value: f32);
+        fn anim_note_state(obj: &BSAnimNote) -> u32;
+        fn set_anim_note_state(obj: Pin<&mut BSAnimNote>, value: u32);
+        /// The controlled blocks of the `NiSequence` at `owner`, with the strings the file's
+        /// version saves. Empty if it isn't one.
+        fn controlled_blocks(file: &NifFile, owner: u32) -> Vec<ControlledBlockFfi>;
+        /// Replaces the controlled blocks, setting their strings in every form and writing them
+        /// to the sequence's string palette in the versions that use one. False, changing
+        /// nothing, unless each ref is empty or the right type.
+        fn set_controlled_blocks(file: Pin<&mut NifFile>, owner: u32, blocks: &[ControlledBlockFfi]) -> bool;
+        fn add_ni_sequence(file: Pin<&mut NifFile>, name: &[u8]) -> u32;
+        fn add_ni_controller_sequence(file: Pin<&mut NifFile>, name: &[u8]) -> u32;
+        fn add_ni_sequence_stream_helper(file: Pin<&mut NifFile>, name: &[u8]) -> u32;
+        /// Adds a controller sequence to the end of the sequences of the `NiControllerManager` at
+        /// `owner`, managed by it. `NIF_NPOS`, adding nothing, if `owner` isn't one.
+        fn add_manager_sequence(file: Pin<&mut NifFile>, owner: u32, name: &[u8]) -> u32;
+        fn add_bs_anim_note(file: Pin<&mut NifFile>) -> u32;
+        fn add_bs_anim_notes(file: Pin<&mut NifFile>) -> u32;
     }
 }

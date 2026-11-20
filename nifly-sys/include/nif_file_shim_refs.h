@@ -439,6 +439,30 @@ inline RefSlot find_ref(nifly::NiObject& obj, RefKind kind) {
             return ref_slot<NiParticles, NiParticlesData>(obj, [](auto& o) {
                 return o.DataRef();
             });
+        case RefKind::SequenceTextKeys:
+            if (auto ref = sequence_text_keys_ref(obj))
+                return {ref, &is_a<NiTextKeyExtraData>};
+            return {};
+        case RefKind::SequenceManager:
+            return ref_slot<NiControllerSequence, NiControllerManager>(
+                obj,
+                [](auto& o) { return &o.managerRef; }
+            );
+        case RefKind::SequencePalette:
+            return ref_slot<NiControllerSequence, NiStringPalette>(
+                obj,
+                [](auto& o) { return &o.stringPaletteRef; }
+            );
+        case RefKind::AnimNotes:
+            return ref_slot<NiControllerSequence, BSAnimNotes>(
+                obj,
+                [](auto& o) { return &o.animNotesRef; }
+            );
+        case RefKind::ObjectPalette:
+            return ref_slot<NiControllerManager, NiDefaultAVObjectPalette>(
+                obj,
+                [](auto& o) { return &o.objectPaletteRef; }
+            );
         default:
             return {};
     }

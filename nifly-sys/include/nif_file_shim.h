@@ -90,8 +90,8 @@ struct FactoryAccess: nifly::NiFactoryRegister {
 
 // Swaps in SourceTextureFactory, SpotLightFactory (effects_shim.h),
 // PackedSharedGeomDataFactory (extra_data_shim.h), GeometryFactory
-// (mesh_writer.h), BlendInterpolatorFactory and FloatExtraDataControllerFactory
-// (animation_shim.h).
+// (mesh_writer.h), BlendInterpolatorFactory, FloatExtraDataControllerFactory
+// (animation_shim.h) and the ReplacementFactory replacements.
 inline void register_factories() {
     static const bool registered = [] {
         auto& regs =
@@ -130,6 +130,12 @@ inline void register_factories() {
             BlendInterpolatorFactory<nifly::NiBlendPoint3Interpolator>>();
         regs[nifly::NiBlendTransformInterpolator::BlockName] = std::make_unique<
             BlendInterpolatorFactory<nifly::NiBlendTransformInterpolator>>();
+        regs[nifly::NiSequence::BlockName] =
+            std::make_unique<ReplacementFactory<Sequence>>();
+        regs[nifly::NiControllerSequence::BlockName] =
+            std::make_unique<ReplacementFactory<ControllerSequence>>();
+        regs[nifly::BSAnimNote::BlockName] =
+            std::make_unique<ReplacementFactory<AnimNote>>();
         return true;
     }();
     (void)registered;
