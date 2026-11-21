@@ -285,7 +285,10 @@ Kind: undoes nifly's change.
 - **Problem:** Oblivion: writing clears each `NiGeometryData`'s tangent flag, so the next save
   deletes the tangents' `NiBinaryExtraData` and renumbers blocks.
 - **Fix:** Records which geometry data had the flag and sets it again after the save.
-- **nifly code:** [Geometry.cpp:55-57][tangent]
+- **nifly code:** writing [clears the flag][tangent] (Geometry.cpp:55-57). The next save's
+  `FinalizeData` checks [`HasTangents`][tangent-has], which reads that flag, and without it
+  [calls `DeleteBinaryTangentData`][tangent-finalize] (NifFile.cpp:2135-2143), which
+  [deletes the block][tangent-delete] (NifFile.cpp:3863-3871).
 - **Evidence:** Real files: nifly's `TestNifFile_Skinned_OB` shrank from 140,607 to 108,034 bytes on
   its second save.
 
@@ -474,3 +477,6 @@ against real files from the affected games before they're reported.
 [tri-finalize]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/NifFile.cpp#L2090-L2098
 [tri-calc]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Geometry.cpp#L1145
 [x-tri-size]: https://github.com/niftools/nifxml/blob/292bb9403cbf4052c58d66e80906b6bde1700779/nif.xml#L8251-L8254
+[tangent-has]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/include/Geometry.hpp#L193
+[tangent-finalize]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/NifFile.cpp#L2135-L2143
+[tangent-delete]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/NifFile.cpp#L3863-L3871
