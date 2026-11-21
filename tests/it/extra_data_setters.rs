@@ -1,7 +1,7 @@
 //! Tests for changing existing extra data: the block setters, NiExtraData::set_name and the old
 //! extra data chain.
 
-use std::{fs, io::Cursor};
+use std::fs;
 
 use nifly::{
     extra_data::{
@@ -21,27 +21,16 @@ use nifly::{
         NiStringExtraData, NiStringsExtraData, NiVectorExtraData, NiVertWeightsExtraData,
         SkinAttach,
     },
-    file::{Index, NifFile, NifVersion, SaveOptions},
+    file::{Index, NifFile, NifVersion},
     object3d::Vec3,
     objects::{NiAvObject, NiType},
 };
 
-fn reload(nif: &mut NifFile) -> NifFile {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(
-        &mut cur,
-        Some(SaveOptions {
-            optimize: false,
-            sort_blocks: false,
-        }),
-    )
-    .unwrap();
-    NifFile::load(cur.into_inner().as_slice(), None).unwrap()
-}
+use crate::common::{first_index, reload_in_place};
 
 /// Attaches `value` to the root and returns its index.
 fn add(nif: &mut NifFile, value: impl IntoExtraData) -> Index {
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     nif.edit::<NiAvObject>(root)
         .unwrap()
         .assign_extra_data(value)
@@ -86,7 +75,7 @@ fn values_and_names() {
     set::<NiExtraData>(&mut nif, bsx, |b| b.set_name("Renamed"));
     set::<NiExtraData>(&mut nif, string, |b| b.set_name(b"S2"));
 
-    let nif = reload(&mut nif);
+    let nif = reload_in_place(&mut nif);
     assert_eq!(get::<NiStringExtraData>(&nif, string).value(), "changed");
     assert_eq!(get::<NiExtraData>(&nif, string).name(), "S2");
     assert_eq!(get::<NiIntegerExtraData>(&nif, integer).value(), 42);
@@ -212,7 +201,7 @@ fn lists_and_records() {
     });
     set::<SkinAttach>(&mut nif, attach, |b| b.set_bones(["Bone1", "Bone2"]));
 
-    let nif = reload(&mut nif);
+    let nif = reload_in_place(&mut nif);
     assert_eq!(
         get::<NiVertWeightsExtraData>(&nif, weights).weights(),
         [0.25, 0.75]
@@ -274,7 +263,7 @@ fn blobs() {
     let proxy = add(&mut nif, ExtraBsCollisionQueryProxy([3]));
     set::<BsClothExtraData>(&mut nif, cloth, |b| b.set_data(&[5, 6, 7]));
     set::<BsCollisionQueryProxyExtraData>(&mut nif, proxy, |b| b.set_data(&[]));
-    let nif = reload(&mut nif);
+    let nif = reload_in_place(&mut nif);
     assert_eq!(get::<BsClothExtraData>(&nif, cloth).data(), [5, 6, 7]);
     assert!(
         get::<BsCollisionQueryProxyExtraData>(&nif, proxy)
@@ -314,10 +303,10 @@ fn setting_existing_blocks() {
     // Blocks read from a file change the same way.
     let file = fs::read("nifly-sys/vendor/nifly/tests/input/TestNifFile_SF.nif").unwrap();
     let mut nif = NifFile::load(file.as_slice(), None).unwrap();
-    let attach = nif.blocks_of::<SkinAttach>().indices().next().unwrap();
+    let attach = first_index::<SkinAttach>(&nif);
     set::<SkinAttach>(&mut nif, attach, |b| b.set_bones(["Only"]));
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .block_of::<SkinAttach>(attach)
             .unwrap()
             .bones()
@@ -331,7 +320,7 @@ fn setting_existing_blocks() {
     let three = vec![BoneTranslation::default(); 3];
     set::<BoneTranslations>(&mut nif, translations, |b| b.set_translations(&three));
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .block_of::<BoneTranslations>(translations)
             .unwrap()
             .translations(),
@@ -345,7 +334,7 @@ fn extra_data_chain() {
     let mut nif = NifFile::create(NifVersion::MORROWIND);
     let a = add(&mut nif, ExtraString("", "a"));
     let b = add(&mut nif, ExtraString("", "b"));
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     assert_eq!(
         nif.view::<NiExtraData>(b)
             .unwrap()
@@ -368,7 +357,7 @@ fn extra_data_chain() {
     assert!(edit.set_next_extra_data(Some(a)));
     edit.next_extra_data().unwrap().set_num_bytes(5);
     assert_eq!(nif.block_of::<NiExtraData>(a).unwrap().num_bytes(), 5);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         saved
             .view::<NiExtraData>(b)

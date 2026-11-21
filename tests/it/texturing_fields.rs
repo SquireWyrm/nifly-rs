@@ -8,7 +8,7 @@ use nifly::{
     shaders::{ClampMode, MapSlot, NiTexturingProperty, TextureMap, TextureTransform},
 };
 
-use crate::common::{reload_in_place as reload, upstream};
+use crate::common::{first_index, reload_in_place, upstream};
 
 const TRANSFORM: TextureTransform = TextureTransform {
     translation: [0.5, 0.25],
@@ -19,10 +19,7 @@ const TRANSFORM: TextureTransform = TextureTransform {
 };
 
 fn first(nif: &NifFile) -> Index {
-    nif.blocks_of::<NiTexturingProperty>()
-        .indices()
-        .next()
-        .unwrap()
+    first_index::<NiTexturingProperty>(nif)
 }
 
 fn property(nif: &NifFile, index: Index) -> &NiTexturingProperty {
@@ -67,7 +64,7 @@ fn morrowind_map_fields() {
     assert!(!p.set_map_unknown(TextureMap::Glow, 9), "no glow map");
     assert_eq!(p.map_unknown(TextureMap::Glow), None);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let p = property(&saved, index);
     assert_eq!(p.raw_flags(), 3);
     assert_eq!(
@@ -99,7 +96,7 @@ fn oblivion_map_fields() {
     p.set_bump_matrix([1.0, 2.0, 3.0, 4.0]);
     assert!(p.set_map_ps2(TextureMap::Base, [-3, 5]));
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let p = property(&saved, index);
     assert_eq!(p.map_transform(TextureMap::Base), Some(TRANSFORM));
     assert_eq!(
@@ -123,7 +120,7 @@ fn oblivion_map_fields() {
             .set_map_transform(TextureMap::Base, None)
     );
     assert_eq!(
-        property(&reload(&mut nif), index).map_transform(TextureMap::Base),
+        property(&reload_in_place(&mut nif), index).map_transform(TextureMap::Base),
         None
     );
 }
@@ -144,7 +141,7 @@ fn fallout_3_fields() {
     assert!(p.set_map_max_anisotropy(TextureMap::Base, 4));
     p.set_map_uv_set(TextureMap::Base, 3);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let p = property(&saved, index);
     assert_eq!((p.raw_flags(), p.parallax_offset()), (0x5, 0.125));
     assert_eq!(p.map_raw_flags(TextureMap::Base), Some(0x3201));
@@ -164,7 +161,7 @@ fn fallout_3_fields() {
     nif.block_of_mut::<NiTexturingProperty>(index)
         .unwrap()
         .set_texture_count(7);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert!(
         !property(&saved, index).has_map(TextureMap::Parallax),
         "past the count"
@@ -196,7 +193,7 @@ fn shader_maps() {
     assert!(p.set_shader_map_id(1, 5));
     assert!(p.set_map_uv_set(MapSlot::Shader(1), 2));
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let p = property(&saved, index);
     assert_eq!(p.shader_map_count(), 2);
     assert!(!p.has_map(MapSlot::Shader(0)));
@@ -216,7 +213,7 @@ fn shader_maps() {
             .unwrap()
             .set_map_source(MapSlot::Shader(1), None)
     );
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert!(!property(&saved, index).has_map(MapSlot::Shader(1)));
     assert_eq!(property(&saved, index).shader_map_id(1), None);
 }

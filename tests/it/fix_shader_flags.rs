@@ -1,29 +1,14 @@
 //! Tests for NifFile::fix_shader_flags and the shader flag getters.
 
-use crate::common::load;
-use std::io::Cursor;
+use crate::common::{first, load, save_in_place};
 
-use nifly::{
-    file::{NifFile, SaveOptions},
-    shaders::BsLightingShaderProperty,
-};
+use nifly::{file::NifFile, shaders::BsLightingShaderProperty};
 
 const ENVIRONMENT_MAPPING: u32 = 1 << 7; // flags 1
 const EYE_ENVIRONMENT_MAPPING: u32 = 1 << 17; // flags 1
 
-/// The file as it is in memory: no optimizing or sorting on save.
-fn raw(nif: &mut NifFile) -> Vec<u8> {
-    let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions {
-        optimize: false,
-        sort_blocks: false,
-    };
-    nif.save(&mut cur, Some(options)).unwrap();
-    cur.into_inner()
-}
-
 fn lighting(nif: &NifFile) -> &BsLightingShaderProperty {
-    nif.blocks_of::<BsLightingShaderProperty>().next().unwrap()
+    first::<BsLightingShaderProperty>(nif)
 }
 
 #[test]
@@ -38,16 +23,16 @@ fn consistent_shaders_are_unchanged() {
             "{asset}"
         );
 
-        let before = raw(&mut nif);
+        let before = save_in_place(&mut nif);
         nif.fix_shader_flags();
-        assert_eq!(raw(&mut nif), before, "{asset}");
+        assert_eq!(save_in_place(&mut nif), before, "{asset}");
     }
 }
 
 #[test]
 fn no_shaders_does_nothing() {
     let mut nif = load("Icosphere");
-    let before = raw(&mut nif);
+    let before = save_in_place(&mut nif);
     nif.fix_shader_flags();
-    assert_eq!(raw(&mut nif), before);
+    assert_eq!(save_in_place(&mut nif), before);
 }

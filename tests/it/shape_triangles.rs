@@ -1,23 +1,8 @@
 //! Tests for NifFile::shape_triangles and NifFile::set_shape_triangles.
 
-use crate::common::{load, reload, upstream};
+use crate::common::{load, reload, shape, shape_index, upstream};
 
-use nifly::{
-    file::{Index, NifFile},
-    geometry::NiShape,
-};
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
-}
+use nifly::file::NifFile;
 
 fn triangles(nif: &NifFile, name: &str) -> Option<Vec<[u16; 3]>> {
     nif.view_of(shape(nif, name)).unwrap().triangles()
@@ -62,7 +47,7 @@ fn reads_triangles() {
 fn set_round_trip() {
     // BSTriShape: flip every triangle's winding.
     let mut nif = load("Cube");
-    let cube = index(&nif, "Cube");
+    let cube = shape_index(&nif, "Cube");
     let flipped: Vec<[u16; 3]> = triangles(&nif, "Cube")
         .unwrap()
         .iter()
@@ -77,7 +62,7 @@ fn set_round_trip() {
 
     // NiTriShapeData: keep half, which updates the stored count.
     let mut nif = load("Bones");
-    let limb = index(&nif, "Limb");
+    let limb = shape_index(&nif, "Limb");
     let half = triangles(&nif, "Limb").unwrap()[..126].to_vec();
     assert!(
         nif.edit::<nifly::geometry::NiShape>(limb)
@@ -114,7 +99,7 @@ fn set_round_trip() {
 #[test]
 fn false_changes_nothing() {
     let mut nif = load("Bones");
-    let limb = index(&nif, "Limb");
+    let limb = shape_index(&nif, "Limb");
     let before = triangles(&nif, "Limb");
     // Index 164 is one past the last vertex.
     assert!(
@@ -144,7 +129,7 @@ fn false_changes_nothing() {
 
     // Skyrim SE BSTriShapes save at most 65535 triangles.
     let mut nif = load("Cube");
-    let cube = index(&nif, "Cube");
+    let cube = shape_index(&nif, "Cube");
     assert_eq!(nif.triangle_limit(), 65535);
     assert!(
         !nif.edit::<nifly::geometry::NiShape>(cube)
@@ -158,7 +143,7 @@ fn false_changes_nothing() {
 
     // Particles have no triangle list.
     let mut nif = upstream("TestNifFile_Particles_MW");
-    let particles = index(&nif, "Blizzard");
+    let particles = shape_index(&nif, "Blizzard");
     assert!(
         !nif.edit::<nifly::geometry::NiShape>(particles)
             .is_some_and(|mut e| e.set_triangles(&[]))

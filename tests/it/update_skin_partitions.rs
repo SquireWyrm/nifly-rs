@@ -1,6 +1,6 @@
 //! Tests for NifFile::update_skin_partitions and NiSkinPartition's accessors.
 
-use crate::common::{load, reload, upstream};
+use crate::common::{load, reload, shape_index, upstream};
 use std::collections::BTreeSet;
 
 use nifly::{
@@ -33,14 +33,6 @@ fn summary(part: &NiSkinPartition) -> Summary {
 fn shape_summary(nif: &NifFile, name: &str) -> Summary {
     let shape = nif.shapes().find(|s| s.name() == name).unwrap();
     summary(partition(nif, shape).unwrap())
-}
-
-fn shape_index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
 }
 
 #[test]

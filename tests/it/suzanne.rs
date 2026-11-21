@@ -13,9 +13,11 @@
 //!   8 BSLightingShaderProperty -> [9]
 //!   9 BSShaderTextureSet
 
-use std::{fs::File, ptr};
+use std::ptr;
 
 use nifly::{file::NifFile, objects::NiObject};
+
+use crate::common::open;
 
 const BLOCK_NAMES: [&str; 10] = [
     "BSFadeNode",
@@ -31,7 +33,7 @@ const BLOCK_NAMES: [&str; 10] = [
 ];
 
 fn suzanne() -> NifFile {
-    NifFile::load(File::open("assets/Suzanne.nif").unwrap(), None).unwrap()
+    open("assets/Suzanne.nif")
 }
 
 fn block(nif: &NifFile, i: usize) -> &NiObject {

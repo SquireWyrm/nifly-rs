@@ -1,7 +1,6 @@
 //! Tests for the skin root, BSSkin::Instance scales, per-bone data and partition fields.
 
-use crate::common::{UPSTREAM, reload};
-use std::fs;
+use crate::common::{UPSTREAM, first, first_index, open, reload};
 
 use nifly::{
     file::NifFile,
@@ -11,13 +10,7 @@ use nifly::{
 };
 
 fn load(name: &str) -> NifFile {
-    NifFile::load(
-        fs::read(format!("{UPSTREAM}/{name}.nif"))
-            .unwrap()
-            .as_slice(),
-        None,
-    )
-    .unwrap()
+    open(format!("{UPSTREAM}/{name}.nif"))
 }
 
 fn root_name(nif: &NifFile) -> String {
@@ -26,7 +19,7 @@ fn root_name(nif: &NifFile) -> String {
 }
 
 fn first_skin(nif: &NifFile) -> usize {
-    nif.blocks_of::<NiBoneContainer>().indices().next().unwrap()
+    first_index::<NiBoneContainer>(nif)
 }
 
 #[test]
@@ -67,7 +60,7 @@ fn skin_root() {
 #[test]
 fn bs_skin_instance_root_can_be_a_shape() {
     let mut nif = load("TestNifFile_Skinned_FO4");
-    let skin = nif.blocks_of::<BsSkinInstance>().indices().next().unwrap();
+    let skin = first_index::<BsSkinInstance>(&nif);
     let shape = nif.shapes().indices().next().unwrap();
     let name = nif.block_of::<NiShape>(shape).unwrap().name().to_string();
     assert!(nif.edit::<NiBoneContainer>(skin).unwrap().set_root(shape));
@@ -77,7 +70,7 @@ fn bs_skin_instance_root_can_be_a_shape() {
 #[test]
 fn bs_skin_instance_scales() {
     let mut nif = load("TestNifFile_Skinned_FO4");
-    let skin = nif.blocks_of::<BsSkinInstance>().indices().next().unwrap();
+    let skin = first_index::<BsSkinInstance>(&nif);
     assert!(
         nif.block_of::<BsSkinInstance>(skin)
             .unwrap()
@@ -115,7 +108,7 @@ fn per_bone_data() {
 
     let nif = load("TestNifFile_Skinned_OB");
     let shape = nif.shapes().next().unwrap();
-    let data = nif.blocks_of::<NiSkinData>().next().unwrap();
+    let data = first::<NiSkinData>(&nif);
     assert_eq!(data.bounds(3), nif.view_of(shape).unwrap().bone_bounds(3));
     assert_eq!(data.bounds(data.bone_count()), None);
 }
@@ -123,7 +116,7 @@ fn per_bone_data() {
 #[test]
 fn has_vertex_weights() {
     let mut nif = load("TestNifFile_Skinned_OB");
-    let index = nif.blocks_of::<NiSkinData>().indices().next().unwrap();
+    let index = first_index::<NiSkinData>(&nif);
     nif.block_of_mut::<NiSkinData>(index)
         .unwrap()
         .set_has_vertex_weights(false);
@@ -141,7 +134,7 @@ fn has_vertex_weights() {
 #[test]
 fn partitions() {
     let nif = load("TestNifFile_Skinned_SE");
-    let part = nif.blocks_of::<NiSkinPartition>().next().unwrap();
+    let part = first::<NiSkinPartition>(&nif);
     let vertices = part.vertex_map(0).unwrap().len();
     assert_eq!(part.weights_per_vertex(0), Some(4));
     assert_eq!(part.vertex_weights(0).unwrap().len(), vertices);
@@ -162,7 +155,7 @@ fn partitions() {
 
     // Oblivion's partition is one strip.
     let nif = load("TestNifFile_Skinned_OB");
-    let part = nif.blocks_of::<NiSkinPartition>().next().unwrap();
+    let part = first::<NiSkinPartition>(&nif);
     assert!(part.triangles(0).unwrap().is_empty());
     let strips = part.strips(0).unwrap();
     assert_eq!(strips.len(), 1);
@@ -172,7 +165,7 @@ fn partitions() {
 #[test]
 fn partition_lod_and_global_vb() {
     let mut nif = load("TestNifFile_Skinned_SE");
-    let index = nif.blocks_of::<NiSkinPartition>().indices().next().unwrap();
+    let index = first_index::<NiSkinPartition>(&nif);
     let part = nif.block_of_mut::<NiSkinPartition>(index).unwrap();
     assert!(part.set_lod_level(0, 2));
     assert!(part.set_global_vb(0, true));
@@ -187,7 +180,7 @@ fn partition_lod_and_global_vb() {
 
     // Not saved before Skyrim.
     let mut nif = load("TestNifFile_Skinned_OB");
-    let index = nif.blocks_of::<NiSkinPartition>().indices().next().unwrap();
+    let index = first_index::<NiSkinPartition>(&nif);
     nif.block_of_mut::<NiSkinPartition>(index)
         .unwrap()
         .set_lod_level(0, 2);

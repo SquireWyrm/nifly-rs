@@ -1,7 +1,6 @@
 //! Tests for NiDefaultAVObjectPalette's scene and objects.
 
-use crate::common::upstream;
-use std::io::Cursor;
+use crate::common::{reload_with, upstream};
 
 use nifly::{
     bstr::BString,
@@ -12,12 +11,6 @@ use nifly::{
 
 /// The palette in `TestNifFile_Animated_LE`.
 const PALETTE: usize = 47;
-
-fn reload(nif: &mut NifFile, options: Option<SaveOptions>) -> NifFile {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, options).unwrap();
-    NifFile::load(cur.into_inner().as_slice(), None).unwrap()
-}
 
 /// Keeps block indices the same.
 const KEEP: Option<SaveOptions> = Some(SaveOptions {
@@ -88,7 +81,7 @@ fn survives_save() {
         };
         let before = named(entries(&nif));
         // Sorting renumbers the blocks; the refs follow them.
-        let saved = reload(&mut nif, None);
+        let saved = reload_with(&mut nif, None);
         assert_eq!(named(entries(&saved)), before, "{name}");
         let palette = saved
             .blocks_of::<NiDefaultAvObjectPalette>()
@@ -124,7 +117,7 @@ fn set_scene() {
             .name(),
         "Scene"
     );
-    let saved = reload(&mut nif, KEEP);
+    let saved = reload_with(&mut nif, KEEP);
     assert_eq!(
         saved
             .view::<NiDefaultAvObjectPalette>(PALETTE)
@@ -162,7 +155,7 @@ fn set_objects() {
         ("Shape".into(), Some((49, "Low02:0".into()))),
     ];
     assert_eq!(entries(&nif), expected);
-    assert_eq!(entries(&reload(&mut nif, KEEP)), expected);
+    assert_eq!(entries(&reload_with(&mut nif, KEEP)), expected);
 
     let mut edit = nif.edit::<NiDefaultAvObjectPalette>(PALETTE).unwrap();
     assert!(edit.set_objects(Vec::<(String, Option<usize>)>::new()));

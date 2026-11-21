@@ -15,7 +15,7 @@ use nifly::{
     object3d::{BoundingSphere, Vec3},
 };
 
-use crate::common::{load, reload_in_place as reload};
+use crate::common::{first_index, load, reload_in_place};
 
 /// A new file of `version` whose root has a collision object with a new rigid body.
 fn with_body(version: NifVersion) -> (NifFile, Index) {
@@ -90,7 +90,7 @@ fn convex_shapes() {
         capacity_and_raw_flags: 6,
     });
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let shapes: Vec<_> = saved
         .view::<BhkListShape>(list)
         .unwrap()
@@ -149,7 +149,7 @@ fn plane_shape() {
     p.set_center([1.0, 0.0, 0.0, 0.0]);
     p.set_material(7);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let p = saved.block_of::<BhkPlaneShape>(plane).unwrap();
     assert_eq!(
         (p.plane(), p.unknown_vector()),
@@ -218,7 +218,7 @@ fn list_shapes() {
         capacity_and_raw_flags: 0,
     });
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let l = saved.view::<BhkListShape>(list).unwrap();
     assert_eq!(l.sub_shapes().indices().collect::<Vec<_>>(), [convex]);
     assert_eq!((l.filters(), l.material()), (vec![filter], 11));
@@ -275,7 +275,7 @@ fn transform_and_mopp() {
     m.set_mopp_scale(4.0);
     m.set_build_type(1);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let t = saved.view::<BhkTransformShape>(transform).unwrap();
     assert_eq!(t.shape().unwrap().index(), cube);
     assert_eq!((t.transform(), t.material(), t.radius()), (matrix, 5, 0.01));
@@ -296,11 +296,7 @@ fn transform_and_mopp() {
 fn compressed_mesh() {
     // Suzanne.nif: a MOPP shape over a compressed mesh shape.
     let mut nif = load("Suzanne");
-    let shape = nif
-        .blocks_of::<BhkCompressedMeshShape>()
-        .indices()
-        .next()
-        .unwrap();
+    let shape = first_index::<BhkCompressedMeshShape>(&nif);
     let view = nif.view::<BhkCompressedMeshShape>(shape).unwrap();
     let data = view.compressed_data().unwrap().index();
     assert!(view.mesh_target().is_some());
@@ -308,7 +304,7 @@ fn compressed_mesh() {
     let chunks = d.chunks();
     assert!(!chunks.is_empty() && chunks.iter().all(|c| c.vertices.len() % 3 == 0));
 
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let mut edit = nif.edit::<BhkCompressedMeshShape>(shape).unwrap();
     assert!(!edit.set_mesh_target(Some(data)), "not an NiAvObject");
     assert!(
@@ -365,7 +361,7 @@ fn compressed_mesh() {
     d.set_aabb_min([-1.0; 4]);
     d.set_bits_per_index(17);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let s = saved.view::<BhkCompressedMeshShape>(shape).unwrap();
     assert_eq!(s.mesh_target().unwrap().index(), root);
     assert_eq!(
@@ -428,7 +424,7 @@ fn packed_mesh_by_version() {
         );
         assert!(d.set_sub_parts(&[part]));
 
-        let saved = reload(&mut nif);
+        let saved = reload_in_place(&mut nif);
         let s = saved.view::<BhkPackedNiTriStripsShape>(shape).unwrap();
         assert_eq!((s.radius(), s.scale_copy()), (0.1, [1.0; 4]));
         let d = s.packed_data().unwrap();
@@ -457,7 +453,7 @@ fn strips_shape() {
     // Strips_MW.nif: two NiTriStripsData blocks.
     let mut nif = load("Strips_MW");
     let data: Vec<_> = nif.blocks_of::<NiTriStripsData>().indices().collect();
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let collision = nif
         .root_node_mut()
         .unwrap()

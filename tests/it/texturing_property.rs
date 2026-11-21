@@ -1,9 +1,9 @@
 //! Tests for NifFile::texturing_property(_mut) and NiTexturingProperty.
 
-use crate::common::{load, reload, upstream};
+use crate::common::{first_index, load, reload, shape_index, upstream};
 
 use nifly::{
-    file::{Index, NifFile},
+    file::NifFile,
     shaders::{ApplyMode, ClampMode, FilterMode, NiTexturingProperty, TextureMap},
 };
 
@@ -30,14 +30,6 @@ fn texturing<'a>(nif: &'a NifFile, name: &str) -> &'a NiTexturingProperty {
         .texturing_property()
         .unwrap()
         .get()
-}
-
-fn shape_index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
 }
 
 /// (clamp, filter, UV set) of `map`.
@@ -141,11 +133,7 @@ fn none_without_one() {
     );
 
     let nif = upstream("TestNifFile_Skinned_OB");
-    let property = nif
-        .blocks_of::<NiTexturingProperty>()
-        .indices()
-        .next()
-        .unwrap();
+    let property = first_index::<NiTexturingProperty>(&nif);
     let count = nif.blocks().count();
     for index in [0, property, count, usize::MAX] {
         assert!(

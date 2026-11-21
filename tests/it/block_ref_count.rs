@@ -1,6 +1,6 @@
 //! Tests for NifFile::block_ref_count.
 
-use crate::common::load;
+use crate::common::{first, load};
 
 use nifly::{file::NifFile, geometry::NiShape};
 
@@ -64,11 +64,9 @@ fn no_block_at_index() {
 #[test]
 fn follows_edits() {
     let mut nif = load("Suzanne");
-    let shape = nif
-        .block_index(nif.blocks_of::<NiShape>().next().unwrap())
-        .unwrap();
+    let shape = nif.block_index(first::<NiShape>(&nif)).unwrap();
     // Attaching a node under the root adds a ref to it; the root itself is still unowned.
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let node = nif
         .add_node("Extra", nif.root_node().unwrap().transform(), None)
         .unwrap();

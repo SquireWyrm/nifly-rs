@@ -1,7 +1,6 @@
 //! Tests for the BsEffectShaderProperty fields.
 
-use crate::common::{UPSTREAM, reload};
-use std::fs;
+use crate::common::{UPSTREAM, open, reload};
 
 use nifly::{
     file::{Index, NifFile},
@@ -9,13 +8,7 @@ use nifly::{
 };
 
 fn load(name: &str) -> NifFile {
-    NifFile::load(
-        fs::read(format!("{UPSTREAM}/{name}.nif"))
-            .unwrap()
-            .as_slice(),
-        None,
-    )
-    .unwrap()
+    open(format!("{UPSTREAM}/{name}.nif"))
 }
 
 /// The first effect shader with (or without) a name.

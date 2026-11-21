@@ -11,11 +11,7 @@ use nifly::{
     },
 };
 
-use crate::common::{reload_in_place as reload, upstream};
-
-fn first<T: nifly::objects::NiType>(nif: &NifFile) -> Index {
-    nif.blocks_of::<T>().indices().next().unwrap()
-}
+use crate::common::{first_index, reload_in_place, upstream};
 
 /// A new file of `version` with one triangle shape.
 fn triangle(version: NifVersion) -> (NifFile, Index) {
@@ -47,7 +43,7 @@ fn crc_flag_lists() {
     shader.set_crc_flags_1(&[1, 2, 3, 4, 5, 6]);
     shader.set_crc_flags_2(&[]);
     shader.set_raw_flags_1(flags_1 ^ 1);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let shader = saved.block_of::<BsShaderProperty>(231).unwrap();
     assert_eq!(
         (shader.crc_flags_1(), shader.crc_flags_2()),
@@ -75,7 +71,7 @@ fn shading_raw_flags() {
         .unwrap()
         .set_shading_raw_flags(0);
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .block_of::<NiShadeProperty>(shader)
             .unwrap()
             .shading_raw_flags(),
@@ -93,7 +89,7 @@ fn shading_raw_flags() {
         .unwrap()
         .set_shading_raw_flags(0);
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .block_of::<NiShadeProperty>(shader)
             .unwrap()
             .shading_raw_flags(),
@@ -105,7 +101,7 @@ fn shading_raw_flags() {
 #[test]
 fn legacy_raw_flags() {
     let mut nif = upstream("TestNifFile_Static_MW");
-    let material = first::<NiMaterialProperty>(&nif);
+    let material = first_index::<NiMaterialProperty>(&nif);
     let shape = nif.shapes().indices().next().unwrap();
     let stencil = nif
         .edit::<NiShape>(shape)
@@ -117,7 +113,7 @@ fn legacy_raw_flags() {
     nif.block_of_mut::<NiStencilProperty>(stencil)
         .unwrap()
         .set_legacy_raw_flags(7);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         saved
             .block_of::<NiMaterialProperty>(material)
@@ -138,7 +134,7 @@ fn legacy_raw_flags() {
 fn lighting_unknowns() {
     // The Starfield shader has a name, which saves no fields: clear it.
     let mut nif = upstream("TestNifFile_SF");
-    let index = first::<BsLightingShaderProperty>(&nif);
+    let index = first_index::<BsLightingShaderProperty>(&nif);
     nif.block_of_mut::<NiObjectNet>(index).unwrap().set_name("");
     let s = nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap();
     s.set_wetness_unknown_1(1.5);
@@ -147,7 +143,7 @@ fn lighting_unknowns() {
     s.set_unknown_float_1(4.5);
     s.set_unknown_float_2(5.5);
     s.set_unknown_short(6);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let s = saved.block_of::<BsLightingShaderProperty>(index).unwrap();
     assert_eq!((s.wetness_unknown_1(), s.wetness_unknown_2()), (1.5, 2.5));
     assert_eq!(
@@ -175,7 +171,7 @@ fn effect_unknowns() {
     );
     assert_eq!(s.unknown_floats(), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let s = saved.block_of::<BsEffectShaderProperty>(231).unwrap();
     assert_eq!(
         (s.unknown_float(), s.unknown_bytes(), s.unknown_byte()),
@@ -187,11 +183,11 @@ fn effect_unknowns() {
 #[test]
 fn texture_set_slots() {
     let mut nif = upstream("TestNifFile_Static_SE");
-    let index = first::<BsShaderTextureSet>(&nif);
+    let index = first_index::<BsShaderTextureSet>(&nif);
     let set = nif.block_of_mut::<BsShaderTextureSet>(index).unwrap();
     assert!(!set.set_path(9, "x.dds"), "Skyrim sets have 9 slots");
     assert!(set.set_path(1, "textures\\n.dds"));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         saved
             .block_of::<BsShaderTextureSet>(index)
@@ -206,7 +202,7 @@ fn texture_set_slots() {
     nif.block_of_mut::<BsShaderTextureSet>(index)
         .unwrap()
         .set_paths(paths);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert!(
         saved
             .block_of::<BsShaderTextureSet>(index)

@@ -14,7 +14,7 @@ use nifly::{
     object3d::Transform,
 };
 
-use crate::common::reload_in_place as reload;
+use crate::common::reload_in_place;
 
 /// A new file of `version` with rigid bodies on the root and on a child node.
 fn with_bodies(version: NifVersion) -> (NifFile, Index, Index) {
@@ -24,10 +24,7 @@ fn with_bodies(version: NifVersion) -> (NifFile, Index, Index) {
         .unwrap()
         .add_child("Child", Transform::default());
     let mut bodies = [0, 0];
-    for (body, node) in bodies
-        .iter_mut()
-        .zip([nif.root_node().unwrap().index(), child])
-    {
+    for (body, node) in bodies.iter_mut().zip([nif.root_index().unwrap(), child]) {
         let collision = nif
             .edit::<nifly::nodes::NiNode>(node)
             .unwrap()
@@ -55,7 +52,7 @@ fn v(x: f32) -> [f32; 4] {
 #[test]
 fn entities_and_priority() {
     let (mut nif, a, b) = with_bodies(NifVersion::SKYRIM_SE);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let constraint = nif
         .edit::<BhkRigidBody>(a)
         .unwrap()
@@ -67,7 +64,7 @@ fn entities_and_priority() {
     assert!(edit.set_entities([Some(b), Some(a)]));
     edit.set_priority(2);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(entities(&saved, constraint), [Some(b), Some(a)]);
     assert_eq!(
         saved
@@ -91,7 +88,7 @@ fn entities_and_priority() {
             .set_entities([None, Some(a)])
     );
     assert_eq!(
-        entities(&reload(&mut nif), constraint),
+        entities(&reload_in_place(&mut nif), constraint),
         [None, Some(a)],
         "empty slots are kept"
     );
@@ -179,7 +176,7 @@ fn descriptors_and_motors() {
         .unwrap()
         .set_descriptor(ball);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         saved
             .view::<BhkRigidBody>(a)
@@ -262,7 +259,7 @@ fn oblivion_descriptors() {
         .unwrap()
         .set_descriptor(hinge);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let expected = LimitedHingeDescriptor {
         axle_in_b1: [0.0; 4],
         motor: Motor::None,
@@ -330,7 +327,7 @@ fn wrapped_constraints() {
         m.set_wrapped(ragdoll);
         m.set_damping(0.75);
 
-        let saved = reload(&mut nif);
+        let saved = reload_in_place(&mut nif);
         let c = saved.view::<BhkBreakableConstraint>(breakable).unwrap();
         assert_eq!(
             c.wrapped_entities().map(|e| e.map(|e| e.index())),
@@ -360,7 +357,7 @@ fn wrapped_constraints() {
 #[test]
 fn constraint_chain() {
     let (mut nif, a, b) = with_bodies(NifVersion::SKYRIM_SE);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let chain = nif
         .edit::<BhkRigidBody>(a)
         .unwrap()
@@ -381,7 +378,7 @@ fn constraint_chain() {
     c.set_max_error_distance(2.0);
     c.set_priority(4);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let c = saved.view::<BhkBallSocketConstraintChain>(chain).unwrap();
     assert_eq!(
         c.entities().map(|e| e.map(|e| e.index())),

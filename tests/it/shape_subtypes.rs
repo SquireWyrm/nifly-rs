@@ -3,7 +3,7 @@
 //! No test file has these shapes, so each test saves a quad made by `create_shape` and patches
 //! the saved bytes into the wanted block types.
 
-use crate::common::save;
+use crate::common::{first_index, save};
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
@@ -279,7 +279,7 @@ fn lines_data() {
             },
         ]
     });
-    let index = nif.blocks_of::<NiLinesData>().indices().next().unwrap();
+    let index = first_index::<NiLinesData>(&nif);
     assert_eq!(
         nif.block_of::<NiLinesData>(index).unwrap().line_flags(),
         [true, true, true, false]
@@ -321,11 +321,7 @@ fn screen_elements_data() {
             },
         ]
     });
-    let index = nif
-        .blocks_of::<NiScreenElementsData>()
-        .indices()
-        .next()
-        .unwrap();
+    let index = first_index::<NiScreenElementsData>(&nif);
     let data = nif.block_of::<NiScreenElementsData>(index).unwrap();
     assert_eq!(data.polygons(), [polygon]);
     assert_eq!(data.polygon_indices(), [0]);

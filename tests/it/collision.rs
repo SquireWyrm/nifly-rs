@@ -13,11 +13,7 @@ use nifly::{
     objects::NiAvObject,
 };
 
-use crate::common::{load, reload_in_place as reload};
-
-fn first<T: nifly::objects::NiType>(nif: &NifFile) -> Index {
-    nif.blocks_of::<T>().indices().next().unwrap()
-}
+use crate::common::{first_index, load, reload_in_place};
 
 /// A new file of `version` whose root has a new collision object of type `C`.
 fn with_collision<C: nifly::collision::NewCollisionObject>(
@@ -32,7 +28,7 @@ fn with_collision<C: nifly::collision::NewCollisionObject>(
 fn reads_collision_object() {
     // Suzanne.nif: a collision object whose body is a rigid body.
     let nif = load("Suzanne");
-    let index = first::<BhkCollisionObject>(&nif);
+    let index = first_index::<BhkCollisionObject>(&nif);
     let collision = nif.view::<BhkCollisionObject>(index).unwrap();
     let target = collision.target().unwrap();
     assert_eq!(target.collision().unwrap().index(), index);
@@ -43,7 +39,7 @@ fn reads_collision_object() {
 #[test]
 fn target_and_body() {
     let mut nif = load("Suzanne");
-    let index = first::<BhkCollisionObject>(&nif);
+    let index = first_index::<BhkCollisionObject>(&nif);
     let body = nif
         .view::<BhkCollisionObject>(index)
         .unwrap()
@@ -60,7 +56,7 @@ fn target_and_body() {
         | CollisionObjectFlags::SYNC_ON_UPDATE
         | CollisionObjectFlags::from_bits_retain(1 << 15);
     edit.set_flags(flags);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let collision = saved.view::<BhkCollisionObject>(index).unwrap();
     assert_eq!(collision.target().unwrap().index(), shape);
     assert_eq!(
@@ -76,7 +72,7 @@ fn target_and_body() {
             .set_body(None)
     );
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<BhkCollisionObject>(index)
             .unwrap()
             .body()
@@ -87,7 +83,7 @@ fn target_and_body() {
 #[test]
 fn assign_collision_and_body() {
     let (mut nif, collision) = with_collision::<BhkCollisionObject>(NifVersion::SKYRIM_SE);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     assert_eq!(
         nif.view::<NiCollisionObject>(collision)
             .unwrap()
@@ -107,7 +103,7 @@ fn assign_collision_and_body() {
     let body = edit.assign_body::<BhkRigidBody, _>().unwrap();
     assert_ne!(phantom, body);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let root = saved.view::<NiNode>(root).unwrap();
     let collision = root.collision().unwrap();
     assert_eq!(
@@ -141,7 +137,7 @@ fn systems() {
         .unwrap()
         .set_data(&[1, 2, 3, 4]);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let collision = saved.view::<BhkNpCollisionObject>(collision).unwrap();
     assert_eq!(collision.body_id(), 3);
     assert_eq!(
@@ -173,7 +169,7 @@ fn blend_gains() {
         .unwrap();
     blend.set_heir_gain(0.5);
     blend.set_velocity_gain(0.25);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let blend = saved
         .block_of::<BhkBlendCollisionObject>(collision)
         .unwrap();
@@ -191,7 +187,7 @@ fn collision_data() {
     data.set_collision_mode(CollisionMode::UseAbv);
     data.set_bounding_volume(Some(&volume));
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let data = saved.block_of::<NiCollisionData>(collision).unwrap();
     assert_eq!(data.propagation_mode(), Some(PropagationMode::Never));
     assert_eq!(data.collision_mode(), Some(CollisionMode::UseAbv));

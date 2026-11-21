@@ -1,16 +1,11 @@
 //! Tests for NifFile::mirror_shape.
 
-use crate::common::{UPSTREAM, reload};
-use std::fs;
+use crate::common::{UPSTREAM, open, reload};
 
 use nifly::{
     file::{Index, NifFile},
     object3d::Vec3,
 };
-
-fn load(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
-}
 
 /// (index, vertices, normals, triangles) of the first shape.
 fn first(nif: &NifFile) -> (Index, Vec<Vec3>, Vec<Vec3>, Vec<[u16; 3]>) {
@@ -45,7 +40,7 @@ fn reversed(tris: &[[u16; 3]]) -> Vec<[u16; 3]> {
 fn mirrors_one_axis() {
     // NiTriShapeData (Bones) and BSTriShape (Cube, normals stored at reduced precision).
     for (path, tolerance) in [("assets/Bones.nif", 0.0), ("assets/Cube.nif", 0.02)] {
-        let mut nif = load(path);
+        let mut nif = open(path);
         let (shape, vertices, normals, tris) = first(&nif);
         assert!(
             nif.edit::<nifly::geometry::NiShape>(shape)
@@ -81,7 +76,7 @@ fn mirrors_one_axis() {
 
 #[test]
 fn even_axes_keep_winding() {
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     let (shape, vertices, _, tris) = first(&nif);
     // Two axes are a rotation, so triangles keep their winding.
     assert!(
@@ -114,7 +109,7 @@ fn even_axes_keep_winding() {
 
 #[test]
 fn skinned_skyrim_se_needs_partition_update() {
-    let mut nif = load(&format!("{UPSTREAM}/TestNifFile_Skinned_SE.nif"));
+    let mut nif = open(format!("{UPSTREAM}/TestNifFile_Skinned_SE.nif"));
     let (shape, _, _, tris) = first(&nif);
     assert!(
         nif.edit::<nifly::geometry::NiShape>(shape)
@@ -136,7 +131,7 @@ fn skinned_skyrim_se_needs_partition_update() {
 
 #[test]
 fn strips_only_with_even_axes() {
-    let mut nif = load("assets/Strips_MW.nif");
+    let mut nif = open("assets/Strips_MW.nif");
     let (shape, vertices, _, tris) = first(&nif);
     assert!(
         !nif.edit::<nifly::geometry::NiShape>(shape)
@@ -164,7 +159,7 @@ fn strips_only_with_even_axes() {
 
 #[test]
 fn false_without_vertices() {
-    let mut nif = load(&format!("{UPSTREAM}/TestNifFile_Particles_MW.nif"));
+    let mut nif = open(format!("{UPSTREAM}/TestNifFile_Particles_MW.nif"));
     let particles = nif
         .shapes()
         .indexed()

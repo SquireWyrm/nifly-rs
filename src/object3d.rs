@@ -6,6 +6,11 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 
 use nifly_sys::object_3d::ffi;
 
+/// Shorthand for [`Vec3::new`].
+pub const fn vec3(x: f32, y: f32, z: f32) -> Vec3 {
+    Vec3::new(x, y, z)
+}
+
 /// A 3D vector or point.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec3 {
@@ -53,6 +58,13 @@ impl Vec3 {
     pub fn normalize(self) -> Self {
         let len = self.length();
         if len == 0.0 { self } else { self / len }
+    }
+
+    /// Whether each component differs from `other`'s by at most `epsilon`.
+    pub fn abs_diff_eq(&self, other: &Self, epsilon: f32) -> bool {
+        (self.x - other.x).abs() <= epsilon
+            && (self.y - other.y).abs() <= epsilon
+            && (self.z - other.z).abs() <= epsilon
     }
 
     pub(crate) fn to_ffi(self) -> ffi::Vec3 {
@@ -171,6 +183,24 @@ impl Matrix3 {
         Self { rows: [r0, r1, r2] }
     }
 
+    /// A rotation by `angle` radians about the X axis, counterclockwise looking down the axis.
+    pub fn from_rotation_x(angle: f32) -> Self {
+        let (s, c) = angle.sin_cos();
+        Self::from_rows(Vec3::X, vec3(0.0, c, -s), vec3(0.0, s, c))
+    }
+
+    /// A rotation by `angle` radians about the Y axis, counterclockwise looking down the axis.
+    pub fn from_rotation_y(angle: f32) -> Self {
+        let (s, c) = angle.sin_cos();
+        Self::from_rows(vec3(c, 0.0, s), Vec3::Y, vec3(-s, 0.0, c))
+    }
+
+    /// A rotation by `angle` radians about the Z axis, counterclockwise looking down the axis.
+    pub fn from_rotation_z(angle: f32) -> Self {
+        let (s, c) = angle.sin_cos();
+        Self::from_rows(vec3(c, -s, 0.0), vec3(s, c, 0.0), Vec3::Z)
+    }
+
     pub fn transpose(&self) -> Self {
         let [a, b, c] = self.rows;
         Self::from_rows(
@@ -212,6 +242,11 @@ impl Matrix3 {
                 (a.x * b.y - a.y * b.x) * i,
             ),
         ))
+    }
+
+    /// Whether each entry differs from `other`'s by at most `epsilon`.
+    pub fn abs_diff_eq(&self, other: &Self, epsilon: f32) -> bool {
+        (0..3).all(|i| self.rows[i].abs_diff_eq(&other.rows[i], epsilon))
     }
 
     fn column(&self, i: usize) -> Vec3 {
@@ -299,6 +334,29 @@ impl Transform {
         }
     }
 
+    /// A translation, with no rotation and a scale of 1.
+    pub const fn from_translation(translation: Vec3) -> Self {
+        Self::new(translation, Matrix3::IDENTITY, 1.0)
+    }
+
+    /// A rotation, with no translation and a scale of 1.
+    pub const fn from_rotation(rotation: Matrix3) -> Self {
+        Self::new(Vec3::ZERO, rotation, 1.0)
+    }
+
+    /// A scale, with no translation or rotation.
+    pub const fn from_scale(scale: f32) -> Self {
+        Self::new(Vec3::ZERO, Matrix3::IDENTITY, scale)
+    }
+
+    /// Whether the translations, rotations and scales each differ by at most `epsilon` in any
+    /// component.
+    pub fn abs_diff_eq(&self, other: &Self, epsilon: f32) -> bool {
+        self.translation.abs_diff_eq(&other.translation, epsilon)
+            && self.rotation.abs_diff_eq(&other.rotation, epsilon)
+            && (self.scale - other.scale).abs() <= epsilon
+    }
+
     /// Maps a point into the parent's coordinate system.
     pub fn apply(&self, point: Vec3) -> Vec3 {
         self.translation + self.rotation * (point * self.scale)
@@ -373,6 +431,12 @@ impl BoundingSphere {
         Self { center, radius }
     }
 
+    /// Whether the centers' components and the radii each differ by at most `epsilon`.
+    pub fn abs_diff_eq(&self, other: &Self, epsilon: f32) -> bool {
+        self.center.abs_diff_eq(&other.center, epsilon)
+            && (self.radius - other.radius).abs() <= epsilon
+    }
+
     pub(crate) fn to_ffi(self) -> ffi::BoundingSphere {
         ffi::BoundingSphere {
             center: self.center.to_ffi(),
@@ -420,6 +484,60 @@ impl BoundingVolume {
     const CAPSULE: u32 = 2;
     const UNION: u32 = 4;
     const HALF_SPACE: u32 = 5;
+
+    /// Whether both are the same kind of volume, with values that each differ by at most
+    /// `epsilon`.
+    pub fn abs_diff_eq(&self, other: &Self, epsilon: f32) -> bool {
+        let f = |a: f32, b: f32| (a - b).abs() <= epsilon;
+        let v = |a: Vec3, b: Vec3| a.abs_diff_eq(&b, epsilon);
+        match (self, other) {
+            (Self::Base, Self::Base) => true,
+            (Self::Sphere(a), Self::Sphere(b)) => a.abs_diff_eq(b, epsilon),
+            (
+                Self::Box {
+                    center: c1,
+                    axes: a1,
+                    extents: e1,
+                },
+                Self::Box {
+                    center: c2,
+                    axes: a2,
+                    extents: e2,
+                },
+            ) => v(*c1, *c2) && (0..3).all(|i| v(a1[i], a2[i]) && f(e1[i], e2[i])),
+            (
+                Self::Capsule {
+                    center: c1,
+                    origin: o1,
+                    extent: e1,
+                    radius: r1,
+                },
+                Self::Capsule {
+                    center: c2,
+                    origin: o2,
+                    extent: e2,
+                    radius: r2,
+                },
+            ) => v(*c1, *c2) && v(*o1, *o2) && f(*e1, *e2) && f(*r1, *r2),
+            (Self::Union(a), Self::Union(b)) => {
+                a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.abs_diff_eq(y, epsilon))
+            }
+            (
+                Self::HalfSpace {
+                    normal: n1,
+                    constant: k1,
+                    center: c1,
+                },
+                Self::HalfSpace {
+                    normal: n2,
+                    constant: k2,
+                    center: c2,
+                },
+            ) => v(*n1, *n2) && f(*k1, *k2) && v(*c1, *c2),
+            (Self::Other(a), Self::Other(b)) => a == b,
+            _ => false,
+        }
+    }
 
     /// Appends the volume's records in pre-order.
     pub(crate) fn to_ffi(&self, out: &mut Vec<ffi::BoundingVolumeFfi>) {

@@ -1,13 +1,9 @@
 //! Tests for NifFile::shape_vertices, shape_normals, shape_uvs, shape_colors, shape_tangents,
 //! shape_bitangents and shape_eye_data.
 
-use crate::common::{load, upstream};
+use crate::common::{load, shape, upstream};
 
 use nifly::{file::NifFile, geometry::NiShape, object3d::Vec3};
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
 
 /// The length of each array, `None` for ones the shape doesn't store.
 fn lengths(nif: &NifFile, s: &NiShape) -> [Option<usize>; 7] {

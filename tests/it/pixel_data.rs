@@ -226,7 +226,7 @@ fn palette() {
 #[test]
 fn rejects_other_blocks() {
     let mut nif = NifFile::create(NifVersion::OBLIVION);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     assert!(nif.edit::<NiSourceTexture>(root).is_none());
     assert!(nif.edit::<NiSourceTexture>(usize::MAX).is_none());
     assert!(nif.view::<TextureRenderData>(root).is_none());

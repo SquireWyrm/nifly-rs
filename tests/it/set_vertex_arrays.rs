@@ -1,25 +1,9 @@
 //! Tests for NifFile::set_shape_vertices, set_shape_normals, set_shape_uvs, set_shape_colors,
 //! set_shape_tangents, set_shape_bitangents, set_shape_eye_data and set_shape_vertex.
 
-use crate::common::{load, reload, upstream};
+use crate::common::{load, reload, shape, shape_index, upstream};
 
-use nifly::{
-    file::{Index, NifFile},
-    geometry::NiShape,
-    object3d::Vec3,
-};
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
-}
+use nifly::{file::NifFile, object3d::Vec3};
 
 /// `n` distinct unit vectors.
 fn units(n: usize) -> Vec<Vec3> {
@@ -62,7 +46,7 @@ fn arrays(nif: &NifFile, name: &str) -> Arrays {
 #[test]
 fn geometry_data_round_trip() {
     let mut nif = load("Bones");
-    let limb = index(&nif, "Limb");
+    let limb = shape_index(&nif, "Limb");
     let n = 164;
     let vertices: Vec<Vec3> = nif
         .view_of(shape(&nif, "Limb"))
@@ -139,7 +123,7 @@ fn turning_on_tangents_adds_bitangents() {
     // Replacing tangents a shape already has.
     let mut nif = upstream("TestNifFile_Animated_LE");
     let name = "Low02:0";
-    let low = index(&nif, name);
+    let low = shape_index(&nif, name);
     let n = 10;
     assert!(
         nif.edit::<nifly::geometry::NiShape>(low)
@@ -153,7 +137,7 @@ fn turning_on_tangents_adds_bitangents() {
     // Morrowind's editor marker has only positions and normals.
     let mut nif = upstream("TestNifFile_Static_MW");
     let name = "Tri EditorMarker_box_02";
-    let marker = index(&nif, name);
+    let marker = shape_index(&nif, name);
     assert!(nif.view_of(shape(&nif, name)).unwrap().tangents().is_none());
     assert!(
         nif.edit::<nifly::geometry::NiShape>(marker)
@@ -172,7 +156,7 @@ fn turning_on_tangents_adds_bitangents() {
 #[test]
 fn bs_tri_shape_round_trip() {
     let mut nif = load("Cube");
-    let cube = index(&nif, "Cube");
+    let cube = shape_index(&nif, "Cube");
     let n = 14;
     let vertices: Vec<Vec3> = nif
         .view_of(shape(&nif, "Cube"))
@@ -248,7 +232,7 @@ fn bs_tri_shape_round_trip() {
 #[test]
 fn false_changes_nothing() {
     let mut nif = load("Bones");
-    let limb = index(&nif, "Limb");
+    let limb = shape_index(&nif, "Limb");
     let before = arrays(&nif, "Limb");
     // One value too few or too many.
     for n in [163, 165, 0] {
@@ -315,7 +299,7 @@ fn false_changes_nothing() {
 
     // Particles store no settable vertex data.
     let mut nif = upstream("TestNifFile_Particles_MW");
-    let particles = index(&nif, "Blizzard");
+    let particles = shape_index(&nif, "Blizzard");
     for len in [0, 1, 40] {
         assert!(
             !nif.edit::<nifly::geometry::NiShape>(particles)
@@ -338,7 +322,7 @@ fn oblivion_tangents_round_trip_through_extra_data() {
     };
     let mut nif = upstream("TestNifFile_Skinned_OB");
     assert_eq!(blob(&nif), 1);
-    let cuirass = index(&nif, "Cuirass");
+    let cuirass = shape_index(&nif, "Cuirass");
     let n = nif
         .view_of(shape(&nif, "Cuirass"))
         .unwrap()
@@ -380,7 +364,7 @@ fn moves_one_vertex() {
     // NiTriShapeData and BSTriShape.
     for (asset, name) in [("Bones", "Limb"), ("Cube", "Cube")] {
         let mut nif = load(asset);
-        let i = index(&nif, name);
+        let i = shape_index(&nif, name);
         let mut expected = nif.view_of(shape(&nif, name)).unwrap().vertices().unwrap();
         let last = expected.len() - 1;
         for v in [0, last] {
@@ -424,7 +408,7 @@ fn moves_one_vertex() {
 
     // No vertices to move: particles, not a shape, out of range.
     let mut nif = upstream("TestNifFile_Particles_MW");
-    let particles = index(&nif, "Blizzard");
+    let particles = shape_index(&nif, "Blizzard");
     assert!(
         !nif.edit::<nifly::geometry::NiShape>(particles)
             .is_some_and(|mut e| e.set_vertex(0, Vec3::ZERO))

@@ -1,26 +1,14 @@
 //! Tests for NifFile::delete_unreferenced_blocks.
 
-use crate::common::load;
-use std::io::Cursor;
+use crate::common::{load, save_in_place};
 
 use nifly::{
-    file::{NifFile, NifVersion, SaveOptions},
+    file::{NifFile, NifVersion},
     geometry::NiShape,
     nodes::NiNode,
     objects::NiObject,
     shaders::NiShader,
 };
-
-/// The file as it is in memory: no optimizing or sorting on save.
-fn raw(nif: &mut NifFile) -> Vec<u8> {
-    let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions {
-        optimize: false,
-        sort_blocks: false,
-    };
-    nif.save(&mut cur, Some(options)).unwrap();
-    cur.into_inner()
-}
 
 fn types(nif: &NifFile) -> Vec<&str> {
     nif.blocks().map(|b| b.block_name()).collect()
@@ -81,9 +69,9 @@ fn cascades_within_the_type() {
 fn nothing_to_delete() {
     for asset in ["Bones", "Cube", "Icosphere", "Suzanne"] {
         let mut nif = load(asset);
-        let before = raw(&mut nif);
+        let before = save_in_place(&mut nif);
         assert_eq!(nif.delete_unreferenced_blocks::<NiObject>(), 0, "{asset}");
-        assert_eq!(raw(&mut nif), before, "{asset}");
+        assert_eq!(save_in_place(&mut nif), before, "{asset}");
     }
 }
 

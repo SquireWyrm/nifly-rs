@@ -1,8 +1,8 @@
 //! Tests for the BsLightingShaderProperty fields and BsShaderProperty's UV and environment map
 //! fields.
 
-use crate::common::{UPSTREAM, reload};
-use std::{fs, io::Cursor};
+use crate::common::{UPSTREAM, first, first_index, open, reload};
+use std::io::Cursor;
 
 use nifly::{
     file::{NifFile, NifVersion},
@@ -10,21 +10,13 @@ use nifly::{
     shaders::{BsLightingShaderProperty, ClampMode, LightingShaderType, Translucency},
 };
 
-fn load(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
-}
-
 /// The first lighting shader.
 fn shader(nif: &NifFile) -> &BsLightingShaderProperty {
-    nif.blocks_of::<BsLightingShaderProperty>().next().unwrap()
+    first::<BsLightingShaderProperty>(nif)
 }
 
 fn shader_mut(nif: &mut NifFile) -> &mut BsLightingShaderProperty {
-    let index = nif
-        .blocks_of::<BsLightingShaderProperty>()
-        .indices()
-        .next()
-        .unwrap();
+    let index = first_index::<BsLightingShaderProperty>(nif);
     nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap()
 }
 
@@ -40,7 +32,7 @@ fn fallout_76() -> NifFile {
 
 #[test]
 fn reads_fields() {
-    let nif = load("assets/Cube.nif");
+    let nif = open("assets/Cube.nif");
     let s = shader(&nif);
     assert_eq!(s.shader_type(), Some(LightingShaderType::Default));
     assert_eq!(s.texture_clamp_mode(), Some(ClampMode::WrapBoth));
@@ -48,7 +40,7 @@ fn reads_fields() {
     assert_eq!(s.translucency(), None);
     assert!(s.texture_arrays().is_empty());
 
-    let nif = load(&format!("{UPSTREAM}/TestNifFile_Static_FO4_132.nif"));
+    let nif = open(format!("{UPSTREAM}/TestNifFile_Static_FO4_132.nif"));
     let s = shader(&nif);
     assert_eq!(s.shader_type(), Some(LightingShaderType::EnvironmentMap));
     assert_eq!(s.environment_map_scale(), 0.7);
@@ -57,7 +49,7 @@ fn reads_fields() {
 
 #[test]
 fn shared_fields_round_trip() {
-    let mut nif = load("assets/Cube.nif");
+    let mut nif = open("assets/Cube.nif");
     let s = shader_mut(&mut nif);
     s.set_emissive_color([0.25, 0.5, 0.75]);
     s.set_emissive_multiple(2.0);
@@ -98,7 +90,7 @@ fn shared_fields_round_trip() {
 #[test]
 fn type_fields_round_trip() {
     let set = |shader_type, f: &dyn Fn(&mut BsLightingShaderProperty)| {
-        let mut nif = load("assets/Cube.nif");
+        let mut nif = open("assets/Cube.nif");
         let s = shader_mut(&mut nif);
         s.set_shader_type(shader_type);
         f(s);
@@ -107,7 +99,7 @@ fn type_fields_round_trip() {
         saved
     };
 
-    let mut nif = load("assets/Cube.nif");
+    let mut nif = open("assets/Cube.nif");
     shader_mut(&mut nif).set_shader_type(LightingShaderType::EnvironmentMap);
     shader_mut(&mut nif).set_environment_map_scale(2.5);
     assert_eq!(shader(&reload(&mut nif)).environment_map_scale(), 2.5);
@@ -164,7 +156,7 @@ fn type_fields_round_trip() {
 
 #[test]
 fn fallout_4_fields_round_trip() {
-    let mut nif = load(&format!("{UPSTREAM}/TestNifFile_Static_FO4.nif"));
+    let mut nif = open(format!("{UPSTREAM}/TestNifFile_Static_FO4.nif"));
     let s = shader_mut(&mut nif);
     s.set_shader_type(LightingShaderType::EnvironmentMap);
     s.set_wet_material("wet.bgsm");
@@ -211,7 +203,7 @@ fn fallout_4_fields_round_trip() {
     );
 
     // Skin tint alpha, from Fallout 4 on.
-    let mut nif = load(&format!("{UPSTREAM}/TestNifFile_Static_FO4.nif"));
+    let mut nif = open(format!("{UPSTREAM}/TestNifFile_Static_FO4.nif"));
     let s = shader_mut(&mut nif);
     s.set_shader_type(LightingShaderType::SkinTint);
     s.set_skin_tint_alpha(0.5);
@@ -257,7 +249,7 @@ fn fallout_76_fields_round_trip() {
 #[test]
 fn shader_types_by_version() {
     // Every type saves in Skyrim.
-    let mut nif = load("assets/Cube.nif");
+    let mut nif = open("assets/Cube.nif");
     shader_mut(&mut nif).set_shader_type(LightingShaderType::Parallax);
     assert_eq!(
         shader(&reload(&mut nif)).shader_type(),
@@ -301,7 +293,7 @@ fn shader_types_by_version() {
     );
 
     // A named shader saves none of its fields, so it isn't affected.
-    let mut nif = load(&format!("{UPSTREAM}/TestNifFile_FO76.nif"));
+    let mut nif = open(format!("{UPSTREAM}/TestNifFile_FO76.nif"));
     shader_mut(&mut nif).set_shader_type(LightingShaderType::Eye);
     assert_eq!(
         shader(&reload(&mut nif)).shader_type(),
@@ -336,7 +328,7 @@ fn fallout_76_reads_face_tint() {
 
 #[test]
 fn named_starfield_shader_saves_no_fields() {
-    let mut nif = load(&format!("{UPSTREAM}/TestNifFile_SF.nif"));
+    let mut nif = open(format!("{UPSTREAM}/TestNifFile_SF.nif"));
     let before = shader(&nif).glossiness();
     shader_mut(&mut nif).set_glossiness(before + 1.0);
     assert_eq!(shader(&reload(&mut nif)).glossiness(), before);

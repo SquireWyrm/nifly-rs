@@ -1,7 +1,6 @@
 //! Tests for NifFile::create and NifFile::version.
 
-use crate::common::save;
-use std::fs;
+use crate::common::{open, save};
 
 use nifly::{
     file::{NifFile, NifVersion},
@@ -40,7 +39,7 @@ fn create_has_only_root_node() {
 fn created_file_round_trips_through_save() {
     for (game, version) in ALL {
         let mut nif = NifFile::create(version);
-        let root = nif.root_node().unwrap().index();
+        let root = nif.root_index().unwrap();
         let identity = nif.root_node().unwrap().transform();
         nif.add_node("Child", identity, Some(root)).unwrap();
 
@@ -64,11 +63,7 @@ fn version_of_loaded_assets() {
         ("Cone", NifVersion::SKYRIM_SE),
     ];
     for (name, version) in expected {
-        let nif = NifFile::load(
-            fs::read(format!("assets/{name}.nif")).unwrap().as_slice(),
-            None,
-        )
-        .unwrap();
+        let nif = open(format!("assets/{name}.nif"));
         assert_eq!(nif.version(), version, "{name}");
     }
 }
@@ -94,11 +89,7 @@ fn create_then_build_a_small_tree() {
 #[test]
 fn sse_compatibility_per_shape() {
     for name in ["Cube", "Suzanne", "Icosphere", "Bones", "Cone"] {
-        let nif = NifFile::load(
-            fs::read(format!("assets/{name}.nif")).unwrap().as_slice(),
-            None,
-        )
-        .unwrap();
+        let nif = open(format!("assets/{name}.nif"));
         let shapes: Vec<_> = nif.blocks_of::<NiShape>().collect();
         assert!(!shapes.is_empty(), "{name}");
 

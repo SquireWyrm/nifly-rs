@@ -1,7 +1,6 @@
 //! Tests for NifFile::shape_transform_global_to_skin and the skin-to-bone getter and setter.
 
-use crate::common::load;
-use std::fs;
+use crate::common::{assert_close, first, load, open, reload};
 
 use nifly::{
     file::{NifFile, NifVersion},
@@ -9,17 +8,6 @@ use nifly::{
 };
 
 const EPS: f32 = 1e-5;
-
-fn assert_close(a: Transform, b: Transform) {
-    assert!(
-        a.translation.distance(b.translation) < EPS,
-        "{a:?} != {b:?}"
-    );
-    for (r, s) in a.rotation.rows.into_iter().zip(b.rotation.rows) {
-        assert!(r.distance(s) < EPS, "{a:?} != {b:?}");
-    }
-    assert!((a.scale - b.scale).abs() < EPS, "{a:?} != {b:?}");
-}
 
 /// In the bind pose, each bone's global transform times its skin-to-bone transform is the
 /// skin-to-global transform.
@@ -41,7 +29,7 @@ fn assert_bind_pose(nif: &NifFile) {
             .unwrap()
             .transform_skin_to_bone(i)
             .unwrap();
-        assert_close(bone_global * skin_to_bone, skin_to_global);
+        assert_close!(bone_global * skin_to_bone, skin_to_global, EPS);
     }
 }
 
@@ -49,12 +37,13 @@ fn assert_bind_pose(nif: &NifFile) {
 fn bones_values() {
     let nif = load("Bones");
     let shape = nif.shapes().next().unwrap();
-    assert_close(
+    assert_close!(
         nif.view_of(shape)
             .unwrap()
             .transform_global_to_skin()
             .unwrap(),
         Transform::IDENTITY,
+        EPS
     );
 
     // The bones stand along Z at 0, 0.75 and 1.5, each rotated 90° about X so its Y axis points
@@ -67,12 +56,13 @@ fn bones_values() {
             .transform_skin_to_bone(i)
             .unwrap();
         let expected = Transform::new(Vec3::new(0.0, -height, 0.0), to_bone, 1.0);
-        assert_close(skin_to_bone, expected);
-        assert_close(
+        assert_close!(skin_to_bone, expected, EPS);
+        assert_close!(
             nif.node_transform_to_global(format!("Bone{}", i + 1))
                 .unwrap()
                 * skin_to_bone,
             Transform::IDENTITY,
+            EPS
         );
     }
 }
@@ -161,9 +151,10 @@ fn set_skin_to_bone_ni_skin_data() {
             .is_some_and(|mut e| e.set_transform_skin_to_bone(1, sample()))
     );
     let s = nif.shapes().next().unwrap();
-    assert_close(
+    assert_close!(
         nif.view_of(s).unwrap().transform_skin_to_bone(1).unwrap(),
         sample(),
+        EPS
     );
     // The other bones are untouched.
     assert_eq!(
@@ -176,24 +167,22 @@ fn set_skin_to_bone_ni_skin_data() {
     );
 
     // It's stored in the NiSkinData block and survives a save.
-    let mut cur = std::io::Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
-    let data = saved.blocks_of::<nifly::skin::NiSkinData>().next().unwrap();
-    assert_close(data.transform_skin_to_bone(1).unwrap(), sample());
+    let saved = reload(&mut nif);
+    let data = first::<nifly::skin::NiSkinData>(&saved);
+    assert_close!(data.transform_skin_to_bone(1).unwrap(), sample(), EPS);
 }
 
 #[test]
 fn set_skin_to_bone_bs_skin_bone_data() {
     // Fallout 4 stores bone transforms in BSSkin::BoneData.
     let path = "nifly-sys/vendor/nifly/tests/input/TestNifFile_Skinned_FO4.nif";
-    let mut nif = NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap();
+    let mut nif = open(path);
     let shape = shape_index(&nif);
     assert!(
         nif.edit::<nifly::geometry::NiShape>(shape)
             .is_some_and(|mut e| e.set_transform_skin_to_bone(0, sample()))
     );
-    assert_close(
+    assert_close!(
         nif.shapes()
             .views()
             .next()
@@ -201,6 +190,7 @@ fn set_skin_to_bone_bs_skin_bone_data() {
             .transform_skin_to_bone(0)
             .unwrap(),
         sample(),
+        EPS
     );
 }
 
@@ -208,7 +198,7 @@ fn set_skin_to_bone_bs_skin_bone_data() {
 fn set_skin_to_bone_rejects() {
     let mut nif = load("Bones");
     let shape = shape_index(&nif);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let save = |nif: &mut NifFile| {
         let mut cur = std::io::Cursor::new(Vec::new());
         let options = nifly::file::SaveOptions {
@@ -288,7 +278,7 @@ fn calc_returns_stored_transform() {
 
 #[test]
 fn calc_from_first_bone() {
-    let mut nif = NifFile::load(fs::read(FO4).unwrap().as_slice(), None).unwrap();
+    let mut nif = open(FO4);
     // Move both bones away from the bind pose, so the result isn't the identity.
     nif.set_node_transform_to_parent("BoneA", sample(), false);
     nif.set_node_transform_to_parent(
@@ -305,7 +295,7 @@ fn calc_from_first_bone() {
         .unwrap()
         .calc_transform_global_to_skin()
         .unwrap();
-    assert_close(calc, expected_from_bone(&nif, 0));
+    assert_close!(calc, expected_from_bone(&nif, 0), EPS);
     let from_b = expected_from_bone(&nif, 1);
     assert!(
         calc.translation.distance(from_b.translation) > 0.1,
@@ -319,12 +309,13 @@ fn calc_from_first_bone() {
         .set_name("Renamed");
     let shape = nif.shapes().next().unwrap();
     assert_eq!(nif.view_of(shape).unwrap().bone_list()[0], "Renamed");
-    assert_close(
+    assert_close!(
         nif.view_of(shape)
             .unwrap()
             .calc_transform_global_to_skin()
             .unwrap(),
         calc,
+        EPS
     );
 }
 

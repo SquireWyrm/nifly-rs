@@ -31,4 +31,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 members = ["nifly-sys"]
 
 [dev-dependencies]
+fastrand = "2.5.0"
+lexopt = "0.3.2"
 rayon = "1.12.0"
+walkdir = "2.5.1"

@@ -1,6 +1,6 @@
 //! Tests for NifFile::load_shape_mesh and NifFile::save_shape_mesh.
 
-use crate::common::UPSTREAM;
+use crate::common::{UPSTREAM, open};
 use std::{fs, io};
 
 use nifly::{
@@ -9,13 +9,7 @@ use nifly::{
 };
 
 fn starfield() -> NifFile {
-    NifFile::load(
-        fs::read(format!("{UPSTREAM}/TestNifFile_SF.nif"))
-            .unwrap()
-            .as_slice(),
-        None,
-    )
-    .unwrap()
+    open(format!("{UPSTREAM}/TestNifFile_SF.nif"))
 }
 
 fn mesh() -> Vec<u8> {
@@ -133,7 +127,7 @@ fn false_without_external_mesh() {
     }
     assert_eq!(counts(&nif), (0, 0, 0, 0));
 
-    let mut cube = NifFile::load(fs::read("assets/Cube.nif").unwrap().as_slice(), None).unwrap();
+    let mut cube = open("assets/Cube.nif");
     let cube_shape = cube.shapes().indices().next().unwrap();
     assert!(
         !cube
@@ -264,7 +258,7 @@ fn save_without_external_mesh_or_writer() {
         Err(Error::Io(e)) => assert_eq!(e.kind(), io::ErrorKind::BrokenPipe),
         other => panic!("{other:?}"),
     }
-    let cube = NifFile::load(fs::read("assets/Cube.nif").unwrap().as_slice(), None).unwrap();
+    let cube = open("assets/Cube.nif");
     assert!(
         !cube
             .shapes()

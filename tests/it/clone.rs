@@ -1,8 +1,8 @@
 //! Tests for NifFile::clone_shape, clone_shape_from, clone_node, clone_node_from and
 //! clone_children.
 
-use crate::common::{UPSTREAM, load, reload};
-use std::{fs, ptr};
+use crate::common::{UPSTREAM, load, open, reload, shape, shape_index};
+use std::ptr;
 
 use nifly::{
     file::{Index, NifFile},
@@ -11,25 +11,7 @@ use nifly::{
 };
 
 fn skinned_se() -> NifFile {
-    NifFile::load(
-        fs::read(format!("{UPSTREAM}/TestNifFile_Skinned_SE.nif"))
-            .unwrap()
-            .as_slice(),
-        None,
-    )
-    .unwrap()
-}
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
+    open(format!("{UPSTREAM}/TestNifFile_Skinned_SE.nif"))
 }
 
 fn node(nif: &NifFile, name: &str) -> Index {
@@ -58,7 +40,7 @@ fn parent_name(nif: &NifFile, name: &str) -> Option<String> {
 #[test]
 fn clones_a_shape_in_place() {
     let mut nif = load("Bones");
-    let limb = index(&nif, "Limb");
+    let limb = shape_index(&nif, "Limb");
     let count = nif.blocks().count();
     let copy = nif
         .edit::<nifly::geometry::NiShape>(limb)
@@ -181,7 +163,7 @@ fn clones_nodes() {
 
     // From another file of the same game.
     let source = load("Bones");
-    let mut other = NifFile::load(fs::read("assets/Bones.nif").unwrap().as_slice(), None).unwrap();
+    let mut other = open("assets/Bones.nif");
     let copy = other
         .clone_node_from(
             source
@@ -195,15 +177,7 @@ fn clones_nodes() {
 #[test]
 fn versions_of_one_game() {
     // Fallout 4 stream 130 into stream 132, saved in the target's version.
-    let read = |name: &str| {
-        NifFile::load(
-            fs::read(format!("{UPSTREAM}/{name}.nif"))
-                .unwrap()
-                .as_slice(),
-            None,
-        )
-        .unwrap()
-    };
+    let read = |name: &str| open(format!("{UPSTREAM}/{name}.nif"));
     let source = read("TestNifFile_Static_FO4");
     let mut nif = read("TestNifFile_Static_FO4_132");
     assert_ne!(source.version(), nif.version());
@@ -254,7 +228,7 @@ fn different_games_are_refused() {
 fn clones_children() {
     // The cube's shader becomes a block of its own; the original is left unreferenced.
     let mut nif = load("Cube");
-    let cube = index(&nif, "Cube");
+    let cube = shape_index(&nif, "Cube");
     let shader_index = |nif: &NifFile| {
         nif.view_of(shape(nif, "Cube"))
             .unwrap()
@@ -284,7 +258,7 @@ fn none_without_a_source_block() {
         None
     );
     assert_eq!(
-        nif.edit::<nifly::nodes::NiNode>(index(&nif, "Limb"))
+        nif.edit::<nifly::nodes::NiNode>(shape_index(&nif, "Limb"))
             .map(|mut e| e.clone_node()),
         None
     );

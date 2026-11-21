@@ -1,27 +1,12 @@
 //! Tests for NifFile::triangulate_shape, on assets/Strips_MW.nif.
 
-use crate::common::reload;
-use std::{fs, ptr};
+use crate::common::{open, reload, shape, shape_index};
+use std::ptr;
 
-use nifly::{
-    file::{Index, NifFile},
-    geometry::NiShape,
-};
+use nifly::file::NifFile;
 
 fn load() -> NifFile {
-    NifFile::load(fs::read("assets/Strips_MW.nif").unwrap().as_slice(), None).unwrap()
-}
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
+    open("assets/Strips_MW.nif")
 }
 
 const MARKER: &str = "Tri EditorMarker_box_02";
@@ -68,7 +53,7 @@ fn the_asset_has_strips() {
 #[test]
 fn converts_to_triangles() {
     let mut nif = load();
-    let marker = index(&nif, MARKER);
+    let marker = shape_index(&nif, MARKER);
     let data = nif
         .block_index(
             nif.view_of(shape(&nif, MARKER))
@@ -135,14 +120,14 @@ fn false_changes_nothing() {
     // Shared data.
     for name in ["", "Shared"] {
         assert!(
-            !nif.edit::<nifly::geometry::NiShape>(index(&nif, name))
+            !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name))
                 .is_some_and(|mut e| e.triangulate()),
             "{name:?}"
         );
         assert_eq!(shape(&nif, name).block_name(), "NiTriStrips");
     }
     // Already triangles.
-    let marker = index(&nif, MARKER);
+    let marker = shape_index(&nif, MARKER);
     assert!(
         nif.edit::<nifly::geometry::NiShape>(marker)
             .is_some_and(|mut e| e.triangulate())

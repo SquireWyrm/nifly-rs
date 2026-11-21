@@ -1,7 +1,5 @@
 //! Tests for keys, animation data blocks and text keys.
 
-use std::fs;
-
 use nifly::{
     animation::{
         Interpolation, Key, KeyGroup, Morph, NiBSplineBasisData, NiBSplineData, NiBoolData,
@@ -14,7 +12,7 @@ use nifly::{
     objects::NiAvObject,
 };
 
-use crate::common::{UPSTREAM, reload_in_place as reload, save, upstream};
+use crate::common::{UPSTREAM, first, open, reload_in_place, save, upstream};
 
 const TBC: Tbc = Tbc {
     tension: 0.25,
@@ -98,7 +96,7 @@ fn key_groups_by_interpolation() {
                     .set_keys(&colors)
             );
 
-            let nif = reload(&mut nif);
+            let nif = reload_in_place(&mut nif);
             assert_eq!(
                 nif.block_of::<NiFloatData>(f).unwrap().keys(),
                 saved(&floats),
@@ -173,7 +171,7 @@ fn keyframe_rotations() {
                 .set_rotations(&rotations)
         );
 
-        let nif = reload(&mut nif);
+        let nif = reload_in_place(&mut nif);
         let data = nif.block_of::<NiKeyframeData>(q).unwrap();
         let Rotations::Quaternion(read) = data.rotations() else {
             panic!("quaternions")
@@ -235,7 +233,7 @@ fn uv_and_visibility() {
         .unwrap()
         .set_keys(&visible);
 
-    let nif = reload(&mut nif);
+    let nif = reload_in_place(&mut nif);
     let data = nif.block_of::<NiUvData>(uv).unwrap();
     let read = [
         data.u_translations(),
@@ -277,7 +275,7 @@ fn morphs_by_version() {
         assert!(data.set_morphs(&morphs));
         data.set_relative_targets(false);
 
-        let nif = reload(&mut nif);
+        let nif = reload_in_place(&mut nif);
         let data = nif.block_of::<NiMorphData>(index).unwrap();
         assert_eq!((data.vertex_count(), data.relative_targets()), (3, false));
         let morrowind = version == NifVersion::MORROWIND;
@@ -318,7 +316,7 @@ fn bsplines_and_palettes() {
         .unwrap()
         .set_palette(b"Bip01\0NiTransformController\0");
 
-    let nif = reload(&mut nif);
+    let nif = reload_in_place(&mut nif);
     let data = nif.block_of::<NiBSplineData>(spline).unwrap();
     assert_eq!(
         (data.float_control_points(), data.short_control_points()),
@@ -356,13 +354,13 @@ fn text_keys() {
         },
     ];
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let index = nif
         .edit::<NiAvObject>(root)
         .unwrap()
         .assign_extra_data(ExtraTextKeys("Text", &keys))
         .unwrap();
-    let nif2 = reload(&mut nif);
+    let nif2 = reload_in_place(&mut nif);
     let data = nif2.block_of::<NiTextKeyExtraData>(index).unwrap();
     assert_eq!((data.name(), data.text_keys()), ("Text".into(), keys));
 
@@ -370,7 +368,7 @@ fn text_keys() {
         .unwrap()
         .set_text_keys(&[]);
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .block_of::<NiTextKeyExtraData>(index)
             .unwrap()
             .text_keys()
@@ -388,11 +386,7 @@ fn upstream_files_round_trip() {
         "TestNifFile_PathController_MW.nif",
         "TestNifFile_Animated_LE.nif",
     ] {
-        let mut nif = NifFile::load(
-            fs::read(format!("{UPSTREAM}/{name}")).unwrap().as_slice(),
-            None,
-        )
-        .unwrap();
+        let mut nif = open(format!("{UPSTREAM}/{name}"));
         let before = save(&mut nif);
         let indices: Vec<_> = nif.blocks().indices().collect();
         for i in indices {
@@ -428,7 +422,7 @@ fn upstream_files_round_trip() {
         assert!(save(&mut nif) == before, "{name}");
     }
     let morph = upstream("TestNifFile_Morph_MW");
-    let data = morph.blocks_of::<NiMorphData>().next().unwrap();
+    let data = first::<NiMorphData>(&morph);
     let first = &data.morphs()[0];
     assert_eq!(
         (first.keys.interpolation, first.keys.keys.len()),

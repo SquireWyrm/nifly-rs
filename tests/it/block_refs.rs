@@ -1,10 +1,8 @@
 //! Tests for pointing refs at existing blocks: shaders, alpha properties, texture sets,
 //! geometry data, skins, multi-bounds, LOD data, additional data, pixel data and palettes.
 
-use std::io::Cursor;
-
 use nifly::{
-    file::{Index, NifFile, NifVersion, SaveOptions},
+    file::{Index, NifFile, NifVersion},
     geometry::{NiAdditionalGeometryData, NiGeometryData, NiShape},
     nodes::{BsMultiBound, BsMultiBoundNode, NiLodNode, NiRangeLodData},
     object3d::Transform,
@@ -12,21 +10,7 @@ use nifly::{
     skin::{BsSkinInstance, NiSkinData, NiSkinInstance},
 };
 
-use crate::common::{load, upstream};
-
-/// Saves without optimizing or sorting, so block indices and unattached blocks stay.
-fn reload(nif: &mut NifFile) -> NifFile {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(
-        &mut cur,
-        Some(SaveOptions {
-            optimize: false,
-            sort_blocks: false,
-        }),
-    )
-    .unwrap();
-    NifFile::load(cur.into_inner().as_slice(), None).unwrap()
-}
+use crate::common::{first_index, load, reload_in_place, upstream};
 
 fn first_shape(nif: &NifFile) -> Index {
     nif.shapes().indices().next().unwrap()
@@ -53,7 +37,7 @@ fn shader_alpha_and_texture_set() {
     assert!(!edit.set_shader(Some(set)));
     assert!(!edit.set_alpha_property(Some(shader)));
     assert!(edit.set_shader(None) && edit.set_alpha_property(None));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let view = saved.view::<NiShape>(shape).unwrap();
     assert!(view.shader().is_none() && view.alpha_property().is_none());
 
@@ -63,7 +47,7 @@ fn shader_alpha_and_texture_set() {
     assert!(!shader_edit.set_texture_set(Some(shader)));
     assert!(shader_edit.set_texture_set(None));
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiShader>(shader)
             .unwrap()
             .texture_set()
@@ -75,7 +59,7 @@ fn shader_alpha_and_texture_set() {
             .set_texture_set(Some(set))
     );
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let view = saved.view::<NiShape>(shape).unwrap();
     assert_eq!(view.shader().map(|s| s.index()), Some(shader));
     assert_eq!(view.alpha_property().map(|a| a.index()), Some(alpha));
@@ -101,7 +85,7 @@ fn geometry_data() {
     assert!(nif.edit::<NiShape>(a).unwrap().set_geometry_data(b_data));
     let vertices = |nif: &NifFile, s| nif.view::<NiShape>(s).unwrap().vertices();
     assert_eq!(vertices(&nif, a), vertices(&nif, b));
-    assert_eq!(data_index(&reload(&mut nif), a), b_data);
+    assert_eq!(data_index(&reload_in_place(&mut nif), a), b_data);
 
     // Each shape type takes only its own data type.
     let mut nif = load("Strips_MW");
@@ -137,7 +121,7 @@ fn ni_skin_instance() {
     assert!(!edit.set_skin_partition(Some(data)));
     assert!(edit.set_skin_partition(None));
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiSkinInstance>(skin)
             .unwrap()
             .skin_partition()
@@ -152,7 +136,7 @@ fn ni_skin_instance() {
     assert!(shape_edit.set_skin_instance(None));
     assert!(shape_edit.skin_instance().is_none());
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiShape>(shape)
             .unwrap()
             .bone_ids()
@@ -164,7 +148,7 @@ fn ni_skin_instance() {
             .set_skin_instance(Some(skin))
     );
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiShape>(shape)
             .unwrap()
             .skin_instance()
@@ -177,7 +161,7 @@ fn ni_skin_instance() {
 #[test]
 fn skin_data_partition() {
     let mut nif = upstream("TestNifFile_Skinned_MW");
-    let data = nif.blocks_of::<NiSkinData>().indices().next().unwrap();
+    let data = first_index::<NiSkinData>(&nif);
     let before = nif
         .view::<NiSkinData>(data)
         .unwrap()
@@ -188,7 +172,7 @@ fn skin_data_partition() {
     assert!(edit.set_partition(None));
     assert!(edit.partition().is_none());
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiSkinData>(data)
             .unwrap()
             .partition()
@@ -200,13 +184,13 @@ fn skin_data_partition() {
 #[test]
 fn bs_skin_instance() {
     let mut nif = upstream("TestNifFile_Skinned_FO4");
-    let skin = nif.blocks_of::<BsSkinInstance>().indices().next().unwrap();
+    let skin = first_index::<BsSkinInstance>(&nif);
     let mut edit = nif.edit::<BsSkinInstance>(skin).unwrap();
     let data = edit.bone_data().unwrap().index();
     assert!(!edit.set_bone_data(Some(skin)));
     assert!(edit.set_bone_data(None));
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<BsSkinInstance>(skin)
             .unwrap()
             .bone_data()
@@ -218,7 +202,7 @@ fn bs_skin_instance() {
             .set_bone_data(Some(data))
     );
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<BsSkinInstance>(skin)
             .unwrap()
             .bone_data()
@@ -231,11 +215,7 @@ fn bs_skin_instance() {
 #[test]
 fn multi_bound() {
     let mut nif = upstream("TestNifFile_MultiBound_SE");
-    let node = nif
-        .blocks_of::<BsMultiBoundNode>()
-        .indices()
-        .next()
-        .unwrap();
+    let node = first_index::<BsMultiBoundNode>(&nif);
     let mut edit = nif.edit::<BsMultiBoundNode>(node).unwrap();
     let bound = edit.view().multi_bound().unwrap().index();
     let data = edit
@@ -250,7 +230,7 @@ fn multi_bound() {
     let mut bound_edit = nif.edit::<BsMultiBound>(bound).unwrap();
     assert!(!bound_edit.set_multi_bound_data(Some(bound)));
     assert!(bound_edit.set_multi_bound_data(None));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert!(
         saved
             .view::<BsMultiBoundNode>(node)
@@ -276,7 +256,7 @@ fn multi_bound() {
             .unwrap()
             .set_multi_bound(Some(bound))
     );
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let bound = saved
         .view::<BsMultiBoundNode>(node)
         .unwrap()
@@ -298,7 +278,7 @@ fn lod_data() {
     assert!(edit.lod_data().is_none());
     assert!(edit.set_lod_data(Some(data)));
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiLodNode>(node)
             .unwrap()
             .lod_data()
@@ -311,7 +291,7 @@ fn lod_data() {
 #[test]
 fn additional_data() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
-    let data = nif.blocks_of::<NiGeometryData>().indices().next().unwrap();
+    let data = first_index::<NiGeometryData>(&nif);
     let mut edit = nif.edit::<NiGeometryData>(data).unwrap();
     let extra = edit.assign_additional_data::<NiAdditionalGeometryData, _>();
     assert!(!edit.set_additional_data(Some(data)));
@@ -319,7 +299,7 @@ fn additional_data() {
     assert!(edit.additional_data().is_none());
     assert!(edit.set_additional_data(Some(extra)));
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiGeometryData>(data)
             .unwrap()
             .additional_data()
@@ -351,7 +331,7 @@ fn pixel_data_and_palette() {
     assert!(!edit.set_pixel_data(Some(palette)));
     assert!(edit.set_pixel_data(None));
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiSourceTexture>(texture)
             .unwrap()
             .pixel_data()
@@ -362,7 +342,7 @@ fn pixel_data_and_palette() {
             .unwrap()
             .set_pixel_data(Some(data))
     );
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let data_view = saved
         .view::<NiSourceTexture>(texture)
         .unwrap()

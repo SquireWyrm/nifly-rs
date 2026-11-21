@@ -1,7 +1,6 @@
 //! Tests for NifFile::shape_mesh_paths and NifFile::set_shape_mesh_path.
 
-use crate::common::{UPSTREAM, load, reload};
-use std::fs;
+use crate::common::{UPSTREAM, load, open, reload};
 
 use nifly::{file::NifFile, geometry::BsGeometryMeshData};
 
@@ -9,13 +8,7 @@ use nifly::{file::NifFile, geometry::BsGeometryMeshData};
 const PATH: &str = r"abcdef0123456789\0123456789abcdef01234567";
 
 fn starfield() -> NifFile {
-    NifFile::load(
-        fs::read(format!("{UPSTREAM}/TestNifFile_SF.nif"))
-            .unwrap()
-            .as_slice(),
-        None,
-    )
-    .unwrap()
+    open(format!("{UPSTREAM}/TestNifFile_SF.nif"))
 }
 
 fn paths(nif: &NifFile) -> Vec<String> {

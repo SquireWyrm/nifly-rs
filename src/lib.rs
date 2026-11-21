@@ -8,18 +8,15 @@
 //!
 //! ```
 //! use nifly::prelude::*;
-//! use std::{fs::File, io::Cursor};
 //!
-//! let mut nif = NifFile::load(File::open("assets/Cube.nif")?, None)?;
+//! let mut nif = NifFile::open("assets/Cube.nif", None)?;
 //! for shape in nif.blocks_of::<NiShape>().views() {
 //!     println!("{}: {:?}", shape.name().to_str_lossy(), shape.texture_paths());
 //! }
 //! let mut root = nif.root_node_mut().unwrap();
-//! root.set_transform(Transform::new(Vec3::new(0.0, 0.0, 10.0), Matrix3::IDENTITY, 1.0));
+//! root.set_transform(Transform::from_translation(vec3(0.0, 0.0, 10.0)));
 //!
-//! let mut output = Cursor::new(Vec::new());
-//! nif.save(&mut output, None)?;
-//! let bytes = output.into_inner();
+//! let bytes = nif.to_bytes(None)?;
 //! # assert!(!bytes.is_empty());
 //! # Ok::<(), nifly::Error>(())
 //! ```

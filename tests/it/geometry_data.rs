@@ -1,22 +1,14 @@
 //! Tests for NifFile::geometry_data(_mut) and NiGeometryData.
 
-use crate::common::{load, reload, upstream};
-use std::{io::Cursor, ptr};
+use crate::common::{assert_close, load, reload, reload_with, shape_index, upstream};
+use std::ptr;
 
 use nifly::{
-    file::{Index, NifFile, SaveOptions},
+    file::{NifFile, SaveOptions},
     geometry::{BsGeometryMeshData, NiGeometryData, NiShape, NiTriBasedGeomData, NiTriShapeData},
     object3d::{BoundingSphere, Vec3},
     objects::NiObject,
 };
-
-fn shape_index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
-}
 
 fn data<'a>(nif: &'a NifFile, name: &str) -> &'a NiGeometryData {
     let shape = nif.shapes().find(|s| s.name() == name).unwrap();
@@ -83,16 +75,13 @@ fn bounds_setters_round_trip() {
     assert_eq!(data(&nif, name).bounds(), bounds);
 
     // Saving without optimizing keeps them.
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(
-        &mut cur,
+    let mut kept = reload_with(
+        &mut nif,
         Some(SaveOptions {
             optimize: false,
             sort_blocks: true,
         }),
-    )
-    .unwrap();
-    let mut kept = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    );
     assert_eq!(data(&kept, name).bounds(), bounds);
 
     // Recalculating from the vertices gives the stored sphere back.
@@ -102,7 +91,7 @@ fn bounds_setters_round_trip() {
         .geometry_data()
         .unwrap()
         .update_bounds();
-    assert_close(data(&kept, name).bounds(), stored);
+    assert_close!(data(&kept, name).bounds(), stored, 0.01);
 
     // A default save recalculates them too.
     nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name))
@@ -110,18 +99,7 @@ fn bounds_setters_round_trip() {
         .geometry_data()
         .unwrap()
         .set_bounds(bounds);
-    assert_close(data(&reload(&mut nif), name).bounds(), stored);
-}
-
-fn assert_close(a: BoundingSphere, b: BoundingSphere) {
-    let close = |x: f32, y: f32| (x - y).abs() < 0.01;
-    assert!(
-        close(a.radius, b.radius)
-            && close(a.center.x, b.center.x)
-            && close(a.center.y, b.center.y)
-            && close(a.center.z, b.center.z),
-        "{a:?} != {b:?}"
-    );
+    assert_close!(data(&reload(&mut nif), name).bounds(), stored, 0.01);
 }
 
 #[test]

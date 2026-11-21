@@ -1,6 +1,6 @@
 //! Tests for BSDistantObjectInstancedNode instances and texture arrays.
 
-use crate::common::reload;
+use crate::common::{first, first_index, reload};
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
@@ -11,9 +11,7 @@ use nifly::{
 };
 
 fn node(nif: &NifFile) -> &BsDistantObjectInstancedNode {
-    nif.blocks_of::<BsDistantObjectInstancedNode>()
-        .next()
-        .unwrap()
+    first::<BsDistantObjectInstancedNode>(nif)
 }
 
 fn setup() -> (NifFile, Index) {
@@ -61,11 +59,7 @@ fn instances_round_trip() {
     assert_eq!(n.instance(1), Some(instance(2.0, 0)));
     assert_eq!(n.instance(3), None);
 
-    let index = saved
-        .blocks_of::<BsDistantObjectInstancedNode>()
-        .indices()
-        .next()
-        .unwrap();
+    let index = first_index::<BsDistantObjectInstancedNode>(&saved);
     let n = saved
         .block_of_mut::<BsDistantObjectInstancedNode>(index)
         .unwrap();

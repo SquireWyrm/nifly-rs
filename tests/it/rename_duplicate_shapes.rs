@@ -6,10 +6,6 @@ use nifly::{file::NifFile, object3d::Transform};
 
 const ASSETS: [&str; 5] = ["Bones", "Cone", "Cube", "Icosphere", "Suzanne"];
 
-fn identity() -> Transform {
-    Transform::IDENTITY
-}
-
 fn shape_name(nif: &NifFile) -> Vec<u8> {
     nif.shapes().next().unwrap().name().to_vec()
 }
@@ -30,7 +26,7 @@ fn first_shape_keeps_its_name() {
     // rename it, because the first shape child of each node is skipped.
     let mut nif = load("Suzanne");
     let name = shape_name(&nif);
-    nif.add_node(&name, identity(), None).unwrap();
+    nif.add_node(&name, Transform::IDENTITY, None).unwrap();
 
     assert!(!nif.rename_duplicate_shapes());
     assert_eq!(shape_name(&nif), name);
@@ -45,7 +41,7 @@ fn shapes_below_root_children_are_not_checked() {
         nif.find_block_by_name::<nifly::nodes::NiNode>("Indirect2")
             .unwrap(),
     );
-    nif.add_node(&name, identity(), indirect2).unwrap();
+    nif.add_node(&name, Transform::IDENTITY, indirect2).unwrap();
 
     assert!(!nif.rename_duplicate_shapes());
     assert_eq!(shape_name(&nif), name);

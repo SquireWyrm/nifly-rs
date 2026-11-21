@@ -1,27 +1,11 @@
 //! Tests for NifFile::shape_bone_bounds and NifFile::set_shape_bone_bounds.
 
-use crate::common::UPSTREAM;
-use std::{fs, io::Cursor};
+use crate::common::{UPSTREAM, open, reload, save_in_place};
 
 use nifly::{
-    file::{NifFile, SaveOptions},
     object3d::{BoundingSphere, Vec3},
     skin::NiSkinData,
 };
-
-fn load(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
-}
-
-fn raw(nif: &mut NifFile) -> Vec<u8> {
-    let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions {
-        optimize: false,
-        sort_blocks: false,
-    };
-    nif.save(&mut cur, Some(options)).unwrap();
-    cur.into_inner()
-}
 
 fn sample() -> BoundingSphere {
     BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.5)
@@ -30,7 +14,7 @@ fn sample() -> BoundingSphere {
 #[test]
 fn bones_values() {
     // Each sphere is in its bone's coordinates, where Y points along the limb.
-    let nif = load("assets/Bones.nif");
+    let nif = open("assets/Bones.nif");
     let shape = nif.shapes().next().unwrap();
     for (i, (y, radius)) in [(0.516, 0.844), (0.371, 0.955), (0.105, 0.736)]
         .into_iter()
@@ -49,7 +33,7 @@ fn bones_values() {
 
 #[test]
 fn set_and_save_ni_skin_data() {
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     let shape = nif.shapes().indices().next().unwrap();
     let before: Vec<_> = (0..3)
         .map(|i| nif.shapes().views().next().unwrap().bone_bounds(i))
@@ -64,9 +48,7 @@ fn set_and_save_ni_skin_data() {
     assert_eq!(nif.view_of(s).unwrap().bone_bounds(0), before[0]);
     assert_eq!(nif.view_of(s).unwrap().bone_bounds(2), before[2]);
 
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    let saved = reload(&mut nif);
     assert_eq!(
         saved.shapes().views().next().unwrap().bone_bounds(1),
         Some(sample())
@@ -77,7 +59,7 @@ fn set_and_save_ni_skin_data() {
 #[test]
 fn set_bs_skin_bone_data() {
     // Fallout 4 stores bone bounds in BSSkin::BoneData.
-    let mut nif = load(&format!("{UPSTREAM}/TestNifFile_Skinned_FO4.nif"));
+    let mut nif = open(format!("{UPSTREAM}/TestNifFile_Skinned_FO4.nif"));
     let shape = nif.shapes().indices().next().unwrap();
     assert!(
         nif.edit::<nifly::geometry::NiShape>(shape)
@@ -92,7 +74,7 @@ fn set_bs_skin_bone_data() {
 #[test]
 fn duplicate_names_target_the_given_shape() {
     // Two shapes with the same name: setting bounds on the second must not touch the first.
-    let mut nif = load(&format!("{UPSTREAM}/TestNifFile_Skinned_SE.nif"));
+    let mut nif = open(format!("{UPSTREAM}/TestNifFile_Skinned_SE.nif"));
     let shapes: Vec<_> = nif.shapes().indices().collect();
     assert_eq!(shapes.len(), 2);
     nif.block_of_mut::<nifly::objects::NiObjectNet>(shapes[1])
@@ -112,8 +94,8 @@ fn duplicate_names_target_the_given_shape() {
 
 #[test]
 fn rejects() {
-    let mut nif = load("assets/Bones.nif");
-    let before = raw(&mut nif);
+    let mut nif = open("assets/Bones.nif");
+    let before = save_in_place(&mut nif);
     let shape = nif.shapes().indices().next().unwrap();
     let root = nif.nodes().indices().next().unwrap();
     assert!(
@@ -134,9 +116,9 @@ fn rejects() {
         !nif.edit::<nifly::geometry::NiShape>(usize::MAX)
             .is_some_and(|mut e| e.set_bone_bounds(0, sample()))
     );
-    assert_eq!(raw(&mut nif), before);
+    assert_eq!(save_in_place(&mut nif), before);
 
-    let mut cube = load("assets/Cube.nif");
+    let mut cube = open("assets/Cube.nif");
     let shape = cube.shapes().indices().next().unwrap();
     assert!(
         !cube

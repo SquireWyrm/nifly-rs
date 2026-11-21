@@ -1,33 +1,18 @@
 //! Tests for effects and lights: NiDynamicEffect, NiTextureEffect, NiLight and its subclasses,
 //! node effect lists, add_effect, and the spot light inner angle by version.
 
-use crate::common::upstream;
-use std::io::Cursor;
+use crate::common::{first, reload_in_place, upstream};
 
 use nifly::{
     effects::{
         CoordinateGeneration, EffectType, NiAmbientLight, NiDirectionalLight, NiDynamicEffect,
         NiLight, NiPointLight, NiSpotLight, NiTextureEffect, Plane,
     },
-    file::{Index, NifFile, SaveOptions},
+    file::{Index, NifFile},
     nodes::NiNode,
     object3d::{Matrix3, Vec3},
     shaders::{ClampMode, FilterMode, NiSourceTexture},
 };
-
-/// Saves without optimizing or sorting, so block indices stay the same.
-fn reload(nif: &mut NifFile) -> NifFile {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(
-        &mut cur,
-        Some(SaveOptions {
-            optimize: false,
-            sort_blocks: false,
-        }),
-    )
-    .unwrap();
-    NifFile::load(cur.into_inner().as_slice(), None).unwrap()
-}
 
 fn effects(nif: &NifFile, node: Index) -> Vec<Index> {
     nif.view::<NiNode>(node)
@@ -111,7 +96,7 @@ fn texture_effect_fields_survive_save() {
     b.set_affected_node_pointers(&[1, 2]);
     assert!(edit.set_source_texture(Some(7)));
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let effect = saved.view::<NiTextureEffect>(3).unwrap();
     assert_eq!(effect.projection_matrix(), matrix);
     assert_eq!(effect.projection_translation(), Vec3::new(1.0, 2.0, 3.0));
@@ -171,7 +156,7 @@ fn set_effects_checks_type() {
     let mut node = nif.edit::<NiNode>(2).unwrap();
     assert!(node.set_effects(&[19, 3]));
     assert_eq!(effects(&nif, 2), [19, 3]);
-    assert_eq!(effects(&reload(&mut nif), 2), [19, 3]);
+    assert_eq!(effects(&reload_in_place(&mut nif), 2), [19, 3]);
 
     let mut node = nif.edit::<NiNode>(2).unwrap();
     assert!(node.set_effects(&[]));
@@ -196,7 +181,7 @@ fn affected_nodes() {
         [0]
     );
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let light = saved.blocks_of::<NiAmbientLight>().views().next().unwrap();
     assert_eq!(
         light
@@ -231,7 +216,7 @@ fn check_light(light: &NiLight) {
 #[test]
 fn new_lights_have_defaults() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let count = nif.blocks().count();
     let point = nif
         .edit::<NiNode>(root)
@@ -265,7 +250,7 @@ fn new_lights_have_defaults() {
 #[test]
 fn lights_survive_save() {
     let mut nif = upstream("TestNifFile_Static_SE");
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let ambient = nif
         .edit::<NiNode>(root)
         .unwrap()
@@ -301,7 +286,7 @@ fn lights_survive_save() {
     s.set_inner_angle(0.25);
     s.set_exponent(2.0);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let root = saved.root_node().unwrap();
     let lights: Vec<_> = root.effects().of::<NiLight>().collect();
     assert_eq!(lights.len(), 4);
@@ -333,7 +318,7 @@ fn lights_survive_save() {
 /// `(outer, inner, exponent)`. A copy of the file writes it the same way.
 fn spot_light_round_trip(name: &str) -> (f32, f32, f32) {
     let mut nif = upstream(name);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let spot = nif
         .edit::<NiNode>(root)
         .unwrap()
@@ -347,9 +332,9 @@ fn spot_light_round_trip(name: &str) -> (f32, f32, f32) {
     let mut copy = nif.clone();
 
     let results = [&mut nif, &mut copy].map(|file| {
-        let saved = reload(file);
+        let saved = reload_in_place(file);
         // Everything after the angle is read where it was written.
-        let s = saved.blocks_of::<NiSpotLight>().next().unwrap();
+        let s = first::<NiSpotLight>(&saved);
         check_light(s);
         assert_eq!(saved.root_node().unwrap().effects().count(), 1, "{name}");
         (s.outer_angle(), s.inner_angle(), s.exponent())
@@ -378,7 +363,7 @@ fn spot_light_inner_angle_by_version() {
 #[test]
 fn fallout_4_drops_effect_lists() {
     let mut nif = upstream("TestNifFile_Static_FO4");
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let light = nif
         .edit::<NiNode>(root)
         .unwrap()
@@ -391,7 +376,7 @@ fn fallout_4_drops_effect_lists() {
     );
     set_light(&mut nif, light);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let root = saved.root_node().unwrap();
     assert_eq!(root.effects().count(), 0);
     // As a child, the light itself is kept.

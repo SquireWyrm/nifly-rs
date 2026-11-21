@@ -1,19 +1,8 @@
 //! Tests for NifFile::set_shape_vertex_weights and NifFile::clear_shape_vertex_weights.
 
-use crate::common::{load, reload, upstream};
+use crate::common::{load, reload, shape_index, upstream};
 
-use nifly::{
-    file::{Index, NifFile},
-    geometry::NiShape,
-};
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
-}
+use nifly::{file::NifFile, geometry::NiShape};
 
 /// The weight of each of `shape`'s bones on `vertex`, `None` where it has none.
 fn vertex_weights(nif: &NifFile, shape: &NiShape, vertex: u16) -> Vec<Option<f32>> {
@@ -43,7 +32,7 @@ fn cylinders() -> NifFile {
 #[test]
 fn sets_and_normalizes() {
     let mut nif = cylinders();
-    let shape = index(&nif, "cylinder_1");
+    let shape = shape_index(&nif, "cylinder_1");
     assert_eq!(
         nif.view_of(nif.block_of::<NiShape>(shape).unwrap())
             .unwrap()
@@ -73,7 +62,7 @@ fn sets_and_normalizes() {
 #[test]
 fn clearing() {
     let mut nif = cylinders();
-    let shape = index(&nif, "cylinder_1");
+    let shape = shape_index(&nif, "cylinder_1");
     assert!(
         weights_of(&nif, "cylinder_1", 0)
             .iter()
@@ -97,7 +86,10 @@ fn clearing() {
 fn only_the_indexed_shape() {
     // Two shapes with the same name: only the one at the index changes.
     let mut nif = cylinders();
-    let (first, second) = (index(&nif, "cylinder_1"), index(&nif, "cylinder_2"));
+    let (first, second) = (
+        shape_index(&nif, "cylinder_1"),
+        shape_index(&nif, "cylinder_2"),
+    );
     nif.block_of_mut::<nifly::objects::NiObjectNet>(second)
         .unwrap()
         .set_name("cylinder_1");
@@ -116,7 +108,7 @@ fn only_the_indexed_shape() {
 #[test]
 fn false_changes_nothing() {
     let mut nif = cylinders();
-    let shape = index(&nif, "cylinder_1");
+    let shape = shape_index(&nif, "cylinder_1");
     let before = weights_of(&nif, "cylinder_1", 0);
     let five = [(0, 1.0), (1, 1.0), (0, 1.0), (1, 1.0), (0, 1.0)];
     for (vertex, weights) in [
@@ -153,12 +145,12 @@ fn false_changes_nothing() {
     // An unskinned BSTriShape, and an NiTriShape, whose weights are per bone.
     let mut nif = load("Cube");
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cube"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cube"))
             .is_some_and(|mut e| e.set_vertex_weights(0, &[]))
     );
     let mut nif = load("Bones");
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "Limb"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Limb"))
             .is_some_and(|mut e| e.set_vertex_weights(0, &[(0, 1.0)]))
     );
 
@@ -174,7 +166,10 @@ fn false_changes_nothing() {
 #[test]
 fn clear_all() {
     let mut nif = cylinders();
-    let (first, second) = (index(&nif, "cylinder_1"), index(&nif, "cylinder_2"));
+    let (first, second) = (
+        shape_index(&nif, "cylinder_1"),
+        shape_index(&nif, "cylinder_2"),
+    );
     let other = weights_of(&nif, "cylinder_2", 0);
     assert!(
         nif.edit::<nifly::geometry::NiShape>(first)
@@ -211,13 +206,13 @@ fn clear_all() {
 fn clear_false_without_vertex_weights() {
     let mut nif = load("Cube");
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cube"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cube"))
             .is_some_and(|mut e| e.clear_vertex_weights())
     );
     let mut nif = load("Bones");
     let before = nif.shapes().views().next().unwrap().bone_weights(0);
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "Limb"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Limb"))
             .is_some_and(|mut e| e.clear_vertex_weights())
     );
     assert_eq!(nif.shapes().views().next().unwrap().bone_weights(0), before);

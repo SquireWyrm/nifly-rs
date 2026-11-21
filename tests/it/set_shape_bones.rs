@@ -1,25 +1,12 @@
 //! Tests for NifFile::set_shape_bone_ids and NifFile::set_shape_bone_list.
 
-use crate::common::{load, reload, upstream};
+use crate::common::{load, reload, shape, shape_index, upstream};
 
 use nifly::{
-    file::{Index, NifFile},
-    geometry::NiShape,
+    file::NifFile,
     object3d::Transform,
     skin::{NiSkinData, NiSkinInstance},
 };
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
-}
 
 fn bones(nif: &NifFile, name: &str) -> Vec<String> {
     nif.view_of(shape(nif, name))
@@ -41,7 +28,7 @@ fn skin_data<'a>(nif: &'a NifFile, name: &str) -> &'a NiSkinData {
 #[test]
 fn same_count_keeps_data_by_position() {
     let mut nif = load("Bones");
-    let limb = index(&nif, "Limb");
+    let limb = shape_index(&nif, "Limb");
     let s = shape(&nif, "Limb");
     let weights: Vec<_> = (0..3)
         .map(|b| nif.view_of(s).unwrap().bone_weights(b))
@@ -78,7 +65,7 @@ fn same_count_keeps_data_by_position() {
 #[test]
 fn new_count_resets_skin_data() {
     let mut nif = load("Bones");
-    let limb = index(&nif, "Limb");
+    let limb = shape_index(&nif, "Limb");
     assert!(
         !nif.view_of(shape(&nif, "Limb"))
             .unwrap()
@@ -125,7 +112,7 @@ fn new_count_resets_skin_data() {
 fn after_create_skinning() {
     // Skyrim SE: a new skin, bones by name, then per-vertex weights.
     let mut nif = load("Cube");
-    let cube = index(&nif, "Cube");
+    let cube = shape_index(&nif, "Cube");
     let root = nif.root_node().map(|r| r.index()).unwrap();
     let bone = nif
         .add_node("Bone", Transform::IDENTITY, Some(root))
@@ -156,7 +143,7 @@ fn after_create_skinning() {
 
     // Fallout 4: BSSkin::Instance, using the file's unused bone nodes.
     let mut nif = upstream("TestNifFile_Static_FO4");
-    let cylinder = index(&nif, "cylinder_1");
+    let cylinder = shape_index(&nif, "cylinder_1");
     assert!(
         nif.edit::<nifly::geometry::NiShape>(cylinder)
             .is_some_and(|mut e| e.create_skinning())
@@ -207,7 +194,7 @@ fn bs_geometry_by_name() {
 #[test]
 fn false_changes_nothing() {
     let mut nif = load("Bones");
-    let limb = index(&nif, "Limb");
+    let limb = shape_index(&nif, "Limb");
     let count = nif.blocks().count();
     let before = bones(&nif, "Limb");
 
@@ -228,7 +215,7 @@ fn false_changes_nothing() {
 
     // Not skinned, not a shape, or out of range.
     let mut nif = load("Cube");
-    let cube = index(&nif, "Cube");
+    let cube = shape_index(&nif, "Cube");
     assert!(
         !nif.edit::<nifly::geometry::NiShape>(cube)
             .is_some_and(|mut e| e.set_bone_ids(&[0]))

@@ -1,20 +1,9 @@
 //! Tests for NifFile::pretty_sort_blocks, NifFile::sort_blocks and BlockSorter.
 
-use crate::common::load;
+use crate::common::{load, reload_in_place, save_in_place};
 use std::io::Cursor;
 
 use nifly::file::{NifFile, SaveOptions};
-
-/// The file as it is in memory: no optimizing or sorting on save.
-fn raw(nif: &mut NifFile) -> Vec<u8> {
-    let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions {
-        optimize: false,
-        sort_blocks: false,
-    };
-    nif.save(&mut cur, Some(options)).unwrap();
-    cur.into_inner()
-}
 
 fn types(nif: &NifFile) -> Vec<&str> {
     nif.blocks().map(|b| b.block_name()).collect()
@@ -39,7 +28,7 @@ fn pretty_sort_matches_save() {
         }),
     )
     .unwrap();
-    assert_eq!(raw(&mut a), cur.into_inner());
+    assert_eq!(save_in_place(&mut a), cur.into_inner());
 }
 
 #[test]
@@ -60,7 +49,7 @@ fn visiting_parentless_nodes_is_pretty_sort() {
 
         let mut b = load(asset);
         b.pretty_sort_blocks();
-        assert_eq!(raw(&mut a), raw(&mut b), "{asset}");
+        assert_eq!(save_in_place(&mut a), save_in_place(&mut b), "{asset}");
     }
 }
 
@@ -154,16 +143,7 @@ fn sorted_file_round_trips() {
     sorter.visit(0);
     sorter.apply();
 
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(
-        &mut cur,
-        Some(SaveOptions {
-            optimize: false,
-            sort_blocks: false,
-        }),
-    )
-    .unwrap();
-    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    let saved = reload_in_place(&mut nif);
     assert_eq!(saved.blocks().next().unwrap().block_name(), "NiTriShape");
     let shape = saved.shapes().next().unwrap();
     assert_eq!(

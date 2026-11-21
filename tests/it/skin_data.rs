@@ -1,7 +1,6 @@
 //! Tests for the skin blocks, NifFile::child_blocks_of and NiSkinData::set_transform_global_to_skin.
 
-use crate::common::{load, upstream};
-use std::io::Cursor;
+use crate::common::{load, reload, upstream};
 
 use nifly::{
     file::NifFile,
@@ -104,9 +103,7 @@ fn set_transform_global_to_skin() {
         Some(new)
     );
 
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    let saved = reload(&mut nif);
     assert_eq!(
         saved
             .shapes()

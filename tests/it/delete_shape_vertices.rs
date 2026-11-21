@@ -1,21 +1,13 @@
 //! Tests for NifFile::delete_shape_vertices.
 
-use crate::common::reload;
-use std::{collections::BTreeMap, fs};
+use crate::common::{first, first_index, open, reload};
+use std::collections::BTreeMap;
 
 use nifly::{
     extra_data::{ExtraIntegers, NiIntegersExtraData},
-    file::{Index, NifFile},
+    geometry::NiShape,
     skin::{NiSkinInstance, NiSkinPartition},
 };
-
-fn load(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
-}
-
-fn first(nif: &NifFile) -> Index {
-    nif.shapes().indices().next().unwrap()
-}
 
 /// The new index of each old vertex, `None` for deleted ones.
 fn remap(count: usize, deleted: &[usize]) -> Vec<Option<u16>> {
@@ -47,8 +39,8 @@ fn remapped(tris: &[[u16; 3]], map: &[Option<u16>]) -> Vec<[u16; 3]> {
 
 #[test]
 fn deletes_and_reindexes() {
-    let mut nif = load("assets/Cube.nif");
-    let cube = first(&nif);
+    let mut nif = open("assets/Cube.nif");
+    let cube = first_index::<NiShape>(&nif);
     let s = nif.block_of::<nifly::geometry::NiShape>(cube).unwrap();
     let (vertices, uvs, tris) = (
         nif.view_of(s).unwrap().vertices().unwrap(),
@@ -67,7 +59,7 @@ fn deletes_and_reindexes() {
     let saved = reload(&mut nif);
     for nif in [&nif, &saved] {
         let s = nif
-            .block_of::<nifly::geometry::NiShape>(first(nif))
+            .block_of::<nifly::geometry::NiShape>(first_index::<NiShape>(nif))
             .unwrap();
         let v: Vec<_> = vertices
             .iter()
@@ -92,8 +84,8 @@ fn deletes_and_reindexes() {
 
 #[test]
 fn skin_weights_and_partitions_follow() {
-    let mut nif = load("assets/Bones.nif");
-    let limb = first(&nif);
+    let mut nif = open("assets/Bones.nif");
+    let limb = first_index::<NiShape>(&nif);
     let s = nif.block_of::<nifly::geometry::NiShape>(limb).unwrap();
     let count = nif.view_of(s).unwrap().vertices().unwrap().len();
     let weights: Vec<_> = (0..3)
@@ -109,7 +101,7 @@ fn skin_weights_and_partitions_follow() {
     let saved = reload(&mut nif);
     for nif in [&nif, &saved] {
         let s = nif
-            .block_of::<nifly::geometry::NiShape>(first(nif))
+            .block_of::<nifly::geometry::NiShape>(first_index::<NiShape>(nif))
             .unwrap();
         let left = count - deleted.len();
         assert_eq!(nif.view_of(s).unwrap().vertices().unwrap().len(), left);
@@ -152,8 +144,8 @@ fn skin_weights_and_partitions_follow() {
 #[test]
 fn strips_follow() {
     // Each shape is the strip 1, 2, 0, 3: deleting vertex 3 leaves one triangle.
-    let mut nif = load("assets/Strips_MW.nif");
-    let shape = first(&nif);
+    let mut nif = open("assets/Strips_MW.nif");
+    let shape = first_index::<NiShape>(&nif);
     assert!(
         nif.edit::<nifly::geometry::NiShape>(shape)
             .is_some_and(|mut e| e.delete_vertices(&[3]))
@@ -165,8 +157,8 @@ fn strips_follow() {
 
 #[test]
 fn locked_normals_follow() {
-    let mut nif = load("assets/Cube.nif");
-    let cube = first(&nif);
+    let mut nif = open("assets/Cube.nif");
+    let cube = first_index::<NiShape>(&nif);
     nif.edit::<nifly::objects::NiAvObject>(cube)
         .and_then(|mut e| e.assign_extra_data(ExtraIntegers("LOCKEDNORM", [0, 5, 10])))
         .unwrap();
@@ -174,14 +166,14 @@ fn locked_normals_follow() {
         nif.edit::<nifly::geometry::NiShape>(cube)
             .is_some_and(|mut e| e.delete_vertices(&[5]))
     );
-    let locked = nif.blocks_of::<NiIntegersExtraData>().next().unwrap();
+    let locked = first::<NiIntegersExtraData>(&nif);
     assert_eq!(locked.values(), [0, 9]);
 }
 
 #[test]
 fn deleting_everything_leaves_an_empty_shape() {
-    let mut nif = load("assets/Cube.nif");
-    let cube = first(&nif);
+    let mut nif = open("assets/Cube.nif");
+    let cube = first_index::<NiShape>(&nif);
     let all: Vec<usize> = (0..14).collect();
     assert!(
         nif.edit::<nifly::geometry::NiShape>(cube)
@@ -198,8 +190,8 @@ fn deleting_everything_leaves_an_empty_shape() {
 
 #[test]
 fn false_changes_nothing() {
-    let mut nif = load("assets/Cube.nif");
-    let cube = first(&nif);
+    let mut nif = open("assets/Cube.nif");
+    let cube = first_index::<NiShape>(&nif);
     let before = nif
         .view::<nifly::geometry::NiShape>(cube)
         .unwrap()
@@ -232,7 +224,7 @@ fn false_changes_nothing() {
         before
     );
 
-    let mut nif = load("nifly-sys/vendor/nifly/tests/input/TestNifFile_Particles_MW.nif");
+    let mut nif = open("nifly-sys/vendor/nifly/tests/input/TestNifFile_Particles_MW.nif");
     let particles = nif
         .shapes()
         .indexed()

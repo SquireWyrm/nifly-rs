@@ -1,33 +1,15 @@
 //! Tests for NifFile::shape_segments and NifFile::set_shape_segments.
 
-use crate::common::{UPSTREAM, load, reload};
-use std::{collections::BTreeMap, fs};
+use crate::common::{UPSTREAM, load, open, reload, shape, shape_index};
+use std::collections::BTreeMap;
 
 use nifly::{
-    file::{Index, NifFile},
-    geometry::{NiShape, Segment, SegmentIndex, ShapeSegments, Subsegment},
+    file::NifFile,
+    geometry::{Segment, SegmentIndex, ShapeSegments, Subsegment},
 };
 
 fn fo4() -> NifFile {
-    NifFile::load(
-        fs::read(format!("{UPSTREAM}/TestNifFile_Skinned_FO4.nif"))
-            .unwrap()
-            .as_slice(),
-        None,
-    )
-    .unwrap()
-}
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
+    open(format!("{UPSTREAM}/TestNifFile_Skinned_FO4.nif"))
 }
 
 fn segments(nif: &NifFile, name: &str) -> ShapeSegments {
@@ -89,7 +71,7 @@ fn reads_segments() {
 #[test]
 fn sets_subsegments() {
     let mut nif = fo4();
-    let cylinder = index(&nif, "cylinder_1");
+    let cylinder = shape_index(&nif, "cylinder_1");
     let before = nif
         .view_of(shape(&nif, "cylinder_1"))
         .unwrap()
@@ -168,7 +150,7 @@ fn sets_subsegments() {
 #[test]
 fn unassigned_go_to_the_first_segment() {
     let mut nif = fo4();
-    let cylinder = index(&nif, "cylinder_1");
+    let cylinder = shape_index(&nif, "cylinder_1");
     let n = segments(&nif, "cylinder_1").triangles.len();
     let input = ShapeSegments {
         segments: vec![Segment::default(); 2],
@@ -185,7 +167,7 @@ fn unassigned_go_to_the_first_segment() {
 #[test]
 fn false_changes_nothing() {
     let mut nif = fo4();
-    let cylinder = index(&nif, "cylinder_1");
+    let cylinder = shape_index(&nif, "cylinder_1");
     let before = segments(&nif, "cylinder_1");
     let n = before.triangles.len();
     let one_sub = Segment {
@@ -230,7 +212,7 @@ fn false_changes_nothing() {
     // Not a BSSubIndexTriShape, not a shape, out of range.
     let empty = ShapeSegments::default();
     let mut cube = load("Cube");
-    let cube_shape = index(&cube, "Cube");
+    let cube_shape = shape_index(&cube, "Cube");
     assert!(
         !cube
             .edit::<nifly::geometry::NiShape>(cube_shape)

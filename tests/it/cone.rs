@@ -103,9 +103,7 @@ fn sort_moves_unreferenced_blocks_last() {
 #[test]
 fn default_options_optimize_and_sort() {
     let mut nif = NifFile::load(cone_bytes().as_slice(), None).unwrap();
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    let default_bytes = cur.into_inner();
+    let default_bytes = nif.to_bytes(None).unwrap();
 
     let (both, _) = save(true, true);
     assert_eq!(default_bytes, both);

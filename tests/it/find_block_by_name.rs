@@ -1,6 +1,6 @@
 //! Tests for NifFile::find_block_by_name.
 
-use crate::common::load;
+use crate::common::{first, load};
 
 use nifly::{
     extra_data::{BsxFlags, NiExtraData},
@@ -76,7 +76,7 @@ fn first_in_block_order() {
 #[test]
 fn agrees_with_bone_names() {
     let nif = load("Bones");
-    let shape = nif.blocks_of::<NiShape>().next().unwrap();
+    let shape = first::<NiShape>(&nif);
     let ids = nif.view_of(shape).unwrap().bone_ids();
     for (name, id) in nif.view_of(shape).unwrap().bone_list().iter().zip(ids) {
         let bone = nif.find_block_by_name::<NiNode>(name).unwrap();

@@ -56,14 +56,20 @@ fn main() {
     } else {
         bridge.flag("-include").flag("rust_vec.h");
     }
-    bridge.files(cpp_files_in(Path::new("src"))).include("include").compile("nifly-bridge");
+    bridge
+        .files(cpp_files_in(Path::new("src")))
+        .include("include")
+        .compile("nifly-bridge");
 
     let mut nifly = cc::Build::new();
     common(&mut nifly);
-    nifly.cpp(true).files(cpp_files_in(&nifly_src)).compile("nifly");
+    nifly
+        .cpp(true)
+        .files(cpp_files_in(&nifly_src))
+        .compile("nifly");
 
-    build_deps::rerun_if_changed_paths("src/*").unwrap();
-    build_deps::rerun_if_changed_paths("src").unwrap();
-    build_deps::rerun_if_changed_paths("include/*").unwrap();
-    build_deps::rerun_if_changed_paths("include").unwrap();
+    // Cargo scans each directory's whole tree, so a submodule bump rebuilds nifly too.
+    for dir in ["src", "include", "vendor/nifly/src", "vendor/nifly/include"] {
+        println!("cargo:rerun-if-changed={dir}");
+    }
 }

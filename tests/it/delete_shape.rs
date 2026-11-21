@@ -1,28 +1,8 @@
 //! Tests for NifFile::delete_shape and NifFile::delete_shader.
 
-use crate::common::{UPSTREAM, reload};
-use std::fs;
+use crate::common::{UPSTREAM, open, reload, shape, shape_index};
 
-use nifly::{
-    file::{Index, NifFile},
-    geometry::NiShape,
-};
-
-fn load(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
-}
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
-}
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
+use nifly::file::{Index, NifFile};
 
 fn block_names(nif: &NifFile) -> Vec<String> {
     let mut names: Vec<_> = nif.blocks().map(|b| b.block_name().to_string()).collect();
@@ -39,9 +19,9 @@ fn children(nif: &NifFile, name: &str) -> Vec<String> {
 
 #[test]
 fn deletes_a_shape_and_what_it_owns() {
-    let mut nif = load("assets/Cube.nif");
+    let mut nif = open("assets/Cube.nif");
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cube"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cube"))
             .is_some_and(|e| e.delete())
     );
     assert_eq!(block_names(&nif), ["NiNode"]);
@@ -49,9 +29,9 @@ fn deletes_a_shape_and_what_it_owns() {
     assert_eq!(reload(&mut nif).blocks().count(), 1);
 
     // A skinned shape: its data, skin and shader go; the bone nodes stay.
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "Limb"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Limb"))
             .is_some_and(|e| e.delete())
     );
     assert_eq!(block_names(&nif), ["NiNode"; 4]);
@@ -68,10 +48,10 @@ fn deletes_a_shape_and_what_it_owns() {
 #[test]
 fn shared_blocks_stay() {
     // "" and "Shared" share their data; all three shapes share a texturing property.
-    let mut nif = load("assets/Strips_MW.nif");
+    let mut nif = open("assets/Strips_MW.nif");
     let count = nif.blocks().count();
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, ""))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, ""))
             .is_some_and(|e| e.delete())
     );
     assert_eq!(nif.blocks().count(), count - 1);
@@ -90,7 +70,7 @@ fn shared_blocks_stay() {
 
     // Now the data is "Shared"'s alone, so it goes with it.
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "Shared"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Shared"))
             .is_some_and(|e| e.delete())
     );
     assert_eq!(nif.blocks().count(), count - 3);
@@ -107,8 +87,8 @@ fn shared_blocks_stay() {
 
 #[test]
 fn deletes_a_shader() {
-    let mut nif = load("assets/Cube.nif");
-    let cube = index(&nif, "Cube");
+    let mut nif = open("assets/Cube.nif");
+    let cube = shape_index(&nif, "Cube");
     assert!(
         nif.edit::<nifly::geometry::NiShape>(cube)
             .is_some_and(|mut e| e.delete_shader())
@@ -131,8 +111,8 @@ fn deletes_a_shader() {
     assert_eq!(reload(&mut nif).blocks().count(), 2);
 
     // Morrowind: the material goes; texturing and stencil properties stay.
-    let mut nif = load("assets/Stencil_MW.nif");
-    let marker = index(&nif, "Tri EditorMarker_box_02");
+    let mut nif = open("assets/Stencil_MW.nif");
+    let marker = shape_index(&nif, "Tri EditorMarker_box_02");
     assert!(
         nif.edit::<nifly::geometry::NiShape>(marker)
             .is_some_and(|mut e| e.delete_shader())
@@ -146,7 +126,7 @@ fn deletes_a_shader() {
 #[test]
 fn shared_alpha_stays() {
     // Seven shapes share one alpha property; the last has its own.
-    let mut nif = load(&format!("{UPSTREAM}/TestNifFile_OrderedNode_SE.nif"));
+    let mut nif = open(format!("{UPSTREAM}/TestNifFile_OrderedNode_SE.nif"));
     let shapes: Vec<Index> = nif.shapes().indices().collect();
     let first = nif.shapes().next().unwrap();
     let alpha = nif
@@ -184,7 +164,7 @@ fn shared_alpha_stays() {
 
 #[test]
 fn false_without_a_shape() {
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     let count = nif.blocks().count();
     for i in [0, 1, count, usize::MAX] {
         assert!(

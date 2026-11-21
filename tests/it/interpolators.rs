@@ -194,7 +194,7 @@ fn path_interpolator() {
 fn look_at_interpolator() {
     for version in [OLD, NifVersion::SKYRIM_SE] {
         let mut nif = NifFile::create(version);
-        let root = nif.root_node().unwrap().index();
+        let root = nif.root_index().unwrap();
         let look = nif.add_interpolator::<NiLookAtInterpolator>();
         let point = nif.add_interpolator::<NiPoint3Interpolator>();
         let roll = nif.add_interpolator::<NiFloatInterpolator>();

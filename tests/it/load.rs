@@ -1,4 +1,4 @@
-//! Tests for NifFile::load with borrowed readers and error reporting.
+//! Tests for NifFile::load with borrowed readers and error reporting, and NifFile::open.
 
 use std::{
     fs::{self, File},
@@ -104,4 +104,23 @@ fn terrain_option() {
 
     let terrain = NifFile::load(bytes.as_slice(), Some(LoadOptions { is_terrain: true })).unwrap();
     assert!(terrain.is_terrain());
+}
+
+#[test]
+fn open_reads_a_path() {
+    let opened = NifFile::open("assets/Suzanne.nif", None).unwrap();
+    let loaded = NifFile::load(fs::read("assets/Suzanne.nif").unwrap().as_slice(), None).unwrap();
+    assert_eq!(opened.blocks().count(), loaded.blocks().count());
+    assert_eq!(opened.root_node().unwrap().name(), "Suzanne");
+
+    let terrain = NifFile::open("assets/Suzanne.nif", Some(LoadOptions { is_terrain: true }));
+    assert!(terrain.is_ok());
+}
+
+#[test]
+fn open_missing_file_is_an_io_error() {
+    match NifFile::open("assets/Missing.nif", None) {
+        Err(Error::Io(e)) => assert_eq!(e.kind(), io::ErrorKind::NotFound),
+        other => panic!("expected an i/o error, got {:?}", other.err()),
+    }
 }

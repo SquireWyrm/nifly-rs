@@ -1,13 +1,8 @@
 //! Tests for NifFile::invert_shape_uvs.
 
-use crate::common::reload;
-use std::fs;
+use crate::common::{open, reload};
 
 use nifly::file::{Index, NifFile};
-
-fn load(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
-}
 
 fn first(nif: &NifFile) -> (Index, Vec<[f32; 2]>) {
     let (i, s) = nif.shapes().indexed().next().unwrap();
@@ -18,7 +13,7 @@ fn first(nif: &NifFile) -> (Index, Vec<[f32; 2]>) {
 fn flips_each_axis() {
     // NiTriShapeData (Bones) and BSTriShape (Cube).
     for path in ["assets/Bones.nif", "assets/Cube.nif"] {
-        let mut nif = load(path);
+        let mut nif = open(path);
         let (shape, before) = first(&nif);
         assert!(!before.is_empty());
 
@@ -60,7 +55,7 @@ fn flips_each_axis() {
 #[test]
 fn false_without_uvs() {
     // Morrowind's editor marker has no UVs.
-    let mut nif = load("nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_MW.nif");
+    let mut nif = open("nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_MW.nif");
     let marker = nif
         .shapes()
         .indexed()

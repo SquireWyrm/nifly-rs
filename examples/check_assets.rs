@@ -26,9 +26,7 @@
 use std::{
     any::Any,
     collections::{BTreeMap, HashMap, HashSet},
-    env, fs,
-    hash::{BuildHasher, RandomState},
-    io::Cursor,
+    fs,
     panic::{self, AssertUnwindSafe},
     path::{Path, PathBuf},
     process, ptr,
@@ -37,6 +35,7 @@ use std::{
 };
 
 use rayon::prelude::*;
+use walkdir::WalkDir;
 
 use nifly::{
     bstr::BStr,
@@ -137,34 +136,54 @@ impl Stats {
 const USAGE: &str = "usage: check_assets [paths...] [--verbose] [--sample-size <fraction>] [--seed <n>]   \
                      (default path: external_assets)";
 
-fn main() {
-    let mut verbose = false;
-    let mut sample_size = None;
-    let mut seed = None;
-    let mut roots = Vec::new();
-    let mut args = env::args().skip(1);
-    while let Some(arg) = args.next() {
-        match arg.as_str() {
-            "-v" | "--verbose" => verbose = true,
-            "--sample-size" => match args.next().and_then(|v| v.parse::<f64>().ok()) {
-                Some(f) if f > 0.0 && f <= 1.0 => sample_size = Some(f),
-                _ => usage_error("--sample-size takes a number above 0 and at most 1"),
+/// The command line options.
+#[derive(Default)]
+struct Args {
+    verbose: bool,
+    sample_size: Option<f64>,
+    seed: Option<u64>,
+    roots: Vec<PathBuf>,
+}
+
+/// `None` for `--help`.
+fn parse_args() -> Result<Option<Args>, lexopt::Error> {
+    use lexopt::prelude::*;
+
+    let mut args = Args::default();
+    let mut parser = lexopt::Parser::from_env();
+    while let Some(arg) = parser.next()? {
+        match arg {
+            Short('v') | Long("verbose") => args.verbose = true,
+            Long("sample-size") => match parser.value()?.parse::<f64>()? {
+                f if f > 0.0 && f <= 1.0 => args.sample_size = Some(f),
+                _ => return Err("--sample-size takes a number above 0 and at most 1".into()),
             },
-            "--seed" => match args.next().and_then(|v| v.parse::<u64>().ok()) {
-                Some(n) => seed = Some(n),
-                None => usage_error("--seed takes a whole number"),
-            },
-            "-h" | "--help" => {
-                println!("{USAGE}");
-                return;
-            }
-            _ if arg.starts_with('-') => usage_error(&format!("unknown option {arg}")),
-            _ => roots.push(PathBuf::from(arg)),
+            Long("seed") => args.seed = Some(parser.value()?.parse()?),
+            Short('h') | Long("help") => return Ok(None),
+            Value(path) => args.roots.push(path.into()),
+            _ => return Err(arg.unexpected()),
         }
     }
-    if seed.is_some() && sample_size.is_none() {
-        usage_error("--seed needs --sample-size");
+    if args.seed.is_some() && args.sample_size.is_none() {
+        return Err("--seed needs --sample-size".into());
     }
+    Ok(Some(args))
+}
+
+fn main() {
+    let Args {
+        verbose,
+        sample_size,
+        seed,
+        mut roots,
+    } = match parse_args() {
+        Ok(Some(args)) => args,
+        Ok(None) => {
+            println!("{USAGE}");
+            return;
+        }
+        Err(e) => usage_error(&e.to_string()),
+    };
     if roots.is_empty() {
         roots.push(PathBuf::from("external_assets"));
     }
@@ -184,7 +203,7 @@ fn main() {
     }
     if let Some(fraction) = sample_size {
         let found = files.len();
-        let seed = seed.unwrap_or_else(|| RandomState::new().hash_one(Instant::now()));
+        let seed = seed.unwrap_or_else(|| fastrand::u64(..));
         files = sample(files, fraction, seed);
         eprintln!(
             "sampled {} of {found} files (--sample-size {fraction} --seed {seed})",
@@ -238,36 +257,24 @@ fn usage_error(message: &str) -> ! {
 /// A random `fraction` of `files` (at least one), chosen by `seed`, in path order.
 fn sample(mut files: Vec<PathBuf>, fraction: f64, seed: u64) -> Vec<PathBuf> {
     let count = ((files.len() as f64 * fraction).ceil() as usize).clamp(1, files.len());
-    // A partial Fisher-Yates shuffle with SplitMix64, so a seed repeats a sample.
-    let mut state = seed;
-    let mut next = || {
-        state = state.wrapping_add(0x9E37_79B9_7F4A_7C15);
-        let mut z = state;
-        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
-        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
-        z ^ (z >> 31)
-    };
-    for i in 0..count {
-        let j = i + (next() % (files.len() - i) as u64) as usize;
-        files.swap(i, j);
-    }
+    fastrand::Rng::with_seed(seed).shuffle(&mut files);
     files.truncate(count);
     files.sort();
     files
 }
 
-fn collect_nifs(path: &Path, out: &mut Vec<PathBuf>) {
-    if path.is_dir() {
-        let Ok(entries) = fs::read_dir(path) else {
-            eprintln!("can't read {}", path.display());
-            return;
-        };
-        for entry in entries.flatten() {
-            collect_nifs(&entry.path(), out);
+fn collect_nifs(root: &Path, out: &mut Vec<PathBuf>) {
+    for entry in WalkDir::new(root) {
+        match entry {
+            Ok(e) if e.file_type().is_file() && is_nif(e.path()) => out.push(e.into_path()),
+            Ok(_) => {}
+            Err(e) => eprintln!("can't read {e}"),
         }
-    } else if extension(path).is_some_and(|e| NIF_EXTENSIONS.contains(&e.as_str())) {
-        out.push(path.to_owned());
     }
+}
+
+fn is_nif(path: &Path) -> bool {
+    extension(path).is_some_and(|e| NIF_EXTENSIONS.contains(&e.as_str()))
 }
 
 fn extension(path: &Path) -> Option<String> {
@@ -588,11 +595,8 @@ fn check_shapes(nif: &NifFile, r: &mut Report) {
 
 fn check_round_trip(original: &[u8], options: LoadOptions, r: &mut Report) {
     let load = |bytes: &[u8]| NifFile::load(bytes, Some(options));
-    let save = |nif: &mut NifFile, opts: SaveOptions| -> Result<Vec<u8>, String> {
-        let mut cur = Cursor::new(Vec::new());
-        nif.save(&mut cur, Some(opts)).map_err(|e| e.to_string())?;
-        Ok(cur.into_inner())
-    };
+    let save =
+        |nif: &mut NifFile, opts: SaveOptions| nif.to_bytes(Some(opts)).map_err(|e| e.to_string());
 
     // Without optimizing or sorting, everything the bindings can read survives a round trip.
     let Ok(mut fresh) = load(original) else {

@@ -11,20 +11,22 @@
 //! Indirect2 is the node whose global transform needs real composition, because its parent
 //! (Indirect1) isn't identity.
 
-use std::{fs::File, ptr};
+use std::ptr;
 
 use nifly::{
     file::NifFile,
     geometry::NiShape,
     nodes::NiNode,
-    object3d::{Matrix3, Transform, Vec3},
+    object3d::{Matrix3, Transform, Vec3, vec3},
     objects::{NiAvObject, NiObject},
 };
+
+use crate::common::{assert_close, first, open};
 
 const EPS: f32 = 1e-3;
 
 fn icosphere() -> NifFile {
-    NifFile::load(File::open("assets/Icosphere.nif").unwrap(), None).unwrap()
+    open("assets/Icosphere.nif")
 }
 
 fn block(nif: &NifFile, i: usize) -> &NiObject {
@@ -36,55 +38,29 @@ fn node(nif: &NifFile, i: usize) -> &NiNode {
 }
 
 fn shape(nif: &NifFile) -> &NiShape {
-    nif.blocks_of::<NiShape>().next().unwrap()
-}
-
-fn v(x: f32, y: f32, z: f32) -> Vec3 {
-    Vec3 { x, y, z }
-}
-
-fn assert_vec_eq(a: Vec3, b: Vec3) {
-    let close = (a.x - b.x).abs() < EPS && (a.y - b.y).abs() < EPS && (a.z - b.z).abs() < EPS;
-    assert!(close, "{a:?} != {b:?}");
-}
-
-fn assert_rotation_eq(actual: Matrix3, expected: [Vec3; 3]) {
-    for (row, expected) in actual.rows.into_iter().zip(expected) {
-        assert_vec_eq(row, expected);
-    }
-}
-
-fn assert_transform_eq(a: &Transform, b: &Transform) {
-    assert_vec_eq(a.translation, b.translation);
-    assert_rotation_eq(a.rotation, b.rotation.rows);
-    assert!(
-        (a.scale - b.scale).abs() < EPS,
-        "scale {} != {}",
-        a.scale,
-        b.scale
-    );
+    first::<NiShape>(nif)
 }
 
 /// Independent reimplementation of nifly's `MatTransform::ComposeTransforms`:
 /// `parent ∘ child`, with row-major rotation matrices applied to column vectors.
 fn compose(parent: &Transform, child: &Transform) -> Transform {
     let dot = |a: Vec3, b: Vec3| a.x * b.x + a.y * b.y + a.z * b.z;
-    let mul_vec = |m: &[Vec3; 3], p: Vec3| v(dot(m[0], p), dot(m[1], p), dot(m[2], p));
+    let mul_vec = |m: &[Vec3; 3], p: Vec3| vec3(dot(m[0], p), dot(m[1], p), dot(m[2], p));
     let col = |m: &[Vec3; 3], c: usize| {
         let pick = |r: Vec3| [r.x, r.y, r.z][c];
-        v(pick(m[0]), pick(m[1]), pick(m[2]))
+        vec3(pick(m[0]), pick(m[1]), pick(m[2]))
     };
 
     let (p, c) = (&parent.rotation.rows, &child.rotation.rows);
     let rows = p.map(|row| {
-        v(
+        vec3(
             dot(row, col(c, 0)),
             dot(row, col(c, 1)),
             dot(row, col(c, 2)),
         )
     });
     let s = parent.scale;
-    let scaled = v(
+    let scaled = vec3(
         child.translation.x * s,
         child.translation.y * s,
         child.translation.z * s,
@@ -93,7 +69,7 @@ fn compose(parent: &Transform, child: &Transform) -> Transform {
     let t = parent.translation;
 
     Transform {
-        translation: v(t.x + offset.x, t.y + offset.y, t.z + offset.z),
+        translation: vec3(t.x + offset.x, t.y + offset.y, t.z + offset.z),
         rotation: Matrix3 { rows },
         scale: parent.scale * child.scale,
     }
@@ -140,14 +116,17 @@ fn transform_to_global_composes() {
     //   t.x    = t1.x + s1 * (R1[0] · t2)   = 1.3418 + 0.5 * (0.2443 - 0.0897 + 0.2175) ≈ 1.5279
     //   r[0].x = R1[0] · R2 column 0        = -0.1319 + 0.6400 + 0.0156             ≈ 0.5237
     assert!((global.scale - 0.625).abs() < EPS, "scale {}", global.scale);
-    assert_vec_eq(global.translation, v(1.528, -0.616, 1.085));
-    assert_rotation_eq(
+    assert_close!(global.translation, vec3(1.528, -0.616, 1.085), EPS);
+    assert_close!(
         global.rotation,
-        [
-            v(0.524, -0.849, -0.071),
-            v(0.682, 0.368, 0.632),
-            v(-0.510, -0.379, 0.772),
-        ],
+        Matrix3 {
+            rows: [
+                vec3(0.524, -0.849, -0.071),
+                vec3(0.682, 0.368, 0.632),
+                vec3(-0.510, -0.379, 0.772),
+            ]
+        },
+        EPS
     );
 
     // And it differs from the local transform, so composition actually happened.
@@ -161,6 +140,6 @@ fn transform_to_global_matches_parent_chain() {
     for (name, i) in [("Icosphere", 0), ("Indirect1", 1), ("Indirect2", 2)] {
         let expected = global_via_parents(&nif, node(&nif, i));
         let actual = nif.node_transform_to_global(name).unwrap();
-        assert_transform_eq(&actual, &expected);
+        assert_close!(actual, expected, EPS);
     }
 }

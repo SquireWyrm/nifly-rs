@@ -1,7 +1,6 @@
 //! Tests for NifFile::delete_node, NifFile::can_delete_node and NiNode::can_delete.
 
-use crate::common::load;
-use std::io::Cursor;
+use crate::common::{first, load, reload};
 
 use nifly::{file::NifFile, geometry::NiShape, nodes::NiNode, objects::NiObject};
 
@@ -100,9 +99,7 @@ fn delete_node_with_children_orphans_them() {
     assert_eq!(nif.view_of(indirect2).unwrap().children().count(), 1);
 
     // Saving with optimize removes the orphans.
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    let saved = reload(&mut nif);
     assert_eq!(block_names(&saved), ["BSFadeNode"]);
 }
 
@@ -111,13 +108,13 @@ fn deleting_a_bone_leaves_skin_data_out_of_sync() {
     // Documents upstream behavior: DeleteNode removes the bone from the skin instance, but
     // NiSkinData keeps all three bones' weights, so later bones pick up the wrong weights.
     let mut nif = load("Bones");
-    let shape = nif.blocks_of::<NiShape>().next().unwrap();
+    let shape = first::<NiShape>(&nif);
     let bone2_weights = nif.view_of(shape).unwrap().bone_weights(1);
     assert_eq!(bone2_weights.len(), 115);
 
     assert!(nif.delete_node("Bone2"));
 
-    let shape = nif.blocks_of::<NiShape>().next().unwrap();
+    let shape = first::<NiShape>(&nif);
     assert_eq!(nif.view_of(shape).unwrap().bone_list(), ["Bone1", "Bone3"]);
     assert_eq!(nif.view_of(shape).unwrap().bone_ids(), [1, 2]);
     // Bone index 1 is now Bone3, but its weights are still Bone2's.

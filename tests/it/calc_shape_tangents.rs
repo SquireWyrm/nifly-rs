@@ -1,24 +1,8 @@
 //! Tests for NifFile::calc_shape_tangents.
 
-use crate::common::{load, reload, upstream};
+use crate::common::{load, reload, shape, shape_index, upstream};
 
-use nifly::{
-    file::{Index, NifFile},
-    geometry::NiShape,
-    object3d::Vec3,
-};
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
-}
+use nifly::{file::NifFile, object3d::Vec3};
 
 /// (tangents, bitangents) of the shape named `name`.
 fn frame(nif: &NifFile, name: &str) -> (Vec<Vec3>, Vec<Vec3>) {
@@ -33,7 +17,7 @@ fn frame(nif: &NifFile, name: &str) -> (Vec<Vec3>, Vec<Vec3>) {
 fn calculated(file: fn() -> NifFile, name: &str) -> (Vec<Vec3>, Vec<Vec3>) {
     let mut nif = file();
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, name))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name))
             .is_some_and(|mut e| e.calc_tangents())
     );
     frame(&nif, name)
@@ -69,7 +53,7 @@ fn cube() -> NifFile {
 fn recalculates() {
     // NiTriShapeData: overwrite them, then calculate them back.
     let mut nif = cuirass();
-    let shape = index(&nif, "Cuirass");
+    let shape = shape_index(&nif, "Cuirass");
     let expected = calculated(cuirass, "Cuirass");
     assert!(
         nif.edit::<nifly::geometry::NiShape>(shape)
@@ -92,7 +76,7 @@ fn recalculates() {
 
     // BSTriShape, stored at reduced precision.
     let mut nif = cube();
-    let shape = index(&nif, "Cube");
+    let shape = shape_index(&nif, "Cube");
     let expected = calculated(cube, "Cube");
     assert!(
         nif.edit::<nifly::geometry::NiShape>(shape)
@@ -120,7 +104,7 @@ fn adds_them_along_the_uvs() {
     let [a, b, c] = nif.view_of(s).unwrap().triangles().unwrap()[0].map(usize::from);
 
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, name))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name))
             .is_some_and(|mut e| e.calc_tangents())
     );
     assert_eq!(check_frame(&nif, name, 1e-4), 0);
@@ -150,14 +134,14 @@ fn false_without_normals_and_uvs() {
     let name = "Tri EditorMarker_box_02";
     assert!(nif.view_of(shape(&nif, name)).unwrap().uvs().is_none());
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, name))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name))
             .is_some_and(|mut e| e.calc_tangents())
     );
     assert!(nif.view_of(shape(&nif, name)).unwrap().tangents().is_none());
 
     let mut nif = upstream("TestNifFile_Particles_MW");
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "Blizzard"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Blizzard"))
             .is_some_and(|mut e| e.calc_tangents())
     );
 

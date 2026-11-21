@@ -1,16 +1,11 @@
 //! Tests for NifFile::offset_shape, scale_shape and rotate_shape.
 
-use crate::common::reload;
-use std::fs;
+use crate::common::{open, reload};
 
 use nifly::{
     file::{Index, NifFile},
     object3d::Vec3,
 };
-
-fn load(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
-}
 
 fn vertices(nif: &NifFile, shape: Index) -> Vec<Vec3> {
     nif.view::<nifly::geometry::NiShape>(shape)
@@ -32,7 +27,7 @@ fn close(a: &[Vec3], b: &[Vec3], tolerance: f32) -> bool {
 
 /// A quad tilted 45 degrees about Y, with normals (1, 0, 1)/sqrt(2), in Bones.nif.
 fn tilted_quad() -> (NifFile, Index) {
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     let v = [
         Vec3::new(1.0, -1.0, -1.0),
         Vec3::new(1.0, 1.0, -1.0),
@@ -48,7 +43,7 @@ fn tilted_quad() -> (NifFile, Index) {
 
 #[test]
 fn offsets() {
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     let limb = nif.shapes().indices().next().unwrap();
     let (before, normals_before) = (vertices(&nif, limb), normals(&nif, limb));
     let offset = Vec3::new(1.0, -2.0, 3.0);
@@ -68,7 +63,7 @@ fn offsets() {
     ));
 
     // Weighted: 0 stays, 0.5 moves halfway, 1 moves fully.
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     let n = before.len();
     let weights: Vec<f32> = (0..n).map(|i| [0.0, 0.5, 1.0][i % 3]).collect();
     assert!(
@@ -86,7 +81,7 @@ fn offsets() {
 #[test]
 fn scales_with_normals() {
     // Uniform: positions double, normals stay.
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     let limb = nif.shapes().indices().next().unwrap();
     let (before, normals_before) = (vertices(&nif, limb), normals(&nif, limb));
     assert!(
@@ -147,7 +142,7 @@ fn rotates_with_normals() {
     assert!(vertices(&nif, quad)[0].distance(Vec3::X) < 1e-5);
 
     // A BSTriShape's stored normals turn too, within their precision.
-    let mut nif = load("assets/Cube.nif");
+    let mut nif = open("assets/Cube.nif");
     let cube = nif.shapes().indices().next().unwrap();
     let before = normals(&nif, cube);
     assert!(
@@ -173,7 +168,7 @@ fn weighted_rotation() {
 
 #[test]
 fn false_changes_nothing() {
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     let limb = nif.shapes().indices().next().unwrap();
     let before = vertices(&nif, limb);
     let n = before.len();
@@ -202,7 +197,7 @@ fn false_changes_nothing() {
     );
     assert_eq!(vertices(&nif, limb), before);
 
-    let mut nif = load("nifly-sys/vendor/nifly/tests/input/TestNifFile_Particles_MW.nif");
+    let mut nif = open("nifly-sys/vendor/nifly/tests/input/TestNifFile_Particles_MW.nif");
     let particles = nif
         .shapes()
         .indexed()

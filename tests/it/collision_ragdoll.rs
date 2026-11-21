@@ -10,7 +10,7 @@ use nifly::{
     object3d::Vec3,
 };
 
-use crate::common::reload_in_place as reload;
+use crate::common::reload_in_place;
 
 #[test]
 fn pose_array() {
@@ -33,7 +33,7 @@ fn pose_array() {
     p.set_bones(["Bip01 Pelvis", "Bip01 Spine"]);
     p.set_poses(&[pose(1.0), pose(2.0), vec![]]);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let p = saved.block_of::<BhkPoseArray>(poses).unwrap();
     assert_eq!(
         p.bones().collect::<Vec<_>>(),
@@ -68,7 +68,7 @@ fn ragdoll_template() {
 
     for version in [NifVersion::OBLIVION, NifVersion::SKYRIM_SE] {
         let mut nif = NifFile::create(version);
-        let root = nif.root_node().unwrap().index();
+        let root = nif.root_index().unwrap();
         let template = nif.add_ragdoll_template();
         let bones = [
             nif.add_ragdoll_template_data(),
@@ -95,7 +95,7 @@ fn ragdoll_template() {
         d.set_material(3);
         d.set_joint_constraints(&[ragdoll, spring]);
 
-        let saved = reload(&mut nif);
+        let saved = reload_in_place(&mut nif);
         let t = saved.view::<BhkRagdollTemplate>(template).unwrap();
         assert_eq!(t.ragdoll_bones().indices().collect::<Vec<_>>(), bones);
         let d = saved.block_of::<BhkRagdollTemplateData>(bones[0]).unwrap();

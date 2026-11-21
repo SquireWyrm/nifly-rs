@@ -1,11 +1,9 @@
 //! Tests for NifFile::create_shape.
 
-use crate::common::{UPSTREAM, reload};
-use std::fs;
+use crate::common::{UPSTREAM, open, reload, shape};
 
 use nifly::{
     file::{Index, NifFile},
-    geometry::NiShape,
     object3d::Vec3,
 };
 
@@ -27,16 +25,8 @@ type Geometry<'a> = (
     Option<&'a [Vec3]>,
 );
 
-fn load(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
-}
-
 fn quad(nif: &mut NifFile) -> Option<Index> {
     nif.create_shape("Quad", &VERTICES, &TRIANGLES, Some(&UVS), Some(&NORMALS))
-}
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
 }
 
 #[test]
@@ -55,7 +45,7 @@ fn creates_for_each_version() {
             "NiMaterialProperty",
         ),
     ] {
-        let mut nif = load(path);
+        let mut nif = open(path);
         let names: Vec<String> = nif.blocks().map(|b| b.block_name().to_string()).collect();
         let index = quad(&mut nif).unwrap();
         // New blocks go at the end.
@@ -100,7 +90,7 @@ fn creates_for_each_version() {
 
 #[test]
 fn optional_uvs_and_normals() {
-    let mut nif = load("assets/Bones.nif");
+    let mut nif = open("assets/Bones.nif");
     let index = nif
         .create_shape("Bare", &VERTICES, &TRIANGLES, None, None)
         .unwrap();
@@ -121,7 +111,7 @@ fn optional_uvs_and_normals() {
     );
 
     // A BSTriShape always has UVs.
-    let mut nif = load("assets/Cube.nif");
+    let mut nif = open("assets/Cube.nif");
     nif.create_shape("Bare", &VERTICES, &TRIANGLES, None, None)
         .unwrap();
     assert_eq!(
@@ -138,7 +128,7 @@ fn optional_uvs_and_normals() {
 
 #[test]
 fn none_changes_nothing() {
-    let mut nif = load("assets/Cube.nif");
+    let mut nif = open("assets/Cube.nif");
     let count = nif.blocks().count();
     let bad: [Geometry; 4] = [
         (&VERTICES, &[[0, 1, 4]], None, None),
@@ -159,7 +149,7 @@ fn none_changes_nothing() {
 
     // Versions it can't build shapes for.
     for file in ["TestNifFile_Skinned_OB", "TestNifFile_SF"] {
-        let mut nif = load(&format!("{UPSTREAM}/{file}.nif"));
+        let mut nif = open(format!("{UPSTREAM}/{file}.nif"));
         let count = nif.blocks().count();
         assert_eq!(quad(&mut nif), None, "{file}");
         assert_eq!(nif.blocks().count(), count, "{file}");

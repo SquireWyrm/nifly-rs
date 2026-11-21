@@ -1,7 +1,5 @@
 //! Tests for the block handles: NifFile::view, NifFile::edit and BlockIter::views.
 
-use std::fs;
-
 use nifly::{
     file::NifFile,
     geometry::NiShape,
@@ -10,9 +8,11 @@ use nifly::{
     shaders::NiMaterialProperty,
 };
 
+use crate::common::open;
+
 fn load() -> NifFile {
     let path = "nifly-sys/vendor/nifly/tests/input/TestNifFile_Skinned_OB.nif";
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
+    open(path)
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn edit_sets_and_casts() {
 fn base_methods_reach_subtypes() {
     use nifly::{nodes::BsFadeNode, shaders::NiZBufferProperty};
 
-    let mut nif = NifFile::load(fs::read("assets/Suzanne.nif").unwrap().as_slice(), None).unwrap();
+    let mut nif = open("assets/Suzanne.nif");
     // The root is a BSFadeNode: node and object-net methods work on it without casting.
     let root = nif.view::<BsFadeNode>(0).unwrap();
     assert_eq!(root.children().count(), 1);
@@ -129,8 +129,7 @@ fn base_methods_reach_subtypes() {
 
 #[test]
 fn set_parent_rejects_cycles_and_non_nodes() {
-    let mut nif =
-        NifFile::load(fs::read("assets/Icosphere.nif").unwrap().as_slice(), None).unwrap();
+    let mut nif = open("assets/Icosphere.nif");
     // Root -> Indirect1 (1) -> Indirect2 (2) -> shape (3).
     let mut indirect1 = nif.edit::<NiNode>(1).unwrap();
     assert!(!indirect1.set_parent(Some(2)), "into its own subtree");

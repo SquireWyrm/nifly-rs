@@ -2,7 +2,7 @@
 //!
 //! Blocks are addressed by [`Index`], their position in the file's block list.
 
-use std::io;
+use std::{fs::File, io, path::Path};
 
 use bstr::BString;
 use cxx::UniquePtr;
@@ -296,8 +296,9 @@ pub type Index = usize;
 ///
 /// The main methods of each section below:
 ///
-/// - **General:** [`create`](Self::create), [`load`](Self::load), [`save`](Self::save),
-///   [`version`](Self::version), [`block`](Self::block), [`block_of`](Self::block_of),
+/// - **General:** [`create`](Self::create), [`load`](Self::load), [`open`](Self::open),
+///   [`save`](Self::save), [`to_bytes`](Self::to_bytes), [`version`](Self::version),
+///   [`block`](Self::block), [`block_of`](Self::block_of),
 ///   [`block_mut`](Self::block_mut), [`block_of_mut`](Self::block_of_mut),
 ///   [`view`](Self::view), [`view_of`](Self::view_of), [`edit`](Self::edit),
 ///   [`block_index`](Self::block_index), [`blocks`](Self::blocks),
@@ -306,6 +307,7 @@ pub type Index = usize;
 ///   [`delete_unreferenced_blocks`](Self::delete_unreferenced_blocks),
 ///   [`sort_blocks`](Self::sort_blocks), [`optimize_for`](Self::optimize_for).
 /// - **Nodes:** [`nodes`](Self::nodes), [`root_node`](Self::root_node),
+///   [`root_index`](Self::root_index),
 ///   [`add_node`](Self::add_node), [`add_node_of`](Self::add_node_of), [`add_camera`](Self::add_camera),
 ///   [`delete_node`](Self::delete_node),
 ///   [`node_transform_to_global`](Self::node_transform_to_global).
@@ -394,6 +396,24 @@ impl NifFile {
                 .expect("unknown error code")
                 .into()),
         }
+    }
+
+    /// Reads the file at `path`, as [`load`](Self::load) does.
+    ///
+    /// ```
+    /// # use nifly::NifFile;
+    /// let nif = NifFile::open("assets/Cube.nif", None)?;
+    /// # Ok::<(), nifly::Error>(())
+    /// ```
+    pub fn open(path: impl AsRef<Path>, options: Option<LoadOptions>) -> NifResult<Self> {
+        Self::load(io::BufReader::new(File::open(path)?), options)
+    }
+
+    /// The file as saved by [`save`](Self::save), which can change block indices.
+    pub fn to_bytes(&mut self, options: Option<SaveOptions>) -> NifResult<Vec<u8>> {
+        let mut out = io::Cursor::new(Vec::new());
+        self.save(&mut out, options)?;
+        Ok(out.into_inner())
     }
 
     /// Writes the file to `writer`. `None` uses [`SaveOptions::default`].

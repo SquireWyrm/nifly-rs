@@ -1,6 +1,6 @@
 //! Tests for NifFile::texture_paths, texture_slot and set_texture_slot.
 
-use crate::common::load;
+use crate::common::{first, load};
 
 use nifly::{
     bstr::BString,
@@ -9,7 +9,7 @@ use nifly::{
 };
 
 fn shape(nif: &NifFile) -> &NiShape {
-    nif.blocks_of::<NiShape>().next().unwrap()
+    first::<NiShape>(nif)
 }
 
 #[test]

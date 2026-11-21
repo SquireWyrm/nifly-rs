@@ -9,11 +9,7 @@ use nifly::{
     file::{Index, NifFile, NifVersion},
 };
 
-use crate::common::{load, reload_in_place as reload, upstream};
-
-fn first<T: nifly::objects::NiType>(nif: &NifFile) -> Index {
-    nif.blocks_of::<T>().indices().next().unwrap()
-}
+use crate::common::{first_index, load, reload_in_place, upstream};
 
 /// A new file of `version` whose root has a collision object with a new body of type `B`.
 fn with_body<B: nifly::collision::NewBody>(version: NifVersion) -> (NifFile, Index) {
@@ -34,7 +30,7 @@ fn with_body<B: nifly::collision::NewBody>(version: NifVersion) -> (NifFile, Ind
 fn world_object_fields() {
     // Suzanne.nif: a rigid body with a MOPP shape.
     let mut nif = load("Suzanne");
-    let body = first::<BhkRigidBody>(&nif);
+    let body = first_index::<BhkRigidBody>(&nif);
     let shape = nif
         .view::<BhkRigidBody>(body)
         .unwrap()
@@ -62,7 +58,7 @@ fn world_object_fields() {
     world.set_unknown_bytes([1, 2, 3]);
     world.set_property(property);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let world = saved.block_of::<BhkWorldObject>(body).unwrap();
     assert_eq!(
         (world.collision_filter(), world.property()),
@@ -89,7 +85,7 @@ fn world_object_fields() {
     let mut nif = saved;
     assert!(nif.edit::<BhkRigidBody>(body).unwrap().set_shape(None));
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<BhkRigidBody>(body)
             .unwrap()
             .shape()
@@ -144,7 +140,7 @@ fn rigid_body_fields() {
     b.set_body_raw_flags(9);
     b.set_body_raw_flags_32(10);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let b = saved.block_of::<BhkRigidBody>(body).unwrap();
     assert_eq!(b.collision_response(), Some(CollisionResponse::Reporting));
     assert_eq!(
@@ -216,7 +212,7 @@ fn oblivion_rigid_body() {
     b.set_body_raw_flags_32(0x10001);
     b.set_gravity_factor(0.5);
     b.set_mass(3.0);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let b = saved.block_of::<BhkRigidBody>(body).unwrap();
     assert_eq!((b.body_raw_flags_32(), b.mass()), (0x10001, 3.0));
     assert_eq!(b.gravity_factor(), 1.0, "not saved before Skyrim");
@@ -236,7 +232,7 @@ fn constraints() {
     let mut edit = nif.edit::<BhkRigidBody>(body).unwrap();
     assert!(!edit.set_constraints(&[body]), "not a constraint");
     assert!(edit.set_constraints(&[list[0], list[0]]));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let constraints: Vec<_> = saved
         .view::<BhkRigidBody>(body)
         .unwrap()
@@ -270,13 +266,13 @@ fn phantoms() {
     phantom.set_aabb_max([1.0, 2.0, 3.0, 0.0]);
 
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .block_of::<BhkSimpleShapePhantom>(simple)
             .unwrap()
             .transform(),
         transform
     );
-    let saved = reload(&mut nif2);
+    let saved = reload_in_place(&mut nif2);
     let phantom = saved.block_of::<BhkAabbPhantom>(aabb).unwrap();
     assert_eq!(
         (phantom.aabb_min(), phantom.aabb_max()),
@@ -310,7 +306,7 @@ fn actions() {
     assert!(!edit.set_hinged_body(Some(liquid)), "not a rigid body");
     assert!(edit.set_hinged_body(Some(body)));
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let l = saved.block_of::<BhkLiquidAction>(liquid).unwrap();
     assert_eq!(
         (l.user_data(), l.unknown_int_1(), l.unknown_int_2()),

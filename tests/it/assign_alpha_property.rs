@@ -1,23 +1,11 @@
 //! Tests for NifFile::assign_alpha_property and NifFile::remove_alpha_property.
 
-use crate::common::{load, reload, upstream};
-use std::io::Cursor;
+use crate::common::{load, reload, save_in_place, upstream};
 
 use nifly::{
-    file::{Index, NifFile, SaveOptions},
+    file::{Index, NifFile},
     shaders::{AlphaFlags, NiAlphaProperty},
 };
-
-/// The file as it is in memory: no optimizing or sorting on save.
-fn raw(nif: &mut NifFile) -> Vec<u8> {
-    let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions {
-        optimize: false,
-        sort_blocks: false,
-    };
-    nif.save(&mut cur, Some(options)).unwrap();
-    cur.into_inner()
-}
 
 /// Flags and threshold of each shape's alpha property.
 fn alphas(nif: &NifFile) -> Vec<Option<(u16, u8)>> {
@@ -152,7 +140,7 @@ fn remove_from_the_property_list() {
 #[test]
 fn rejects_without_changes() {
     let mut nif = upstream("TestNifFile_OrderedNode_SE");
-    let before = raw(&mut nif);
+    let before = save_in_place(&mut nif);
     let count = nif.blocks().count();
     // Block 9 is an alpha property, not a shape; the root isn't one either.
     for index in [0, 9, count, usize::MAX] {
@@ -168,15 +156,15 @@ fn rejects_without_changes() {
             "{index}"
         );
     }
-    assert_eq!(raw(&mut nif), before);
+    assert_eq!(save_in_place(&mut nif), before);
 
     // A shape without one.
     let mut cube = load("Cube");
-    let before = raw(&mut cube);
+    let before = save_in_place(&mut cube);
     assert!(
         !cube
             .edit::<nifly::geometry::NiShape>(nth_shape(&cube, 0))
             .is_some_and(|mut e| e.remove_alpha_property())
     );
-    assert_eq!(raw(&mut cube), before);
+    assert_eq!(save_in_place(&mut cube), before);
 }

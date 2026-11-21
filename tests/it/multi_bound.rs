@@ -1,7 +1,6 @@
 //! Tests for BSMultiBound, its data blocks and the BSMultiBoundNode fields.
 
-use crate::common::reload;
-use std::fs;
+use crate::common::{first, first_index, open, reload};
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
@@ -15,14 +14,11 @@ use nifly::{
 
 fn load() -> NifFile {
     let path = "nifly-sys/vendor/nifly/tests/input/TestNifFile_MultiBound_SE.nif";
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
+    open(path)
 }
 
 fn node_index(nif: &NifFile) -> Index {
-    nif.blocks_of::<BsMultiBoundNode>()
-        .indices()
-        .next()
-        .unwrap()
+    first_index::<BsMultiBoundNode>(nif)
 }
 
 fn data(nif: &NifFile) -> View<'_, BsMultiBoundData> {
@@ -40,7 +36,7 @@ fn assign(nif: &mut NifFile, shape: MultiBoundShape) -> Index {
 #[test]
 fn reads_existing() {
     let nif = load();
-    let node = nif.blocks_of::<BsMultiBoundNode>().next().unwrap();
+    let node = first::<BsMultiBoundNode>(&nif);
     assert_eq!(node.name(), "FadeNode Anim");
     assert_eq!(node.culling_mode(), Some(CullingMode::Normal));
     let obb = data(&nif).cast::<BsMultiBoundObb>().unwrap();
@@ -67,7 +63,7 @@ fn edits_round_trip() {
     obb.set_rotation(rotation);
 
     let saved = reload(&mut nif);
-    let node = saved.blocks_of::<BsMultiBoundNode>().next().unwrap();
+    let node = first::<BsMultiBoundNode>(&saved);
     assert_eq!(node.culling_mode(), Some(CullingMode::AllFail));
     let obb = data(&saved).cast::<BsMultiBoundObb>().unwrap();
     assert_eq!(
@@ -151,7 +147,7 @@ fn removes() {
 #[test]
 fn only_multi_bound_nodes() {
     let nif = load();
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     assert!(nif.view::<BsMultiBoundNode>(root).is_none());
     assert!(nif.view::<BsMultiBound>(root).is_none());
 }
@@ -166,6 +162,6 @@ fn culling_mode_not_saved_in_fallout_3() {
         .unwrap()
         .set_culling_mode(CullingMode::AllPass);
     let saved = reload(&mut nif);
-    let node = saved.blocks_of::<BsMultiBoundNode>().next().unwrap();
+    let node = first::<BsMultiBoundNode>(&saved);
     assert_eq!(node.culling_mode(), Some(CullingMode::Normal));
 }

@@ -1,6 +1,6 @@
 //! Tests for NiLODNode's LOD data: NiRangeLODData and NiScreenLODData.
 
-use crate::common::reload;
+use crate::common::{first_index, reload};
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
@@ -92,7 +92,7 @@ fn replaces_and_removes() {
     // The replaced data was dropped on save.
     assert_eq!(saved.blocks_of::<NiLodData>().count(), 1);
 
-    let node = nif.blocks_of::<NiLodNode>().indices().next().unwrap();
+    let node = first_index::<NiLodNode>(&nif);
     let mut edit = nif.edit::<NiLodNode>(node).unwrap();
     assert!(edit.remove_lod_data());
     assert!(!edit.remove_lod_data());
@@ -103,6 +103,6 @@ fn replaces_and_removes() {
 #[test]
 fn only_lod_nodes() {
     let (nif, _) = lod_file();
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     assert!(nif.view::<NiLodNode>(root).is_none());
 }

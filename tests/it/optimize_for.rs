@@ -1,6 +1,6 @@
 //! Tests for NifFile::optimize_for.
 
-use crate::common::save;
+use crate::common::{first, open, reload, save};
 use std::fs;
 
 use nifly::{
@@ -11,7 +11,7 @@ use nifly::{
 const UPSTREAM: &str = "nifly-sys/vendor/nifly/tests";
 
 fn load_path(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
+    open(path)
 }
 
 fn shape_types(nif: &NifFile) -> Vec<String> {
@@ -72,7 +72,7 @@ fn upstream_se_to_le_head_parts() {
 fn bones_le_to_se_keeps_skinning() {
     let mut nif = load_path("assets/Bones.nif");
     assert_eq!(nif.version(), NifVersion::SKYRIM);
-    let shape = nif.blocks_of::<NiShape>().next().unwrap();
+    let shape = first::<NiShape>(&nif);
     let bones = nif.view_of(shape).unwrap().bone_list();
     let weights: Vec<_> = (0..bones.len())
         .map(|i| nif.view_of(shape).unwrap().bone_weights(i).len())
@@ -86,9 +86,9 @@ fn bones_le_to_se_keeps_skinning() {
     assert_eq!(shape_types(&nif), ["BSTriShape"]);
 
     // Still skinned to the same bones after a save and reload.
-    let saved = NifFile::load(save(&mut nif).as_slice(), None).unwrap();
+    let saved = reload(&mut nif);
     assert_eq!(saved.version(), NifVersion::SKYRIM_SE);
-    let shape = saved.blocks_of::<NiShape>().next().unwrap();
+    let shape = first::<NiShape>(&saved);
     assert_eq!(saved.view_of(shape).unwrap().bone_list(), bones);
     let after: Vec<_> = (0..bones.len())
         .map(|i| saved.view_of(shape).unwrap().bone_weights(i).len())

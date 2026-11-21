@@ -1,7 +1,6 @@
 //! Tests for reading extra data and for NifFile::assign_extra_data.
 
-use crate::common::load;
-use std::io::Cursor;
+use crate::common::{first, load, reload};
 
 use nifly::{
     extra_data::{
@@ -15,18 +14,8 @@ use nifly::{
     objects::NiObject,
 };
 
-fn root_index(nif: &NifFile) -> usize {
-    nif.root_node().unwrap().index()
-}
-
 fn root_extra_data(nif: &NifFile) -> Vec<&NiObject> {
     nif.root_node().unwrap().extra_data().collect()
-}
-
-fn save_and_reload(nif: &mut NifFile) -> NifFile {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    NifFile::load(cur.into_inner().as_slice(), None).unwrap()
 }
 
 #[test]
@@ -52,7 +41,7 @@ fn read_existing_bsx_flags() {
 #[test]
 fn assign_each_named_type() {
     let mut nif = load("Cube");
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     let before = nif.blocks().count();
 
     let s = nif
@@ -112,7 +101,7 @@ fn assign_each_named_type() {
 #[test]
 fn assign_bsx_flags() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     let index = nif
         .edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| {
@@ -129,7 +118,7 @@ fn assign_bsx_flags() {
 #[test]
 fn assign_cloth_and_collision_query_proxy() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     let cloth_bytes: Vec<u8> = (0..=255).collect();
 
     let cloth = nif
@@ -171,7 +160,7 @@ fn assign_cloth_and_collision_query_proxy() {
 #[test]
 fn cloth_survives_save() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     let cloth_bytes = vec![0xAB; 10_000];
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraBsCloth(cloth_bytes.clone())))
@@ -180,7 +169,7 @@ fn cloth_survives_save() {
         .and_then(|mut e| e.assign_extra_data(ExtraString("Name", "after cloth")))
         .unwrap();
 
-    let saved = save_and_reload(&mut nif);
+    let saved = reload(&mut nif);
     let extra = root_extra_data(&saved);
     assert_eq!(extra.len(), 2);
     assert_eq!(
@@ -196,7 +185,7 @@ fn cloth_survives_save() {
 #[test]
 fn empty_cloth() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     let index = nif
         .edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraBsCloth([])))
@@ -213,7 +202,7 @@ fn empty_cloth() {
 fn unnamed_blocks_rejected_in_linked_list_versions() {
     // Morrowind (4.0.0.2) stores extra data as a linked list through NiExtraData.
     let mut nif = NifFile::create(NifVersion::MORROWIND);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     assert_eq!(
         nif.edit::<nifly::objects::NiAvObject>(root)
             .and_then(|mut e| e.assign_extra_data(ExtraBsCloth(b"x"))),
@@ -237,15 +226,13 @@ fn unnamed_blocks_rejected_in_linked_list_versions() {
 #[test]
 fn assign_to_shape() {
     let mut nif = load("Cube");
-    let shape = nif
-        .block_index(nif.blocks_of::<NiShape>().next().unwrap())
-        .unwrap();
+    let shape = nif.block_index(first::<NiShape>(&nif)).unwrap();
     let index = nif
         .edit::<nifly::objects::NiAvObject>(shape)
         .and_then(|mut e| e.assign_extra_data(ExtraString("Note", "on the shape")))
         .unwrap();
 
-    let shape = nif.blocks_of::<NiShape>().next().unwrap();
+    let shape = first::<NiShape>(&nif);
     let attached: Vec<_> = nif
         .view_of(shape)
         .unwrap()
@@ -299,7 +286,7 @@ fn invalid_target_changes_nothing() {
 #[test]
 fn non_utf8_name_and_value() {
     let mut nif = load("Cube");
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     let index = nif
         .edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraString(b"Caf\xe9", b"na\xefve")))
@@ -312,7 +299,7 @@ fn non_utf8_name_and_value() {
 #[test]
 fn assigned_extra_data_survives_save() {
     let mut nif = load("Cube");
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraBsxFlags(BsxBitflags::HAVOK)))
         .unwrap();
@@ -323,7 +310,7 @@ fn assigned_extra_data_survives_save() {
         .and_then(|mut e| e.assign_extra_data(ExtraFloat("Scale", 0.25)))
         .unwrap();
 
-    let saved = save_and_reload(&mut nif);
+    let saved = reload(&mut nif);
     let extra = root_extra_data(&saved);
     let names: Vec<_> = extra.iter().map(|e| e.block_name()).collect();
     assert_eq!(names, ["BSXFlags", "NiStringExtraData", "NiFloatExtraData"]);
@@ -342,7 +329,7 @@ fn assigned_extra_data_survives_save() {
 #[test]
 fn blocks_of_finds_extra_data() {
     let mut nif = load("Suzanne");
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraInteger("Count", 7)))
         .unwrap();

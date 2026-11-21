@@ -2,7 +2,7 @@
 //! points, markers, decals, bone data, ...): reading them and creating them with
 //! NifFile::assign_extra_data.
 
-use crate::common::{reload, upstream};
+use crate::common::{first, reload, upstream};
 
 use nifly::{
     extra_data::{
@@ -19,19 +19,9 @@ use nifly::{
         NiColorExtraData, NiFloatExtraData, NiFloatsExtraData, NiStringsExtraData,
         NiVectorExtraData, NiVertWeightsExtraData, SkinAttach,
     },
-    file::{Index, NifFile, NifVersion},
+    file::{NifFile, NifVersion},
     object3d::Vec3,
-    objects::NiType,
 };
-
-fn root_index(nif: &NifFile) -> Index {
-    nif.root_node().unwrap().index()
-}
-
-/// The first block of type `T`.
-fn first<T: NiType>(nif: &NifFile) -> &T {
-    nif.blocks_of::<T>().next().unwrap()
-}
 
 #[test]
 fn reads_existing() {
@@ -62,7 +52,7 @@ fn reads_existing() {
 #[test]
 fn skyrim_round_trip() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     let position = FurniturePosition {
         offset: Vec3::new(1.0, 2.0, 3.0),
         heading: 1.5,
@@ -137,7 +127,7 @@ fn furniture_fields_by_version() {
 
     // Oblivion stores the orientation and position references.
     let mut nif = NifFile::create(NifVersion::OBLIVION);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraFurnitureMarker("FRN", [position])))
         .unwrap();
@@ -155,7 +145,7 @@ fn furniture_fields_by_version() {
 
     // Skyrim stores the heading, animation type and entry points.
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraFurnitureMarkerNode("FRN", [position])))
         .unwrap();
@@ -191,7 +181,7 @@ fn connect_points_round_trip() {
         },
     ];
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraConnectPointParents("CPA", &points)))
         .unwrap();
@@ -219,7 +209,7 @@ fn connect_points_round_trip() {
 #[test]
 fn empty_lists() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraBinary("Bin", [])))
         .unwrap();
@@ -277,7 +267,7 @@ fn invalid_target_changes_nothing() {
 #[test]
 fn value_and_list_types_round_trip() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraColor("Color", [0.25, 0.5, 0.75, 1.0])))
         .unwrap();
@@ -328,7 +318,7 @@ fn value_and_list_types_round_trip() {
 #[test]
 fn position_data_rounds_to_half_floats() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraPositionData("Pos", [1.5, -0.25, 0.1, 70000.0])))
         .unwrap();
@@ -374,7 +364,7 @@ fn decals_and_bones_round_trip() {
     }];
 
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     nif.edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraDecalPlacement("DVPG", 0.5, &decals)))
         .unwrap();
@@ -401,7 +391,7 @@ fn decals_and_bones_round_trip() {
 #[test]
 fn sixteen_bit_counts_are_limited() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     let count = nif.blocks().count();
     assert_eq!(
         nif.edit::<nifly::objects::NiAvObject>(root)
@@ -470,7 +460,7 @@ fn skin_attach() {
 
     // A new one.
     let mut nif = NifFile::create(NifVersion::FALLOUT_76);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     let new = nif
         .edit::<nifly::objects::NiAvObject>(root)
         .and_then(|mut e| e.assign_extra_data(ExtraSkinAttach("SkinBMP", ["Bone", "", "Bone 2"])))

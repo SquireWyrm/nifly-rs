@@ -6,7 +6,7 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
     env,
     error::Error,
-    fs, process, ptr,
+    process, ptr,
 };
 
 use nifly::{
@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         eprintln!("usage: stats <path>");
         process::exit(2);
     };
-    let nif = NifFile::load(fs::File::open(&path)?, None)?;
+    let nif = NifFile::open(&path, None)?;
 
     // Block index by address, so references can be printed as indices.
     let index: HashMap<*const NiObject, usize> = nif

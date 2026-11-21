@@ -1,37 +1,17 @@
 //! Tests for the less common fields of nodes, effects and skins: unknown values, screen counts,
 //! particle systems, per-bone skin data, skin bones and partition details.
 
-use std::io::Cursor;
-
 use nifly::{
     effects::NiTextureEffect,
     extra_data::ExtraInteger,
-    file::{Index, NifFile, NifVersion, SaveOptions},
+    file::{NifFile, NifVersion},
     geometry::{NiShape, VertexWeight},
     nodes::{BsFaceGenNiNode, BsMasterParticleSystem, NiCamera, NiNode},
     object3d::{BoundingSphere, Matrix3, Transform, Vec3},
     skin::{BsDismemberSkinInstance, BsSkinBoneData, NiBoneContainer, NiSkinData, NiSkinPartition},
 };
 
-use crate::common::{load, upstream};
-
-/// Saves without optimizing or sorting, so block indices stay.
-fn reload(nif: &mut NifFile) -> NifFile {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(
-        &mut cur,
-        Some(SaveOptions {
-            optimize: false,
-            sort_blocks: false,
-        }),
-    )
-    .unwrap();
-    NifFile::load(cur.into_inner().as_slice(), None).unwrap()
-}
-
-fn first<T: nifly::objects::NiType>(nif: &NifFile) -> Index {
-    nif.blocks_of::<T>().indices().next().unwrap()
-}
+use crate::common::{first_index, load, reload_in_place, upstream};
 
 fn transform(x: f32) -> Transform {
     Transform::new(Vec3::new(x, 2.0, 3.0), Matrix3::IDENTITY, 1.5)
@@ -60,7 +40,7 @@ fn face_gen_and_master_particle_system() {
     assert!(!edit.set_particle_systems(&[system, extra]));
     assert!(edit.set_particle_systems(&[system]));
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         saved.block_of::<BsFaceGenNiNode>(face).unwrap().unknown(),
         7
@@ -82,7 +62,7 @@ fn camera_screen_counts() {
     let block = nif.block_of_mut::<NiCamera>(camera).unwrap();
     block.set_screen_polygon_count(3);
     block.set_screen_texture_count(4);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let camera = saved.block_of::<NiCamera>(camera).unwrap();
     assert_eq!(
         (camera.screen_polygon_count(), camera.screen_texture_count()),
@@ -93,11 +73,11 @@ fn camera_screen_counts() {
 #[test]
 fn texture_effect_raw_fields() {
     let mut nif = upstream("TestNifFile_TextureEffect_MW");
-    let effect = first::<NiTextureEffect>(&nif);
+    let effect = first_index::<NiTextureEffect>(&nif);
     let block = nif.block_of_mut::<NiTextureEffect>(effect).unwrap();
     block.set_clipping_value(2);
     block.set_unknown(0x1234);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let effect = saved.block_of::<NiTextureEffect>(effect).unwrap();
     assert_eq!(
         (effect.clipping_value(), effect.clipping(), effect.unknown()),
@@ -108,7 +88,7 @@ fn texture_effect_raw_fields() {
 #[test]
 fn skin_data_per_bone() {
     let mut nif = load("Bones");
-    let data = first::<NiSkinData>(&nif);
+    let data = first_index::<NiSkinData>(&nif);
     let bounds = BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0);
     let weights = [
         VertexWeight {
@@ -129,7 +109,7 @@ fn skin_data_per_bone() {
     assert!(!block.set_vertex_weights(3, &weights));
     assert!(!block.set_vertex_weights(0, &vec![weights[0]; 65536]));
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let block = saved.block_of::<NiSkinData>(data).unwrap();
     assert_eq!(
         (block.transform_skin_to_bone(1), block.bounds(1)),
@@ -143,7 +123,7 @@ fn skin_data_per_bone() {
 #[test]
 fn skin_bone_data_per_bone() {
     let mut nif = upstream("TestNifFile_Skinned_FO4");
-    let data = first::<BsSkinBoneData>(&nif);
+    let data = first_index::<BsSkinBoneData>(&nif);
     let bounds = BoundingSphere::new(Vec3::new(-1.0, 0.0, 1.0), 9.0);
     let count = nif.block_of::<BsSkinBoneData>(data).unwrap().bone_count();
     let block = nif.block_of_mut::<BsSkinBoneData>(data).unwrap();
@@ -151,7 +131,7 @@ fn skin_bone_data_per_bone() {
     assert!(block.set_bounds(0, bounds));
     assert!(!block.set_transform_skin_to_bone(count, transform(7.0)));
     assert!(!block.set_bounds(count, bounds));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let block = saved.block_of::<BsSkinBoneData>(data).unwrap();
     assert_eq!(
         (block.transform_skin_to_bone(0), block.bounds(0)),
@@ -175,19 +155,19 @@ fn skin_bones() {
     assert!(!edit.set_bones(&[3, 2]), "the data has three bones");
     assert!(!edit.set_bones(&[3, 2, shape]), "not a node");
     assert!(edit.set_bones(&[3, 2, 1]));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(saved.view::<NiShape>(shape).unwrap().bone_ids(), [3, 2, 1]);
 }
 
 #[test]
 fn dismember_body_part() {
     let mut nif = upstream("TestNifFile_Skinned_SE");
-    let skin = first::<BsDismemberSkinInstance>(&nif);
+    let skin = first_index::<BsDismemberSkinInstance>(&nif);
     let block = nif.block_of_mut::<BsDismemberSkinInstance>(skin).unwrap();
     assert!(block.set_body_part(0, 42));
     assert!(!block.set_body_part(1, 42));
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .block_of::<BsDismemberSkinInstance>(skin)
             .unwrap()
             .body_part(0),
@@ -198,7 +178,7 @@ fn dismember_body_part() {
 #[test]
 fn partition_details() {
     let mut nif = upstream("TestNifFile_Skinned_SE");
-    let part = first::<NiSkinPartition>(&nif);
+    let part = first_index::<NiSkinPartition>(&nif);
     let block = nif.block_of::<NiSkinPartition>(part).unwrap();
     assert_eq!(
         (
@@ -226,7 +206,7 @@ fn partition_details() {
     assert!(block.set_true_triangles(0, &reversed));
     block.set_vertex_desc(desc);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let block = saved.block_of::<NiSkinPartition>(part).unwrap();
     assert_eq!(block.has_bone_indices(0), Some(false));
     assert_eq!(block.bone_indices(0), Some(&[][..]));
@@ -238,7 +218,7 @@ fn partition_details() {
     );
 
     // A partition no shape uses keeps its own.
-    let skin = first::<BsDismemberSkinInstance>(&nif);
+    let skin = first_index::<BsDismemberSkinInstance>(&nif);
     assert!(
         nif.edit::<nifly::skin::NiSkinInstance>(skin)
             .unwrap()
@@ -247,7 +227,7 @@ fn partition_details() {
     let block = nif.block_of_mut::<NiSkinPartition>(part).unwrap();
     block.set_vertex_desc(0x5678);
     assert!(block.set_partition_vertex_desc(0, 0x1234));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let block = saved.block_of::<NiSkinPartition>(part).unwrap();
     assert_eq!(
         (block.vertex_desc(), block.partition_vertex_desc(0)),

@@ -1,7 +1,6 @@
 //! Tests for NifFile::alpha_property(_mut) and NiAlphaProperty.
 
-use crate::common::{load, upstream};
-use std::io::Cursor;
+use crate::common::{load, reload, upstream};
 
 use nifly::{
     file::{Index, NifFile},
@@ -92,9 +91,7 @@ fn setters_round_trip() {
     alpha.set_threshold(200);
     assert_eq!(alphas(&nif), [Some((6, 4845, 200))]);
 
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    let saved = reload(&mut nif);
     let a = saved
         .shapes()
         .views()

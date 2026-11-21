@@ -1,19 +1,12 @@
 //! Tests for NiCamera, NifFile::add_camera and the camera's scene.
 
-use crate::common::upstream;
-use std::io::Cursor;
+use crate::common::{reload_with, upstream};
 
 use nifly::{
     file::{NifFile, NifVersion, SaveOptions},
     nodes::{Frustum, NiCamera, NiNode, Viewport},
     object3d::{Transform, Vec3},
 };
-
-fn reload(nif: &mut NifFile, options: Option<SaveOptions>) -> NifFile {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, options).unwrap();
-    NifFile::load(cur.into_inner().as_slice(), None).unwrap()
-}
 
 /// Keeps block indices the same.
 const KEEP: Option<SaveOptions> = Some(SaveOptions {
@@ -49,7 +42,7 @@ fn set_fields(nif: &mut NifFile, camera: usize) {
 #[test]
 fn add_camera_defaults() {
     let mut nif = upstream("TestNifFile_Static_SE");
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let count = nif.blocks().count();
     let transform = Transform {
         translation: Vec3::new(1.0, 2.0, 3.0),
@@ -136,7 +129,7 @@ fn fields_survive_save() {
             .unwrap();
         set_fields(&mut nif, camera);
 
-        let saved = reload(&mut nif, KEEP);
+        let saved = reload_with(&mut nif, KEEP);
         let c = saved.view::<NiCamera>(camera).unwrap();
         assert_eq!(c.name(), "Camera", "{name}");
         assert_eq!(
@@ -179,7 +172,7 @@ fn scene() {
             .name(),
         "Scene"
     );
-    let saved = reload(&mut nif, KEEP);
+    let saved = reload_with(&mut nif, KEEP);
     assert_eq!(
         saved
             .view::<NiCamera>(camera)
@@ -198,7 +191,7 @@ fn scene() {
 fn scene_can_be_an_ancestor() {
     // A camera usually renders the scene it's in, so its scene ref points back up the tree.
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let node = nif.add_node("Node", Transform::default(), None).unwrap();
     let camera = nif
         .add_camera("Camera", Transform::default(), Some(node))
@@ -206,7 +199,7 @@ fn scene_can_be_an_ancestor() {
     assert!(nif.edit::<NiCamera>(camera).unwrap().set_scene(Some(root)));
 
     // Optimizing and sorting still finish, and keep the ref.
-    let saved = reload(&mut nif, None);
+    let saved = reload_with(&mut nif, None);
     let camera = saved.blocks_of::<NiCamera>().views().next().unwrap();
     assert_eq!(
         camera.scene().map(|s| s.index()),

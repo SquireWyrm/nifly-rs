@@ -1,7 +1,6 @@
 //! Tests for node subclass fields, tree bones and NifFile::add_node_of.
 
-use crate::common::{UPSTREAM, reload};
-use std::fs;
+use crate::common::{UPSTREAM, first, first_index, open, reload};
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
@@ -14,13 +13,7 @@ use nifly::{
 };
 
 fn load(name: &str) -> NifFile {
-    NifFile::load(
-        fs::read(format!("{UPSTREAM}/{name}.nif"))
-            .unwrap()
-            .as_slice(),
-        None,
-    )
-    .unwrap()
+    open(format!("{UPSTREAM}/{name}.nif"))
 }
 
 fn add<T: nifly::nodes::NewNode>(nif: &mut NifFile, name: &str) -> Index {
@@ -31,7 +24,7 @@ fn add<T: nifly::nodes::NewNode>(nif: &mut NifFile, name: &str) -> Index {
 #[test]
 fn reads_existing() {
     let nif = load("TestNifFile_OrderedNode_SE");
-    let ordered = nif.blocks_of::<BsOrderedNode>().next().unwrap();
+    let ordered = first::<BsOrderedNode>(&nif);
     assert_eq!(ordered.alpha_sort_bound(), [0.0; 4]);
     assert!(ordered.is_static_bound());
     let billboard = nif.find_block_by_name::<NiBillboardNode>("jet01").unwrap();
@@ -113,12 +106,12 @@ fn range_node_reads_as_unknown() {
 #[test]
 fn morrowind_billboard_mode_not_saved() {
     let mut nif = load("TestNifFile_Billboard_MW");
-    let index = nif.blocks_of::<NiBillboardNode>().indices().next().unwrap();
+    let index = first_index::<NiBillboardNode>(&nif);
     nif.block_of_mut::<NiBillboardNode>(index)
         .unwrap()
         .set_mode(BillboardMode::RigidFaceCenter);
     let saved = reload(&mut nif);
-    let b = saved.blocks_of::<NiBillboardNode>().next().unwrap();
+    let b = first::<NiBillboardNode>(&saved);
     assert_eq!(b.mode(), Some(BillboardMode::AlwaysFaceCamera));
 }
 
@@ -146,7 +139,7 @@ fn tree_bones() {
     assert_eq!(names(&saved, 2), ["B"]);
 
     // Clearing a list.
-    let tree = nif.blocks_of::<BsTreeNode>().indices().next().unwrap();
+    let tree = first_index::<BsTreeNode>(&nif);
     assert!(nif.edit::<BsTreeNode>(tree).unwrap().set_bones_1(&[]));
     assert!(names(&nif, 1).is_empty());
 }

@@ -27,12 +27,12 @@ The API may still change between 0.x versions.
 ```rust
 use nifly::prelude::*;
 
-let mut nif = NifFile::load(std::fs::File::open("model.nif")?, None)?;
+let mut nif = NifFile::open("model.nif", None)?;
 for shape in nif.blocks_of::<NiShape>().views() {
     println!("{}: {:?}", shape.name().to_str_lossy(), shape.texture_paths());
 }
 let mut root = nif.root_node_mut().unwrap();
-root.set_transform(Transform::new(Vec3::new(0.0, 0.0, 10.0), Matrix3::IDENTITY, 1.0));
+root.set_transform(Transform::from_translation(vec3(0.0, 0.0, 10.0)));
 nif.save(std::fs::File::create("moved.nif")?, None)?;
 ```
 

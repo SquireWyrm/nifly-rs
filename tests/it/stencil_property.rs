@@ -1,7 +1,7 @@
 //! Tests for NifFile::stencil_property(_mut) and NiStencilProperty, on assets/Stencil_MW.nif.
 
-use crate::common::{load, reload};
-use std::{fs, ptr};
+use crate::common::{first_index, load, open, reload};
+use std::ptr;
 
 use nifly::{
     file::NifFile,
@@ -133,18 +133,14 @@ fn none_without_one() {
         );
     }
     let upstream = "nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_MW.nif";
-    let nif = NifFile::load(fs::read(upstream).unwrap().as_slice(), None).unwrap();
+    let nif = open(upstream);
     assert!(
         nif.shapes()
             .all(|s| nif.view_of(s).unwrap().stencil_property().is_none())
     );
 
     let nif = load("Stencil_MW");
-    let stencil_index = nif
-        .blocks_of::<NiStencilProperty>()
-        .indices()
-        .next()
-        .unwrap();
+    let stencil_index = first_index::<NiStencilProperty>(&nif);
     let count = nif.blocks().count();
     for index in [0, stencil_index, count, usize::MAX] {
         assert!(

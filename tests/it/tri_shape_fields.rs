@@ -9,7 +9,7 @@ use nifly::{
     object3d::{BoundingSphere, Vec3},
 };
 
-use crate::common::{load, reload_in_place as reload, upstream};
+use crate::common::{first_index, load, reload_in_place, upstream};
 
 const COLORS: VertexFlags = VertexFlags::COLORS;
 const NORMALS: VertexFlags = VertexFlags::NORMALS;
@@ -18,7 +18,7 @@ const SECOND_UVS: VertexFlags = VertexFlags::UVS_2;
 const FULL_PRECISION: VertexFlags = VertexFlags::FULL_PRECISION;
 
 fn first(nif: &NifFile) -> Index {
-    nif.blocks_of::<BsTriShape>().indices().next().unwrap()
+    first_index::<BsTriShape>(nif)
 }
 
 fn shape(nif: &NifFile, index: Index) -> &BsTriShape {
@@ -33,7 +33,7 @@ fn bounds() {
     let block = nif.block_of_mut::<BsTriShape>(index).unwrap();
     block.set_bounds(sphere);
     block.set_bound_min_max([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(shape(&saved, index).bounds(), sphere);
     assert_eq!(
         shape(&saved, index).bound_min_max(),
@@ -63,7 +63,7 @@ fn vertex_flags() {
     );
     assert!(edit.set_vertex_flags(flags & !(NORMALS | TANGENTS) | COLORS));
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         shape(&saved, index).vertex_flags(),
         flags & !(NORMALS | TANGENTS) | COLORS
@@ -101,7 +101,7 @@ fn extra_floats() {
         "the extra floats need full precision"
     );
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(shape(&saved, index).vertex_extra_floats(), extra);
 }
 
@@ -128,7 +128,7 @@ fn particle_data() {
     })));
     assert!(block.set_particle_data(Some(&data)));
 
-    let mut saved = reload(&mut nif);
+    let mut saved = reload_in_place(&mut nif);
     assert_eq!(shape(&saved, index).particle_data(), Some(data));
     assert!(
         saved
@@ -136,18 +136,17 @@ fn particle_data() {
             .unwrap()
             .set_particle_data(None)
     );
-    assert_eq!(shape(&reload(&mut saved), index).particle_data(), None);
+    assert_eq!(
+        shape(&reload_in_place(&mut saved), index).particle_data(),
+        None
+    );
 }
 
 #[test]
 fn sse_segments() {
     // SubIndex_SE.nif: each shape has one segment holding its first triangle.
     let mut nif = load("SubIndex_SE");
-    let index = nif
-        .blocks_of::<BsSubIndexTriShape>()
-        .indices()
-        .next()
-        .unwrap();
+    let index = first_index::<BsSubIndexTriShape>(&nif);
     let block = nif.block_of::<BsSubIndexTriShape>(index).unwrap();
     assert_eq!(
         block.sse_segments(),
@@ -183,7 +182,7 @@ fn sse_segments() {
         triangle_count: count
     }]));
     assert!(block.set_sse_segments(&segments));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         saved
             .block_of::<BsSubIndexTriShape>(index)

@@ -1,20 +1,9 @@
 //! Tests for NifFile::set_shape_order.
 
-use crate::common::load;
+use crate::common::{load, save_in_place};
 use std::io::Cursor;
 
 use nifly::file::{NifFile, SaveOptions};
-
-/// The file as it is in memory: no optimizing or sorting on save.
-fn raw(nif: &mut NifFile) -> Vec<u8> {
-    let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions {
-        optimize: false,
-        sort_blocks: false,
-    };
-    nif.save(&mut cur, Some(options)).unwrap();
-    cur.into_inner()
-}
 
 fn shape_name(nif: &NifFile) -> Vec<u8> {
     nif.shapes().next().unwrap().name().to_vec()
@@ -34,7 +23,7 @@ fn single_root_shape() {
 fn invalid_orders_change_nothing() {
     let mut nif = load("Suzanne");
     let name = shape_name(&nif);
-    let before = raw(&mut nif);
+    let before = save_in_place(&mut nif);
 
     let cases: [&[&[u8]]; 5] = [
         &[],                  // empty
@@ -45,7 +34,7 @@ fn invalid_orders_change_nothing() {
     ];
     for order in cases {
         assert!(!nif.set_shape_order(order), "{order:?}");
-        assert_eq!(raw(&mut nif), before, "{order:?}");
+        assert_eq!(save_in_place(&mut nif), before, "{order:?}");
     }
 }
 
@@ -53,9 +42,9 @@ fn invalid_orders_change_nothing() {
 fn shapes_must_be_root_children() {
     // Icosphere's shape is under Root -> Indirect1 -> Indirect2.
     let mut nif = load("Icosphere");
-    let before = raw(&mut nif);
+    let before = save_in_place(&mut nif);
     assert!(!nif.set_shape_order([shape_name(&nif)]));
-    assert_eq!(raw(&mut nif), before);
+    assert_eq!(save_in_place(&mut nif), before);
 }
 
 #[test]
@@ -75,5 +64,5 @@ fn sorts_blocks() {
         }),
     )
     .unwrap();
-    assert_eq!(raw(&mut a), cur.into_inner());
+    assert_eq!(save_in_place(&mut a), cur.into_inner());
 }

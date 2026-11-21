@@ -1,11 +1,9 @@
 //! Tests for the fixed-function properties and NifFile::add_property.
 
-use crate::common::{UPSTREAM, reload};
-use std::fs;
+use crate::common::{UPSTREAM, first, open, reload};
 
 use nifly::{
     file::{Index, NifFile, NifVersion},
-    objects::NiType,
     shaders::{
         DepthTest, FogFunction, LightingMode, NiDitherProperty, NiFogProperty, NiMaterialProperty,
         NiSpecularProperty, NiStencilProperty, NiVertexColorProperty, NiWireframeProperty,
@@ -14,21 +12,7 @@ use nifly::{
 };
 
 fn load(name: &str) -> NifFile {
-    NifFile::load(
-        fs::read(format!("{UPSTREAM}/{name}.nif"))
-            .unwrap()
-            .as_slice(),
-        None,
-    )
-    .unwrap()
-}
-
-fn root_index(nif: &NifFile) -> Index {
-    nif.root_node().unwrap().index()
-}
-
-fn first<T: NiType>(nif: &NifFile) -> &T {
-    nif.blocks_of::<T>().next().unwrap()
+    open(format!("{UPSTREAM}/{name}.nif"))
 }
 
 fn add<T: nifly::shaders::NewProperty>(nif: &mut NifFile, target: Index) -> &mut T {
@@ -128,7 +112,7 @@ fn oblivion_round_trip() {
 #[test]
 fn fallout_3_saves_packed_flags_only() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_3);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
 
     let flags = VertexColorFlags::from_bits(0)
         .with_vertex_mode(VertexColorMode::AmbientDiffuse)
@@ -168,7 +152,7 @@ fn fallout_3_saves_packed_flags_only() {
 #[test]
 fn morrowind_has_no_z_function() {
     let mut nif = load("TestNifFile_Static_MW");
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     add::<NiZBufferProperty>(&mut nif, root).set_function(DepthTest::Never);
     let saved = reload(&mut nif);
     let root = saved.root_node().unwrap();
@@ -182,7 +166,7 @@ fn morrowind_has_no_z_function() {
 #[test]
 fn skyrim_saves_no_property_list() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    let root = root_index(&nif);
+    let root = nif.root_index().unwrap();
     assert!(
         nif.edit::<nifly::objects::NiAvObject>(root)
             .map(|mut e| e.add_property::<NiFogProperty, _>())

@@ -219,8 +219,13 @@ impl NifFile {
 
     /// Like [`root_node`](Self::root_node), for editing.
     pub fn root_node_mut(&mut self) -> Option<Edit<'_, NiNode>> {
-        let index = self.root_node()?.index();
+        let index = self.root_index()?;
         self.edit(index)
+    }
+
+    /// The block index of [`root_node`](Self::root_node).
+    pub fn root_index(&self) -> Option<Index> {
+        Some(self.root_node()?.index())
     }
 
     /// The root node's translation relative to its parent, or `None` if there's no root node

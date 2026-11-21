@@ -1,9 +1,11 @@
-//! Round-trip tests for NifFile::save.
+//! Round-trip tests for NifFile::save and NifFile::to_bytes.
 
 use std::{
     fs::File,
     io::{self, Cursor, Seek, SeekFrom, Write},
 };
+
+use crate::common::{IN_PLACE, load, save};
 
 use nifly::{
     error::Error,
@@ -12,16 +14,6 @@ use nifly::{
 };
 
 const ASSETS: [&str; 4] = ["Cube", "Suzanne", "Icosphere", "Bones"];
-
-fn load(name: &str) -> NifFile {
-    NifFile::load(File::open(format!("assets/{name}.nif")).unwrap(), None).unwrap()
-}
-
-fn save_to_vec(nif: &mut NifFile) -> Vec<u8> {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    cur.into_inner()
-}
 
 fn reload(bytes: Vec<u8>) -> NifFile {
     NifFile::load(Cursor::new(bytes), None).unwrap()
@@ -66,7 +58,7 @@ fn round_trip_preserves_everything() {
         let mut nif = load(name);
         let before = summary(&nif);
 
-        let saved = reload(save_to_vec(&mut nif));
+        let saved = reload(save(&mut nif));
         assert!(saved.is_valid(), "{name}");
         assert!(!saved.has_unknown(), "{name}");
         assert_eq!(summary(&saved), before, "{name}");
@@ -77,8 +69,8 @@ fn round_trip_preserves_everything() {
 fn second_save_is_byte_identical() {
     // The first save may optimize and reorder blocks; after that, saving is stable.
     for name in ASSETS {
-        let first = save_to_vec(&mut load(name));
-        let second = save_to_vec(&mut reload(first.clone()));
+        let first = save(&mut load(name));
+        let second = save(&mut reload(first.clone()));
         assert_eq!(first, second, "{name}");
     }
 }
@@ -92,9 +84,9 @@ fn saving_again_keeps_oblivion_tangents() {
     let shape = nif.shapes().views().next().unwrap().index();
     let tangents = nif.view::<NiShape>(shape).unwrap().tangents();
     assert!(tangents.is_some());
-    let first = save_to_vec(&mut nif);
+    let first = save(&mut nif);
     assert_eq!(nif.view::<NiShape>(shape).unwrap().tangents(), tangents);
-    assert_eq!(save_to_vec(&mut nif), first);
+    assert_eq!(save(&mut nif), first);
 }
 
 #[test]
@@ -102,7 +94,7 @@ fn save_writes_after_existing_position() {
     // nifly seeks to absolute stream positions it recorded with tellp, so output that doesn't
     // start at position 0 must still come out right.
     let mut nif = load("Bones");
-    let expected = save_to_vec(&mut nif);
+    let expected = save(&mut nif);
 
     let mut cur = Cursor::new(b"PREFIX".to_vec());
     cur.seek(SeekFrom::End(0)).unwrap();
@@ -188,7 +180,7 @@ fn save_reproduces_original_bytes() {
     // sorted, and saving them reproduces the original file exactly.
     for name in ASSETS {
         let original = std::fs::read(format!("assets/{name}.nif")).unwrap();
-        assert_eq!(save_to_vec(&mut load(name)), original, "{name}");
+        assert_eq!(save(&mut load(name)), original, "{name}");
     }
 }
 
@@ -226,4 +218,16 @@ fn save_options_default_matches_nifly() {
     let d = SaveOptions::default();
     assert!(d.optimize);
     assert!(d.sort_blocks);
+}
+
+#[test]
+fn to_bytes_matches_save() {
+    for name in ASSETS {
+        let mut nif = load(name);
+        for options in [None, Some(IN_PLACE)] {
+            let mut cur = Cursor::new(Vec::new());
+            nif.save(&mut cur, options).unwrap();
+            assert_eq!(nif.to_bytes(options).unwrap(), cur.into_inner(), "{name}");
+        }
+    }
 }

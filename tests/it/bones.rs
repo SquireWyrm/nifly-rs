@@ -15,18 +15,20 @@
 //!
 //! The bones are flat: all are direct children of the root.
 
-use std::{fs::File, ptr};
+use std::ptr;
 
 use nifly::{file::NifFile, geometry::NiShape, nodes::NiNode, objects::NiObject};
+
+use crate::common::{first, open};
 
 const BONES: [&str; 3] = ["Bone1", "Bone2", "Bone3"];
 
 fn bones() -> NifFile {
-    NifFile::load(File::open("assets/Bones.nif").unwrap(), None).unwrap()
+    open("assets/Bones.nif")
 }
 
 fn limb(nif: &NifFile) -> &NiShape {
-    nif.blocks_of::<NiShape>().next().unwrap()
+    first::<NiShape>(nif)
 }
 
 fn index_of(nif: &NifFile, obj: &NiObject) -> usize {

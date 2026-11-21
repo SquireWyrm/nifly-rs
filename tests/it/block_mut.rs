@@ -1,8 +1,8 @@
 //! Tests for block, block_of, block_mut, block_of_mut, NiObject::downcast_mut, DerefMut and
 //! the other `_mut` lookups on NifFile.
 
-use crate::common::{load, upstream};
-use std::{io::Cursor, ptr};
+use crate::common::{first_index, load, reload, upstream};
+use std::ptr;
 
 use nifly::{
     file::{Index, NifFile},
@@ -75,7 +75,7 @@ fn material_and_shader_in_older_files() {
 #[test]
 fn none_cases() {
     let mut nif = load("Suzanne");
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let count = nif.blocks().count();
     for index in [root, 9, count, usize::MAX] {
         assert!(
@@ -140,9 +140,7 @@ fn set_through_material_property_mut() {
         0.5
     );
 
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    let saved = reload(&mut nif);
     assert_eq!(
         saved
             .shapes()
@@ -159,11 +157,7 @@ fn set_through_material_property_mut() {
 #[test]
 fn block_of_matches_downcast() {
     let nif = upstream("TestNifFile_Static_MW");
-    let index = nif
-        .blocks_of::<NiMaterialProperty>()
-        .indices()
-        .next()
-        .unwrap();
+    let index = first_index::<NiMaterialProperty>(&nif);
     let block = nif.block(index).unwrap();
     let material = nif.block_of::<NiMaterialProperty>(index).unwrap();
     assert!(ptr::eq(
@@ -183,11 +177,7 @@ fn block_of_matches_downcast() {
 #[test]
 fn block_mut_and_downcast_mut() {
     let mut nif = upstream("TestNifFile_Static_MW");
-    let index = nif
-        .blocks_of::<NiMaterialProperty>()
-        .indices()
-        .next()
-        .unwrap();
+    let index = first_index::<NiMaterialProperty>(&nif);
     let shared: *const NiObject = nif.block(index).unwrap();
     assert_eq!(addr(nif.block_mut(index)), Some(shared));
     let count = nif.blocks().count();
@@ -245,11 +235,7 @@ fn deref_mut() {
 
     // A subclass reaches its base type's setters, on the same object.
     let mut nif = load("Cube");
-    let index = nif
-        .blocks_of::<BsLightingShaderProperty>()
-        .indices()
-        .next()
-        .unwrap();
+    let index = first_index::<BsLightingShaderProperty>(&nif);
     let shader = nif.block_of_mut::<BsLightingShaderProperty>(index).unwrap();
     shader.set_alpha(0.5);
     let base: &mut BsShaderProperty = shader;

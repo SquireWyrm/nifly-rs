@@ -10,6 +10,6 @@ pub use crate::{
     geometry::NiShape,
     handle::{Edit, View},
     nodes::NiNode,
-    object3d::{Matrix3, Transform, Vec3},
+    object3d::{Matrix3, Transform, Vec3, vec3},
     objects::{NiAvObject, NiObject, NiObjectNet, NiType},
 };

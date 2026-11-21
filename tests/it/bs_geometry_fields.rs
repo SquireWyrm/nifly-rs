@@ -8,12 +8,12 @@ use nifly::{
     object3d::{BoundingSphere, Vec3},
 };
 
-use crate::common::{UPSTREAM, reload_in_place as reload, upstream};
+use crate::common::{UPSTREAM, first_index, reload_in_place, upstream};
 
 /// TestNifFile_SF.nif with its first mesh loaded and made internal.
 fn internal() -> (NifFile, Index) {
     let mut nif = upstream("TestNifFile_SF");
-    let shape = nif.blocks_of::<BsGeometry>().indices().next().unwrap();
+    let shape = first_index::<BsGeometry>(&nif);
     let mesh = fs::read(format!("{UPSTREAM}/TestNifFile_SF.mesh")).unwrap();
     assert!(
         nif.edit::<NiShape>(shape)
@@ -34,7 +34,7 @@ fn geometry(nif: &NifFile, index: Index) -> &BsGeometry {
 #[test]
 fn shape_fields() {
     let mut nif = upstream("TestNifFile_SF");
-    let index = nif.blocks_of::<BsGeometry>().indices().next().unwrap();
+    let index = first_index::<BsGeometry>(&nif);
     let sphere = BoundingSphere::new(Vec3::new(1.0, 2.0, 3.0), 4.0);
     let info = MeshInfo {
         index_count: 30,
@@ -54,7 +54,7 @@ fn shape_fields() {
     }
     assert!(!block.add_mesh());
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let block = geometry(&saved, index);
     assert_eq!(
         (block.bounds(), block.bound_min_max()),
@@ -124,7 +124,7 @@ fn internal_mesh_data_round_trips() {
     mesh.set_cull_data(&cull);
     mesh.set_version(1);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert!(geometry(&saved, index).has_internal_geometry());
     let mesh = geometry(&saved, index).mesh(0).unwrap();
     assert_eq!(mesh.vertex_count(), n);
@@ -190,7 +190,7 @@ fn weights_per_vertex() {
     assert_eq!(grown[1][..2], kept[1][..]);
     assert_eq!(grown[1][2..], [w(0, 0), w(0, 0)]);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let mesh = geometry(&saved, index).mesh(0).unwrap();
     assert_eq!(mesh.weights_per_vertex(), 4);
     assert_eq!(mesh.skin_weights(), grown);
@@ -269,7 +269,7 @@ fn replace_vertices_and_triangles() {
     let scale = mesh.scale();
     assert_eq!(mesh.vertex_count(), 70000);
 
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         geometry(&nif, index).mesh(0).unwrap().scale(),
         scale,

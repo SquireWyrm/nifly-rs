@@ -1,11 +1,10 @@
 //! Tests for the Fallout 3 and New Vegas shader fields, and BSWaterShaderProperty and
 //! BSSkyShaderProperty.
 
-use crate::common::reload;
+use crate::common::{first, reload};
 
 use nifly::{
-    file::{Index, NifFile, NifVersion},
-    objects::NiType,
+    file::{NifFile, NifVersion},
     shaders::{
         BsShaderNoLightingProperty, BsShaderPpLightingProperty, BsSkyShaderProperty,
         BsWaterShaderProperty, ClampMode, LegacyShaderType, NewProperty, NiShader, SkyObjectType,
@@ -13,17 +12,9 @@ use nifly::{
     },
 };
 
-fn root_index(nif: &NifFile) -> Index {
-    nif.root_node().unwrap().index()
-}
-
-fn first<T: NiType>(nif: &NifFile) -> &T {
-    nif.blocks_of::<T>().next().unwrap()
-}
-
 fn add<T: NewProperty>(nif: &mut NifFile) -> &mut T {
     let i = nif
-        .edit::<nifly::objects::NiAvObject>(root_index(nif))
+        .edit::<nifly::objects::NiAvObject>(nif.root_index().unwrap())
         .map(|mut e| e.add_property::<T, _>())
         .unwrap();
     nif.block_of_mut::<T>(i).unwrap()

@@ -18,7 +18,7 @@ use nifly::{
     shaders::{BsShaderProperty, MapSlot, NiSourceTexture, TextureMap},
 };
 
-use crate::common::{reload_in_place, upstream};
+use crate::common::{first_index, reload_in_place, upstream};
 
 /// Oblivion's 10.1.0.106 files.
 const OLD: NifVersion = NifVersion::new(0x0A01006A, 10, 5);
@@ -106,7 +106,7 @@ fn uv_and_flip_controllers() {
     assert_eq!(nif.block_of::<NiUvController>(3).unwrap().uv_set(), 0);
 
     let mut nif = upstream("TestNifFile_Billboard_MW");
-    let texture = nif.blocks_of::<NiSourceTexture>().indices().next().unwrap();
+    let texture = first_index::<NiSourceTexture>(&nif);
     let mut root = nif.root_node_mut().unwrap();
     let uv = root.add_controller::<NiUvController, _>();
     let flip = root.add_controller::<NiFlipController, _>();
@@ -386,11 +386,7 @@ fn bone_lod_controller() {
 #[test]
 fn lightning_controller() {
     let mut nif = upstream("TestNifFile_Static_SE");
-    let shader = nif
-        .blocks_of::<BsShaderProperty>()
-        .indices()
-        .next()
-        .unwrap();
+    let shader = first_index::<BsShaderProperty>(&nif);
     let c = nif
         .root_node_mut()
         .unwrap()

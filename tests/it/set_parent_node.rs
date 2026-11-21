@@ -1,29 +1,18 @@
 //! Tests for NifFile::set_parent_node, on assets/Icosphere.nif:
 //! 0 BSFadeNode -> [1], 1 NiNode "Indirect1" -> [2], 2 NiNode "Indirect2" -> [3], 3 BSTriShape.
 
-use std::{fs, io::Cursor};
-
 use nifly::{
     extra_data::ExtraString,
-    file::{Index, NifFile, NifVersion, SaveOptions},
+    file::{Index, NifFile, NifVersion},
     nodes::NiNode,
     object3d::Transform,
     objects::NiAvObject,
 };
 
-fn icosphere() -> NifFile {
-    NifFile::load(fs::read("assets/Icosphere.nif").unwrap().as_slice(), None).unwrap()
-}
+use crate::common::{open, reload, save_in_place};
 
-/// The file as it is in memory: no optimizing or sorting on save.
-fn raw(nif: &mut NifFile) -> Vec<u8> {
-    let mut cur = Cursor::new(Vec::new());
-    let options = SaveOptions {
-        optimize: false,
-        sort_blocks: false,
-    };
-    nif.save(&mut cur, Some(options)).unwrap();
-    cur.into_inner()
+fn icosphere() -> NifFile {
+    open("assets/Icosphere.nif")
 }
 
 fn node(nif: &NifFile, i: Index) -> &NiNode {
@@ -55,9 +44,7 @@ fn none_moves_under_the_root() {
     // The local transform is kept.
     assert_eq!(nif.block_of::<NiAvObject>(3).unwrap().transform(), before);
 
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    let saved = reload(&mut nif);
     let root = saved.root_node().unwrap();
     let names: Vec<_> = root.children().map(|c| c.name()).collect();
     assert_eq!(names, ["Indirect1", "IcosphereMesh"]);
@@ -84,7 +71,7 @@ fn explicit_parent() {
 #[test]
 fn current_parent_changes_nothing() {
     let mut nif = icosphere();
-    let before = raw(&mut nif);
+    let before = save_in_place(&mut nif);
     assert!(
         nif.edit::<nifly::objects::NiAvObject>(1)
             .is_some_and(|mut e| e.set_parent(Some(0)))
@@ -97,7 +84,7 @@ fn current_parent_changes_nothing() {
         nif.edit::<nifly::objects::NiAvObject>(3)
             .is_some_and(|mut e| e.set_parent(Some(2)))
     );
-    assert_eq!(raw(&mut nif), before);
+    assert_eq!(save_in_place(&mut nif), before);
 }
 
 #[test]
@@ -107,7 +94,7 @@ fn rejects() {
         .edit::<nifly::objects::NiAvObject>(1)
         .and_then(|mut e| e.assign_extra_data(ExtraString("Note", "x")))
         .unwrap();
-    let before = raw(&mut nif);
+    let before = save_in_place(&mut nif);
     let count = nif.blocks().count();
     let cases: [(Index, Option<Index>); 11] = [
         (1, Some(2)),                 // into its own subtree
@@ -129,7 +116,7 @@ fn rejects() {
             "{child} under {parent:?}"
         );
     }
-    assert_eq!(raw(&mut nif), before);
+    assert_eq!(save_in_place(&mut nif), before);
 }
 
 #[test]

@@ -1,25 +1,12 @@
 //! Tests for NifFile::shape_partitions, set_shape_partitions, set_default_partition,
 //! delete_partitions and remove_empty_partitions.
 
-use crate::common::{load, reload, upstream};
+use crate::common::{load, reload, shape, shape_index, upstream};
 
 use nifly::{
     file::{Index, NifFile},
-    geometry::NiShape,
     skin::{NiBoneContainer, NiSkinInstance, NiSkinPartition, ShapePartitions},
 };
-
-fn shape<'a>(nif: &'a NifFile, name: &str) -> &'a NiShape {
-    nif.shapes().find(|s| s.name() == name).unwrap()
-}
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
-}
 
 fn partitions(nif: &NifFile, name: &str) -> ShapePartitions {
     nif.view_of(shape(nif, name)).unwrap().partitions().unwrap()
@@ -93,7 +80,7 @@ fn reads_partitions() {
 fn splits_and_rebuilds() {
     let mut nif = upstream("TestNifFile_Skinned_SE");
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "cylinder_1"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "cylinder_1"))
             .is_some_and(|mut e| e.set_partitions(&[32, 34], &halves(68, Some(1))))
     );
     let saved = reload(&mut nif);
@@ -119,7 +106,7 @@ fn splits_and_rebuilds() {
 fn unassigned_triangles_get_their_own_partition() {
     let mut nif = upstream("TestNifFile_Skinned_SE");
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "cylinder_1"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "cylinder_1"))
             .is_some_and(|mut e| e.set_partitions(&[34], &halves(68, None)))
     );
     let p = partitions(&nif, "cylinder_1");
@@ -145,7 +132,7 @@ fn skyrim_le_gets_a_dismember_instance() {
     let count = nif.blocks().count();
 
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "Limb"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Limb"))
             .is_some_and(|mut e| e.set_partitions(&[32, 34], &halves(252, Some(1))))
     );
     assert_eq!(
@@ -169,7 +156,7 @@ fn skyrim_le_gets_a_dismember_instance() {
 fn oblivion_has_no_body_parts() {
     let mut nif = upstream("TestNifFile_Skinned_OB");
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cuirass"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cuirass"))
             .is_some_and(|mut e| e.set_partitions(&[5, 6], &halves(1638, Some(1))))
     );
     let p = partitions(&nif, "Cuirass");
@@ -180,7 +167,7 @@ fn oblivion_has_no_body_parts() {
 #[test]
 fn false_changes_nothing() {
     let mut nif = upstream("TestNifFile_Skinned_SE");
-    let cylinder = index(&nif, "cylinder_1");
+    let cylinder = shape_index(&nif, "cylinder_1");
     let before = partitions(&nif, "cylinder_1");
     // Wrong length, or an index past the body parts.
     for tris in [vec![Some(0); 67], vec![Some(0); 69], halves(68, Some(2))] {
@@ -201,7 +188,7 @@ fn false_changes_nothing() {
 
     // Partitions that can't be rebuilt: skin data without vertex weights.
     let mut nif = upstream("TestNifFile_Skinned_NoNiSkinDataWeights");
-    let cylinder = index(&nif, "cylinder_1");
+    let cylinder = shape_index(&nif, "cylinder_1");
     let before = partitions(&nif, "cylinder_1");
     assert!(
         !nif.edit::<nifly::geometry::NiShape>(cylinder)
@@ -212,7 +199,7 @@ fn false_changes_nothing() {
     // Not skinned, Fallout 4 skin, not a shape, out of range.
     let mut nif = load("Cube");
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cube"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cube"))
             .is_some_and(|mut e| e.set_partitions(&[32], &[Some(0); 12]))
     );
     let mut nif = upstream("TestNifFile_Skinned_FO4");
@@ -233,7 +220,7 @@ fn false_changes_nothing() {
 /// cylinder_1 split into thirds with body parts 32, 34 and 36.
 fn thirds() -> (NifFile, Index) {
     let mut nif = upstream("TestNifFile_Skinned_SE");
-    let cylinder = index(&nif, "cylinder_1");
+    let cylinder = shape_index(&nif, "cylinder_1");
     let tris: Vec<Option<usize>> = (0..68).map(|t| Some(t * 3 / 68)).collect();
     assert!(
         nif.edit::<nifly::geometry::NiShape>(cylinder)
@@ -282,7 +269,7 @@ fn deletes_partitions() {
 fn deleted_partition_triangles_kept_by_shape_data() {
     // An NiTriShape keeps its triangles in its own data, so they survive a save.
     let mut nif = load("Bones");
-    let limb = index(&nif, "Limb");
+    let limb = shape_index(&nif, "Limb");
     assert!(
         nif.edit::<nifly::geometry::NiShape>(limb)
             .is_some_and(|mut e| e.set_partitions(&[32, 34], &halves(252, Some(1))))
@@ -302,7 +289,7 @@ fn deleted_partition_triangles_kept_by_shape_data() {
 #[test]
 fn deleting_every_partition() {
     let mut nif = upstream("TestNifFile_Skinned_SE");
-    let cylinder = index(&nif, "cylinder_1");
+    let cylinder = shape_index(&nif, "cylinder_1");
     assert!(
         nif.edit::<nifly::geometry::NiShape>(cylinder)
             .is_some_and(|mut e| e.delete_partitions(&[0]))
@@ -345,7 +332,7 @@ fn delete_false_changes_nothing() {
 
     let mut nif = load("Cube");
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cube"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cube"))
             .is_some_and(|mut e| e.delete_partitions(&[]))
     );
     let mut nif = upstream("TestNifFile_Skinned_FO4");
@@ -381,17 +368,17 @@ fn default_partition() {
     // Body part 0 before Skyrim; Skyrim LE gets a dismember instance.
     let mut nif = upstream("TestNifFile_Skinned_OB");
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cuirass"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cuirass"))
             .is_some_and(|mut e| e.set_partitions(&[0, 0], &halves(1638, Some(1))))
     );
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cuirass"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cuirass"))
             .is_some_and(|mut e| e.set_default_partition())
     );
     assert_eq!(counts(&partitions(&nif, "Cuirass")), [1638]);
     let mut nif = load("Bones");
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "Limb"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Limb"))
             .is_some_and(|mut e| e.set_default_partition())
     );
     assert_eq!(info(&partitions(&nif, "Limb")), [(257, 32)]);
@@ -404,12 +391,12 @@ fn default_partition() {
     // Same conditions as set_shape_partitions.
     let mut nif = upstream("TestNifFile_Skinned_NoNiSkinDataWeights");
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "cylinder_1"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "cylinder_1"))
             .is_some_and(|mut e| e.set_default_partition())
     );
     let mut nif = load("Cube");
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cube"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cube"))
             .is_some_and(|mut e| e.set_default_partition())
     );
     for i in [0, nif.blocks().count(), usize::MAX] {
@@ -425,7 +412,7 @@ fn default_partition() {
 fn removes_empty_partitions() {
     // Partition 1 gets no triangles.
     let mut nif = upstream("TestNifFile_Skinned_SE");
-    let cylinder = index(&nif, "cylinder_1");
+    let cylinder = shape_index(&nif, "cylinder_1");
     let tris: Vec<Option<usize>> = (0..68).map(|t| Some(if t < 34 { 0 } else { 2 })).collect();
     assert!(
         nif.edit::<nifly::geometry::NiShape>(cylinder)
@@ -456,7 +443,7 @@ fn removes_empty_partitions() {
         Some(0)
     );
     assert_eq!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "cylinder_2"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "cylinder_2"))
             .and_then(|mut e| e.remove_empty_partitions()),
         Some(0)
     );
@@ -466,7 +453,7 @@ fn removes_empty_partitions() {
 fn remove_empty_needs_partitions() {
     let mut nif = load("Cube");
     assert_eq!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cube"))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cube"))
             .and_then(|mut e| e.remove_empty_partitions()),
         None
     );

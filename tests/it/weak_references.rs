@@ -1,6 +1,6 @@
 //! Tests for BSWeakReferenceNode weak and water references.
 
-use crate::common::reload;
+use crate::common::{first, first_index, reload};
 
 use nifly::{
     file::{NifFile, NifVersion},
@@ -11,7 +11,7 @@ use nifly::{
 };
 
 fn node(nif: &NifFile) -> &BsWeakReferenceNode {
-    nif.blocks_of::<BsWeakReferenceNode>().next().unwrap()
+    first::<BsWeakReferenceNode>(nif)
 }
 
 fn matrix(k: f32) -> [[f32; 4]; 4] {
@@ -115,11 +115,7 @@ fn water_references_round_trip() {
     assert_eq!(node(&saved).water_references(), water);
     assert_eq!(node(&saved).unknown(), 42);
 
-    let index = saved
-        .blocks_of::<BsWeakReferenceNode>()
-        .indices()
-        .next()
-        .unwrap();
+    let index = first_index::<BsWeakReferenceNode>(&saved);
     saved
         .block_of_mut::<BsWeakReferenceNode>(index)
         .unwrap()

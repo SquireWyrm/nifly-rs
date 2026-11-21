@@ -1,8 +1,7 @@
 //! Tests for additional geometry data: NiAdditionalGeometryData, BSPackedAdditionalGeometryData
 //! and NiGeometryData's ref to them.
 
-use crate::common::upstream;
-use std::io::Cursor;
+use crate::common::{first_index, reload_with, upstream};
 
 use nifly::{
     file::{NifFile, SaveOptions},
@@ -12,12 +11,6 @@ use nifly::{
     },
 };
 
-fn reload(nif: &mut NifFile, options: Option<SaveOptions>) -> NifFile {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, options).unwrap();
-    NifFile::load(cur.into_inner().as_slice(), None).unwrap()
-}
-
 /// Keeps block indices the same.
 const KEEP: Option<SaveOptions> = Some(SaveOptions {
     optimize: false,
@@ -25,7 +18,7 @@ const KEEP: Option<SaveOptions> = Some(SaveOptions {
 });
 
 fn first_data(nif: &NifFile) -> usize {
-    nif.blocks_of::<NiGeometryData>().indices().next().unwrap()
+    first_index::<NiGeometryData>(nif)
 }
 
 fn channels() -> Vec<DataChannel> {
@@ -100,7 +93,7 @@ fn assign_and_remove() {
     assert!(edit.view().additional_data().is_none());
     assert!(!edit.remove_additional_data());
     // Saving drops the unused blocks.
-    assert_eq!(reload(&mut nif, None).blocks().count(), count);
+    assert_eq!(reload_with(&mut nif, None).blocks().count(), count);
 }
 
 #[test]
@@ -123,7 +116,7 @@ fn fields_survive_save() {
     block.set_channels(&channels());
     assert!(block.set_blocks(&blocks()));
 
-    let saved = reload(&mut nif, KEEP);
+    let saved = reload_with(&mut nif, KEEP);
     let view = saved
         .view::<NiGeometryData>(data)
         .unwrap()
@@ -144,7 +137,7 @@ fn fields_survive_save() {
     block.set_channels(&big);
     // Saving again keeps the block indices.
     assert_eq!(
-        reload(&mut nif, KEEP)
+        reload_with(&mut nif, KEEP)
             .block_of::<AdditionalGeomData>(extra)
             .unwrap()
             .channels(),
@@ -214,7 +207,7 @@ fn packed_blocks_survive_save() {
     block.set_channels(&channels());
     block.set_blocks(&blocks);
 
-    let saved = reload(&mut nif, KEEP);
+    let saved = reload_with(&mut nif, KEEP);
     let view = saved
         .view::<NiGeometryData>(data)
         .unwrap()
@@ -236,7 +229,7 @@ fn morrowind_drops_the_ref() {
     nif.edit::<NiGeometryData>(data)
         .unwrap()
         .assign_additional_data::<NiAdditionalGeometryData, _>();
-    let saved = reload(&mut nif, KEEP);
+    let saved = reload_with(&mut nif, KEEP);
     assert!(
         saved
             .view::<NiGeometryData>(data)

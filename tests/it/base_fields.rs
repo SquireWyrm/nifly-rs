@@ -1,11 +1,9 @@
 //! Tests for the base classes' fields and lists: flags, transforms, velocity, bounding volumes,
 //! group IDs, children, properties, extra data, controllers and collision.
 
-use std::io::Cursor;
-
 use nifly::{
     extra_data::{ExtraInteger, ExtraString, NiExtraData},
-    file::{Index, NifFile, NifVersion, SaveOptions},
+    file::{Index, NifFile, NifVersion},
     geometry::NiShape,
     nodes::NiNode,
     object3d::{BoundingSphere, BoundingVolume, Matrix3, Transform, Vec3},
@@ -13,24 +11,10 @@ use nifly::{
     shaders::NiShader,
 };
 
-use crate::common::{load, upstream};
-
-/// Saves without optimizing or sorting, so block indices stay.
-fn reload(nif: &mut NifFile) -> NifFile {
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(
-        &mut cur,
-        Some(SaveOptions {
-            optimize: false,
-            sort_blocks: false,
-        }),
-    )
-    .unwrap();
-    NifFile::load(cur.into_inner().as_slice(), None).unwrap()
-}
+use crate::common::{load, reload_in_place, upstream};
 
 fn root(nif: &NifFile) -> Index {
-    nif.root_node().unwrap().index()
+    nif.root_index().unwrap()
 }
 
 fn volume() -> BoundingVolume {
@@ -67,7 +51,7 @@ fn object_fields_round_trip() {
     node.set_transform(transform);
     node.set_velocity(Vec3::new(0.5, 0.0, -1.0));
     node.set_bounding_volume(Some(&volume()));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let node = saved.block_of::<NiAvObject>(root).unwrap();
     assert_eq!(
         (node.raw_flags(), node.transform(), node.velocity()),
@@ -79,7 +63,7 @@ fn object_fields_round_trip() {
     let node = nif.block_of_mut::<NiAvObject>(root).unwrap();
     node.set_bounding_volume(None);
     node.set_raw_flags(0x1_0005);
-    let node = reload(&mut nif);
+    let node = reload_in_place(&mut nif);
     let node = node.block_of::<NiAvObject>(root).unwrap();
     assert_eq!((node.bounding_volume(), node.raw_flags()), (None, 5));
 }
@@ -95,7 +79,7 @@ fn group_id_by_version() {
         nif.block_mut(root).unwrap().set_group_id(7);
         assert_eq!(nif.block(root).unwrap().group_id(), 7);
         assert_eq!(
-            reload(&mut nif).block(root).unwrap().group_id(),
+            reload_in_place(&mut nif).block(root).unwrap().group_id(),
             saved,
             "{version:?}"
         );
@@ -110,7 +94,7 @@ fn shape_transform_and_flags() {
     let block = nif.block_of_mut::<NiAvObject>(shape).unwrap();
     block.set_transform(transform);
     block.set_raw_flags(0x0008_0000);
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let shape = saved.block_of::<NiAvObject>(shape).unwrap();
     assert_eq!(
         (shape.transform(), shape.raw_flags()),
@@ -136,7 +120,7 @@ fn set_children() {
     // Moving the shape up keeps it under Indirect2 too.
     let mut root = nif.edit::<NiNode>(0).unwrap();
     assert!(root.set_children(&[3, 1]));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let children = |i| {
         saved
             .view::<NiNode>(i)
@@ -148,7 +132,7 @@ fn set_children() {
     assert_eq!((children(0), children(2)), (vec![3, 1], vec![3]));
     assert!(nif.edit::<NiNode>(2).unwrap().set_children(&[]));
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiNode>(2)
             .unwrap()
             .children()
@@ -173,7 +157,7 @@ fn properties() {
     assert!(!edit.set_properties(&[props[0], shape]));
     let reversed: Vec<_> = props.iter().rev().copied().collect();
     assert!(edit.set_properties(&reversed));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         saved
             .view::<NiShape>(shape)
@@ -185,7 +169,7 @@ fn properties() {
     );
     assert!(nif.edit::<NiShape>(shape).unwrap().set_properties(&[]));
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiShape>(shape)
             .unwrap()
             .properties()
@@ -205,7 +189,7 @@ fn extra_data_list() {
         .unwrap();
     assert!(!edit.set_extra_data(&[string, root]));
     assert!(edit.set_extra_data(&[string, bsx]));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     assert_eq!(
         saved
             .view::<NiNode>(root)
@@ -232,7 +216,7 @@ fn extra_data_on_any_named_object() {
         .unwrap()
         .assign_extra_data(ExtraInteger("Count", 3))
         .unwrap();
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let view = saved.view::<NiObjectNet>(shader).unwrap();
     assert_eq!(view.extra_data().indices().collect::<Vec<_>>(), [data]);
 }
@@ -252,7 +236,7 @@ fn extra_data_chain() {
     assert!(!edit.set_extra_data_chain(&[a, a]), "a cycle");
     assert!(!edit.set_extra_data_chain(&[a, root]));
     assert!(edit.set_extra_data_chain(&[a, b]));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let chain: Vec<_> = saved
         .view::<NiNode>(root)
         .unwrap()
@@ -270,7 +254,7 @@ fn extra_data_chain() {
     );
     assert!(nif.edit::<NiNode>(root).unwrap().set_extra_data_chain(&[]));
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiNode>(root)
             .unwrap()
             .extra_data_chain()
@@ -300,7 +284,7 @@ fn controller() {
     assert!(edit.controller().is_none());
     assert!(edit.set_controller(Some(controller)));
     assert_eq!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiObjectNet>(owner)
             .unwrap()
             .controller()
@@ -320,14 +304,14 @@ fn collision() {
     assert!(!edit.set_collision(Some(5)), "a rigid body");
     assert!(edit.set_collision(None));
     assert!(
-        reload(&mut nif)
+        reload_in_place(&mut nif)
             .view::<NiNode>(root)
             .unwrap()
             .collision()
             .is_none()
     );
     assert!(nif.edit::<NiNode>(root).unwrap().set_collision(Some(6)));
-    let saved = reload(&mut nif);
+    let saved = reload_in_place(&mut nif);
     let collision: Option<_> = saved.view::<NiNode>(root).unwrap().collision();
     assert_eq!(
         collision.map(|c| c.get().block_name()),

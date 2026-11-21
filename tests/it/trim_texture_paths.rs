@@ -1,12 +1,8 @@
 //! Tests for NifFile::trim_texture_paths.
 
-use std::fs;
-
 use nifly::file::{Index, NifFile};
 
-fn load(path: &str) -> NifFile {
-    NifFile::load(fs::read(path).unwrap().as_slice(), None).unwrap()
-}
+use crate::common::open;
 
 fn first(nif: &NifFile) -> Index {
     nif.shapes().indices().next().unwrap()
@@ -25,7 +21,7 @@ fn slot(nif: &NifFile, index: usize) -> String {
 
 #[test]
 fn normalizes_skyrim_paths() {
-    let mut nif = load("assets/Cube.nif");
+    let mut nif = open("assets/Cube.nif");
     let shape = first(&nif);
     let cases = [
         (
@@ -55,7 +51,7 @@ fn normalizes_skyrim_paths() {
 
 #[test]
 fn no_prefix_for_morrowind() {
-    let mut nif = load("nifly-sys/vendor/nifly/tests/input/TestNifFile_Skinned_MW.nif");
+    let mut nif = open("nifly-sys/vendor/nifly/tests/input/TestNifFile_Skinned_MW.nif");
     let shape = first(&nif);
     nif.edit::<nifly::geometry::NiShape>(shape)
         .unwrap()

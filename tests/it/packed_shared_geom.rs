@@ -14,6 +14,8 @@ use nifly::{
     objects::NiAvObject,
 };
 
+use crate::common::open;
+
 fn save(nif: &mut NifFile) -> Vec<u8> {
     let mut cur = Cursor::new(Vec::new());
     nif.save(
@@ -72,7 +74,7 @@ fn object() -> PackedGeomObject {
 /// A Fallout 4 file with a packed geometry block holding `objects` on its root.
 fn with_objects(objects: &[PackedGeomObject]) -> (NifFile, Index) {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let block = nif
         .edit::<NiAvObject>(root)
         .unwrap()
@@ -146,7 +148,7 @@ fn set_objects() {
 #[test]
 fn copies_keep_the_layout() {
     let (mut nif, block) = with_objects(&[object()]);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let copy = nif.edit::<NiNode>(root).unwrap().clone_node();
     let count = nif.blocks().count();
     let saved = reload(&mut nif);
@@ -163,13 +165,7 @@ fn needs_an_object_target() {
     let (mut nif, block) = with_objects(&[]);
     assert!(nif.edit::<NiAvObject>(block).is_none());
     // A shape works too.
-    let mut nif = NifFile::load(
-        std::fs::read("nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_FO4.nif")
-            .unwrap()
-            .as_slice(),
-        None,
-    )
-    .unwrap();
+    let mut nif = open("nifly-sys/vendor/nifly/tests/input/TestNifFile_Static_FO4.nif");
     let shape = nif.shapes().indices().next().unwrap();
     let block = nif
         .edit::<NiShape>(shape)
@@ -186,7 +182,7 @@ fn needs_an_object_target() {
 #[test]
 fn totals_at_creation() {
     let mut nif = NifFile::create(NifVersion::FALLOUT_4);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let totals = PackedGeomTotals {
         vertex_desc: 7,
         vertex_count: 3,

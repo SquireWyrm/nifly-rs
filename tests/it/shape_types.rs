@@ -1,6 +1,6 @@
 //! Tests for the NiShape subclasses.
 
-use crate::common::{UPSTREAM, load};
+use crate::common::{UPSTREAM, first, load};
 use std::fs;
 
 use nifly::{
@@ -38,7 +38,7 @@ fn downcasts_to_own_type(block_name: &str, obj: &NiObject) -> Option<bool> {
 #[test]
 fn deref_chain() {
     let nif = load("Bones");
-    let tri = nif.blocks_of::<NiTriShape>().next().unwrap();
+    let tri = first::<NiTriShape>(&nif);
     let based: &NiTriBasedGeom = tri;
     let geom: &NiGeometry = based;
     let shape: &NiShape = geom;

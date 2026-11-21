@@ -29,7 +29,7 @@ fn replaces_keeping_position() {
     let mut nif = load("Bones");
     let (shape, s) = limb(&nif);
     let weights = nif.view_of(s).unwrap().bone_weights(1);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let new = nif
         .add_node("NewBone", Transform::IDENTITY, Some(root))
         .unwrap();

@@ -1,7 +1,6 @@
 //! Tests for NiObjectNet::set_name.
 
-use crate::common::load;
-use std::io::Cursor;
+use crate::common::{first, load, reload};
 
 use nifly::{file::NifFile, geometry::NiShape, nodes::NiNode, objects::NiObjectNet};
 
@@ -21,7 +20,7 @@ fn rename_node() {
     assert!(nif.node_transform_to_parent("Elbow").is_some());
     assert!(nif.node_transform_to_parent("Bone2").is_none());
     // Bone names come from the bone nodes, so the skin's bone list follows.
-    let shape = nif.blocks_of::<NiShape>().next().unwrap();
+    let shape = first::<NiShape>(&nif);
     assert_eq!(
         nif.view_of(shape).unwrap().bone_list(),
         ["Bone1", "Elbow", "Bone3"]
@@ -62,9 +61,7 @@ fn renamed_node_survives_save() {
         .0;
     rename(&mut nif, index, "Renamed");
 
-    let mut cur = Cursor::new(Vec::new());
-    nif.save(&mut cur, None).unwrap();
-    let saved = NifFile::load(cur.into_inner().as_slice(), None).unwrap();
+    let saved = reload(&mut nif);
 
     let names: Vec<_> = saved.nodes().map(|n| n.name().to_string()).collect();
     assert_eq!(names, ["Icosphere", "Indirect1", "Renamed"]);

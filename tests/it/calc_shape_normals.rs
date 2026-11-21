@@ -1,23 +1,15 @@
 //! Tests for NifFile::calc_shape_normals and BsShaderProperty's flags.
 
-use crate::common::{load, reload, upstream};
+use crate::common::{first, load, reload, shape_index, upstream};
 
 use nifly::{
-    file::{Index, NifFile},
+    file::NifFile,
     geometry::{NiShape, NormalOptions},
     object3d::Vec3,
     shaders::{BsShaderProperty, SkyrimShaderFlags1},
 };
 
 const MODEL_SPACE: SkyrimShaderFlags1 = SkyrimShaderFlags1::MODEL_SPACE_NORMALS;
-
-fn index(nif: &NifFile, name: &str) -> Index {
-    nif.shapes()
-        .indexed()
-        .find(|(_, s)| s.name() == name)
-        .unwrap()
-        .0
-}
 
 fn normals(nif: &NifFile, name: &str) -> Vec<Vec3> {
     nif.view_of(nif.shapes().find(|s| s.name() == name).unwrap())
@@ -30,7 +22,7 @@ fn normals(nif: &NifFile, name: &str) -> Vec<Vec3> {
 fn calculated(file: fn() -> NifFile, name: &str, options: Option<NormalOptions>) -> Vec<Vec3> {
     let mut nif = file();
     assert!(
-        nif.edit::<nifly::geometry::NiShape>(index(&nif, name))
+        nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, name))
             .is_some_and(|mut e| e.calc_normals(options))
     );
     normals(&nif, name)
@@ -61,7 +53,7 @@ fn cube() -> NifFile {
 fn calculates_from_triangles() {
     // NiTriShapeData: overwrite the normals, then calculate them back.
     let mut nif = cuirass();
-    let shape = index(&nif, "Cuirass");
+    let shape = shape_index(&nif, "Cuirass");
     let expected = calculated(cuirass, "Cuirass", None);
     assert!(
         nif.edit::<nifly::geometry::NiShape>(shape)
@@ -79,7 +71,7 @@ fn calculates_from_triangles() {
 
     // BSTriShape, stored at reduced precision.
     let mut nif = cube();
-    let shape = index(&nif, "Cube");
+    let shape = shape_index(&nif, "Cube");
     let expected = calculated(cube, "Cube", None);
     assert!(
         nif.edit::<nifly::geometry::NiShape>(shape)
@@ -110,7 +102,7 @@ fn smoothing_merges_seams() {
     let split = |options| {
         let mut nif = cuirass();
         assert!(
-            nif.edit::<nifly::geometry::NiShape>(index(&nif, "Cuirass"))
+            nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Cuirass"))
                 .is_some_and(|mut e| e.calc_normals(options))
         );
         split_seams(&nif, "Cuirass")
@@ -129,7 +121,7 @@ fn smoothing_merges_seams() {
 #[test]
 fn skips_model_space_unless_forced() {
     let mut nif = cube();
-    let shape = index(&nif, "Cube");
+    let shape = shape_index(&nif, "Cube");
     let shader = {
         let s = nif.block_of::<NiShape>(shape).unwrap();
         nif.view_of(s).unwrap().shader().unwrap().index()
@@ -193,11 +185,7 @@ fn set_raw_flags_2() {
         .set_raw_flags_2(before ^ 0x10);
     let saved = reload(&mut nif);
     assert_eq!(
-        saved
-            .blocks_of::<BsShaderProperty>()
-            .next()
-            .unwrap()
-            .raw_flags_2(),
+        first::<BsShaderProperty>(&saved).raw_flags_2(),
         before ^ 0x10
     );
 }
@@ -206,7 +194,7 @@ fn set_raw_flags_2() {
 fn false_without_triangle_data() {
     let mut nif = upstream("TestNifFile_Particles_MW");
     assert!(
-        !nif.edit::<nifly::geometry::NiShape>(index(&nif, "Blizzard"))
+        !nif.edit::<nifly::geometry::NiShape>(shape_index(&nif, "Blizzard"))
             .is_some_and(|mut e| e.calc_normals(None))
     );
 
@@ -233,7 +221,7 @@ fn false_without_triangle_data() {
 fn flag_sets_by_game() {
     use nifly::shaders::{Fallout4ShaderFlags1, Fallout4ShaderFlags2, SkyrimShaderFlags2};
     let nif = upstream("TestNifFile_Skinned_SE");
-    let shader = nif.blocks_of::<BsShaderProperty>().next().unwrap();
+    let shader = first::<BsShaderProperty>(&nif);
     assert!(
         shader
             .flags_1::<SkyrimShaderFlags1>()

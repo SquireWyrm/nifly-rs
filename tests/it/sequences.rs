@@ -12,7 +12,7 @@ use nifly::{
     objects::NiObjectNet,
 };
 
-use crate::common::{reload_in_place, upstream};
+use crate::common::{first_index, open, reload_in_place, upstream};
 
 /// The versions with different controlled block layouts: target names only (10.0.1.0), strings
 /// (10.1.0.106), palette offsets (10.2.0.0 and 20.0.0.5) and string table refs (20.2.0.7).
@@ -71,16 +71,10 @@ fn upstream_manager() {
 
 #[test]
 fn upstream_stream_helper() {
-    let nif = NifFile::load(
-        std::fs::read(format!(
-            "{}/TestNifFile_Sequence_MW.kf",
-            crate::common::UPSTREAM
-        ))
-        .unwrap()
-        .as_slice(),
-        None,
-    )
-    .unwrap();
+    let nif = open(format!(
+        "{}/TestNifFile_Sequence_MW.kf",
+        crate::common::UPSTREAM
+    ));
     let helper = nif.view::<NiSequenceStreamHelper>(0).unwrap();
     assert_eq!(helper.controllers().indices().collect::<Vec<_>>(), [3]);
     assert!(nif.view::<NiObjectNet>(0).is_some());
@@ -110,7 +104,7 @@ fn controlled_blocks_round_trip_unchanged() {
 /// Builds a sequence animating `Bone` and returns the file and the sequence's index.
 fn sequence_file(version: NifVersion) -> (NifFile, usize) {
     let mut nif = NifFile::create(version);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let keys = nif
         .edit::<NiNode>(root)
         .unwrap()
@@ -337,11 +331,7 @@ fn fields_lost_by_version() {
 fn plain_sequence() {
     for version in [SPECIAL, NifVersion::SKYRIM_SE] {
         let (mut nif, _) = sequence_file(version);
-        let keys = nif
-            .blocks_of::<NiTextKeyExtraData>()
-            .indices()
-            .next()
-            .unwrap();
+        let keys = first_index::<NiTextKeyExtraData>(&nif);
         let seq = nif.add_sequence::<NiSequence>("Old");
         let mut edit = nif.edit::<NiSequence>(seq).unwrap();
         edit.set_accum_root_name("Root");
@@ -361,7 +351,7 @@ fn plain_sequence() {
 #[test]
 fn manager() {
     let mut nif = NifFile::create(NifVersion::SKYRIM_SE);
-    let root = nif.root_node().unwrap().index();
+    let root = nif.root_index().unwrap();
     let manager = nif
         .edit::<NiNode>(root)
         .unwrap()
