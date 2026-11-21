@@ -2,8 +2,11 @@
 //! for testing the bindings against real game assets that can't be committed to the repo.
 //!
 //! cargo run --release --example check_assets -- [paths...] [--verbose]
+//!     [--sample-size <fraction>] [--seed <n>]
 //!
 //! Paths can be files or directories (searched recursively) and default to `external_assets`.
+//! `--sample-size` checks a random fraction of the files found, from 0 (exclusive) to 1; the seed
+//! it used is printed, and `--seed` repeats a sample.
 //! `.nif`, `.bto` and `.btr` files are checked; `.btr` (terrain) files load with
 //! `LoadOptions::is_terrain`. Files are checked in parallel and reported in path order. Exits with
 //! status 1 if any check fails.
@@ -24,6 +27,7 @@ use std::{
     any::Any,
     collections::{BTreeMap, HashMap, HashSet},
     env, fs,
+    hash::{BuildHasher, RandomState},
     io::Cursor,
     panic::{self, AssertUnwindSafe},
     path::{Path, PathBuf},
@@ -130,20 +134,36 @@ impl Stats {
     }
 }
 
+const USAGE: &str = "usage: check_assets [paths...] [--verbose] [--sample-size <fraction>] [--seed <n>]   \
+                     (default path: external_assets)";
+
 fn main() {
     let mut verbose = false;
+    let mut sample_size = None;
+    let mut seed = None;
     let mut roots = Vec::new();
-    for arg in env::args().skip(1) {
+    let mut args = env::args().skip(1);
+    while let Some(arg) = args.next() {
         match arg.as_str() {
             "-v" | "--verbose" => verbose = true,
+            "--sample-size" => match args.next().and_then(|v| v.parse::<f64>().ok()) {
+                Some(f) if f > 0.0 && f <= 1.0 => sample_size = Some(f),
+                _ => usage_error("--sample-size takes a number above 0 and at most 1"),
+            },
+            "--seed" => match args.next().and_then(|v| v.parse::<u64>().ok()) {
+                Some(n) => seed = Some(n),
+                None => usage_error("--seed takes a whole number"),
+            },
             "-h" | "--help" => {
-                println!(
-                    "usage: check_assets [paths...] [--verbose]   (default path: external_assets)"
-                );
+                println!("{USAGE}");
                 return;
             }
+            _ if arg.starts_with('-') => usage_error(&format!("unknown option {arg}")),
             _ => roots.push(PathBuf::from(arg)),
         }
+    }
+    if seed.is_some() && sample_size.is_none() {
+        usage_error("--seed needs --sample-size");
     }
     if roots.is_empty() {
         roots.push(PathBuf::from("external_assets"));
@@ -161,6 +181,15 @@ fn main() {
     if files.is_empty() {
         eprintln!("no .nif, .bto or .btr files found");
         process::exit(2);
+    }
+    if let Some(fraction) = sample_size {
+        let found = files.len();
+        let seed = seed.unwrap_or_else(|| RandomState::new().hash_one(Instant::now()));
+        files = sample(files, fraction, seed);
+        eprintln!(
+            "sampled {} of {found} files (--sample-size {fraction} --seed {seed})",
+            files.len()
+        );
     }
     eprintln!("checking {} files", files.len());
 
@@ -199,6 +228,32 @@ fn main() {
     if stats.failed > 0 {
         process::exit(1);
     }
+}
+
+fn usage_error(message: &str) -> ! {
+    eprintln!("{message}\n{USAGE}");
+    process::exit(2);
+}
+
+/// A random `fraction` of `files` (at least one), chosen by `seed`, in path order.
+fn sample(mut files: Vec<PathBuf>, fraction: f64, seed: u64) -> Vec<PathBuf> {
+    let count = ((files.len() as f64 * fraction).ceil() as usize).clamp(1, files.len());
+    // A partial Fisher-Yates shuffle with SplitMix64, so a seed repeats a sample.
+    let mut state = seed;
+    let mut next = || {
+        state = state.wrapping_add(0x9E37_79B9_7F4A_7C15);
+        let mut z = state;
+        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+        z ^ (z >> 31)
+    };
+    for i in 0..count {
+        let j = i + (next() % (files.len() - i) as u64) as usize;
+        files.swap(i, j);
+    }
+    files.truncate(count);
+    files.sort();
+    files
 }
 
 fn collect_nifs(path: &Path, out: &mut Vec<PathBuf>) {
