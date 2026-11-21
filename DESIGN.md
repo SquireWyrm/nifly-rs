@@ -101,7 +101,7 @@ The fix uses replacement classes:
 - The shims that add blocks create replacements too, so new blocks also write correctly.
 - They override `Clone_impl`, so cloned blocks stay replacements.
 
-The **Evidence** column says how each bug was established:
+Each entry's **Evidence** says how the bug was established:
 - **Real files:** seen when loading and saving nifly's own test files.
 - **Built files:** seen when saving and reloading files the tests build, with no real file at
   hand.
@@ -114,19 +114,126 @@ Fixes backed only by nif.xml or built files should be checked against real files
 affected games when they're available. Code links go to the pinned nifly commit, and
 nif.xml links to the lines that disagree with it, at develop as of 2026-11-20.
 
-| Factory | Replaces | Why | nifly code | Evidence |
-|---|---|---|---|---|
-| `SourceTextureFactory` | `NiSourceTexture`, `NiSourceCubeMap` | From 10.0.1.4, the embedded pixel data ref is always stored, but nifly reads and writes it only when a flag that those files don't store is false. Loading skips the ref and misreads the rest of the block. | [Objects.cpp:281-288][src-tex] | [nif.xml][x-src-tex], and built files: an Oblivion or Skyrim file with an embedded texture lost its pixel data on a round trip. No real file with an embedded texture was available. |
-| `PackedSharedGeomDataFactory` | `BSPackedCombinedSharedGeomDataExtra` | nifly reads each object's vertices and triangles, which only the baked `BSPackedCombinedGeomDataExtra` stores. Files are misread from the first object on. | [ExtraData.cpp:293-294][packed], reading [vertices][packed-data] | [nif.xml][x-packed] only. Not tried on Fallout 4 or 76 precombined meshes. |
-| `GeometryFactory` | `BSGeometry` | Mesh positions are stored as 16-bit fractions of the mesh's `scale`, which nifly writes as read: a position moved outside that range overflows (undefined behaviour in C++, a wrap in practice), and a new mesh's scale of 0 stops the write before the vertices. Writing also drops the second UV set and cuts the first to 65535 entries. `Geometry` writes meshes with `write_mesh_data`, also used for external `.mesh` files, which writes a scale widened to fit the positions (`fitted_mesh_scale`) without changing the mesh. | [scale][geom-scale], [positions][geom-pos], [65535 cap][geom-cap], [UVs][geom-uv] | Real files: nifly's Starfield test mesh lost a second UV set the test gave it, and its vertices moved past the scale came back wrong (both tests fail with the stored scale). The fixed writer matches nifly's expected test file byte for byte. |
-| `BlendInterpolatorFactory` | `NiBlend*Interpolator` | Its items' interpolator refs aren't listed as child refs. Saving would drop those interpolators, and renumbering blocks would leave the refs stale. | [Animation.cpp:739-749][blend] | nifly's code: the child refs list only the single interpolator, where [nif.xml][x-blend] makes each item's interpolator a ref. Tested on built files. |
-| `FloatExtraDataControllerFactory` | `NiFloatExtraDataController` | The extra data name is read and written in every version, but stored only from 10.2.0.0. | [Animation.cpp:459-461][float-ctrl] | [nif.xml][x-float-ctrl] |
-| `SpotLightFactory` | `NiSpotLight` | The inner angle is read and written in every version, but stored only from 20.2.0.5. | [Objects.cpp:391][spot] | [nif.xml][x-spot] |
-| `ReplacementFactory<Emitter<_>>` | `NiPSys*Emitter`, `BSPSysArrayEmitter` | Radius variation is read in every version, but stored only from 10.4.0.1. | [Particles.cpp:962][emitter] | [nif.xml][x-emitter] |
-| `ReplacementFactory<RotationModifier>` | `NiPSysRotationModifier` | Four fields are read in every version, but stored only from 20.0.0.2. | [Particles.cpp:524-533][rotation] | [nif.xml][x-rotation] |
-| `ReplacementFactory<MeshPSysData>` | `NiMeshPSysData` | The pool fields are read in every version, but stored only from 10.2.0.0. | [Particles.cpp:372-375][mesh-psys] | [nif.xml][x-mesh-psys] |
-| `ReplacementFactory<Sequence>`, `<ControllerSequence>` | `NiSequence`, `NiControllerSequence` | Files before 10.1.0.104 store an accumulation root name and text keys ref after the name, which nifly doesn't read. | [Animation.cpp:945-953][sequence] | [nif.xml][x-sequence] |
-| `ReplacementFactory<AnimNote>` | `BSAnimNote` | Gain and state are read and written for grab IK notes too, but files store them only for look IK notes. | [Animation.cpp:983-986][anim-note] | [nif.xml][x-anim-note] |
+#### `SourceTextureFactory`
+
+Replaces `NiSourceTexture`, `NiSourceCubeMap`.
+
+- **Problem:** From 10.0.1.4, the embedded pixel data ref is always stored, but nifly reads and
+  writes it only when a flag that those files don't store is false. That flag defaults to true, so
+  loading skips the ref and misreads the rest of the block.
+- **Fix:** Creates each texture from those versions with the flag false before reading it, so the
+  ref is read.
+- **nifly code:** [Objects.cpp:281-288][src-tex]
+- **Evidence:** [nif.xml][x-src-tex], and built files: an Oblivion or Skyrim file with an embedded
+  texture lost its pixel data on a round trip. No real file with an embedded texture was available.
+
+#### `PackedSharedGeomDataFactory`
+
+Replaces `BSPackedCombinedSharedGeomDataExtra`.
+
+- **Problem:** nifly reads each object's vertices and triangles, which only the baked
+  `BSPackedCombinedGeomDataExtra` stores. Files are misread from the first object on.
+- **Fix:** `PackedSharedGeomData` reads and writes each object's data only up to its vertex
+  description, the shared block's layout.
+- **nifly code:** [ExtraData.cpp:293-294][packed], reading [vertices][packed-data]
+- **Evidence:** [nif.xml][x-packed] only. Not tried on Fallout 4 or 76 precombined meshes.
+
+#### `GeometryFactory`
+
+Replaces `BSGeometry`.
+
+- **Problem:** Mesh positions are stored as 16-bit fractions of the mesh's `scale`, which nifly
+  writes as read: a position moved outside that range overflows (undefined behaviour in C++, a wrap
+  in practice), and a new mesh's scale of 0 stops the write before the vertices. Writing also drops
+  the second UV set and cuts the first to 65535 entries.
+- **Fix:** `Geometry` writes internal meshes with `write_mesh_data`, also used for external `.mesh`
+  files. It writes a scale widened to fit the positions (`fitted_mesh_scale`), both UV sets and each
+  array at its own length, without changing the mesh.
+- **nifly code:** [scale][geom-scale], [positions][geom-pos], [65535 cap][geom-cap], [UVs][geom-uv]
+- **Evidence:** Real files: nifly's Starfield test mesh lost a second UV set the test gave it, and
+  its vertices moved past the scale came back wrong (both tests fail with the stored scale). The
+  fixed writer matches nifly's expected test file byte for byte.
+
+#### `BlendInterpolatorFactory`
+
+Replaces `NiBlend*Interpolator`.
+
+- **Problem:** Its items' interpolator refs aren't listed as child refs. Saving would drop those
+  interpolators, and renumbering blocks would leave the refs stale.
+- **Fix:** `BlendInterpolator` adds each item's interpolator ref to the child refs and indices.
+- **nifly code:** [Animation.cpp:739-749][blend]
+- **Evidence:** nifly's code: the child refs list only the single interpolator, where
+  [nif.xml][x-blend] makes each item's interpolator a ref. Tested on built files.
+
+#### `FloatExtraDataControllerFactory`
+
+Replaces `NiFloatExtraDataController`.
+
+- **Problem:** The extra data name is read and written in every version, but stored only from
+  10.2.0.0.
+- **Fix:** `FloatExtraDataController` reads and writes it only from 10.2.0.0.
+- **nifly code:** [Animation.cpp:459-461][float-ctrl]
+- **Evidence:** [nif.xml][x-float-ctrl]
+
+#### `SpotLightFactory`
+
+Replaces `NiSpotLight`.
+
+- **Problem:** The inner angle is read and written in every version, but stored only from 20.2.0.5.
+- **Fix:** `SpotLight` reads and writes it only from 20.2.0.5.
+- **nifly code:** [Objects.cpp:391][spot]
+- **Evidence:** [nif.xml][x-spot]
+
+#### `ReplacementFactory<Emitter<_>>`
+
+Replaces `NiPSys*Emitter`, `BSPSysArrayEmitter`.
+
+- **Problem:** Radius variation is read and written in every version, but stored only from 10.4.0.1.
+- **Fix:** `Emitter<_>` reads and writes the emitter's fields without it before 10.4.0.1.
+- **nifly code:** [Particles.cpp:962][emitter]
+- **Evidence:** [nif.xml][x-emitter]
+
+#### `ReplacementFactory<RotationModifier>`
+
+Replaces `NiPSysRotationModifier`.
+
+- **Problem:** Four fields are read and written in every version, but stored only from 20.0.0.2.
+- **Fix:** `RotationModifier` skips them before 20.0.0.2.
+- **nifly code:** [Particles.cpp:524-533][rotation]
+- **Evidence:** [nif.xml][x-rotation]
+
+#### `ReplacementFactory<MeshPSysData>`
+
+Replaces `NiMeshPSysData`.
+
+- **Problem:** The pool fields are read and written in every version, but stored only from 10.2.0.0.
+- **Fix:** `MeshPSysData` skips them before 10.2.0.0.
+- **nifly code:** [Particles.cpp:372-375][mesh-psys]
+- **Evidence:** [nif.xml][x-mesh-psys]
+
+#### `ReplacementFactory<Sequence>`, `<ControllerSequence>`
+
+Replaces `NiSequence`, `NiControllerSequence`.
+
+- **Problem:** Files before 10.1.0.104 store an accumulation root name and text keys ref after the
+  name, which nifly doesn't read.
+- **Fix:** `Sequence` and `ControllerSequence` read and write them in those versions. `Sequence`
+  adds the two fields, which nifly's plain `NiSequence` doesn't have, and lists the text keys ref as
+  a child ref.
+- **nifly code:** [Animation.cpp:945-953][sequence]
+- **Evidence:** [nif.xml][x-sequence]
+
+#### `ReplacementFactory<AnimNote>`
+
+Replaces `BSAnimNote`.
+
+- **Problem:** Gain and state are read and written for grab IK notes too, but files store them only
+  for look IK notes.
+- **Fix:** `AnimNote` reads and writes them only for look IK notes.
+- **nifly code:** [Animation.cpp:983-986][anim-note]
+- **Evidence:** [nif.xml][x-anim-note]
+
+#### Fixed after loading: lighting shader types
 
 A misread that leaves the layout in step can be fixed after loading instead.
 `fix_read_lighting_shader_types` does this for Fallout 76 and Starfield shader types that nifly
@@ -144,12 +251,6 @@ it back afterwards. There are two kinds:
 - **Adjusting for the save:** nifly writes correctly only with a value the file in memory
   shouldn't keep. The guard sets it for the save and restores it.
 
-| Guard | Kind | What it handles | nifly code | Evidence |
-|---|---|---|---|---|
-| `LightingTypeRestore` | Undo | Fallout 76 and Starfield: writing lowers each lighting shader's type by one in memory. The data written is still wrong, which the Rust docs say (`set_shader_type`); the guard undoes only the change in memory. | [Shaders.cpp:412-421][shader-type], then the [type's fields][shader-fields] | Built files: a HairTint shader saved a file nifly couldn't load again. Not tried in either game. |
-| `TangentFlagRestore` | Undo | Oblivion: writing clears each `NiGeometryData`'s tangent flag, so the next save deletes the tangents' `NiBinaryExtraData` and renumbers blocks. | [Geometry.cpp:55-57][tangent] | Real files: nifly's `TestNifFile_Skinned_OB` shrank from 140,607 to 108,034 bytes on its second save. |
-| `SourceTextureRestore` | Adjust | Sets the pixel data flag that `SourceTextureFactory` sets on load, for textures added since, so nifly writes their pixel data ref. | [Objects.cpp:281-288][src-tex] | As `SourceTextureFactory` |
-
 The guards are C++ RAII objects in `save_nif`, not Rust code around the call, for two reasons:
 - **The state is inside one C++ call:** the guards set and restore it around nifly's `Save`.
 - **They must run if `Save` throws:** a Rust writer's `io::Error` reaches C++ as an exception,
@@ -160,6 +261,146 @@ address among the remaining ones instead of dereferencing pointers it saved.
 
 Where the bindings write a block themselves, a guard isn't needed: the writer can use the
 adjusted value without storing it, as `write_mesh_data` does with the mesh scale.
+
+#### `LightingTypeRestore`
+
+Kind: undoes nifly's change.
+
+- **Problem:** Fallout 76 and Starfield: writing lowers each lighting shader's type by one in
+  memory. The data written is also wrong, which the Rust docs say (`set_shader_type`).
+- **Fix:** Records each shader's type before the save and sets it back after. The data written isn't
+  fixed.
+- **nifly code:** [Shaders.cpp:412-421][shader-type], then the [type's fields][shader-fields]
+- **Evidence:** Built files: a HairTint shader saved a file nifly couldn't load again. Not tried in
+  either game.
+
+#### `TangentFlagRestore`
+
+Kind: undoes nifly's change.
+
+- **Problem:** Oblivion: writing clears each `NiGeometryData`'s tangent flag, so the next save
+  deletes the tangents' `NiBinaryExtraData` and renumbers blocks.
+- **Fix:** Records which geometry data had the flag and sets it again after the save.
+- **nifly code:** [Geometry.cpp:55-57][tangent]
+- **Evidence:** Real files: nifly's `TestNifFile_Skinned_OB` shrank from 140,607 to 108,034 bytes on
+  its second save.
+
+#### `SourceTextureRestore`
+
+Kind: adjusts for the save.
+
+- **Problem:** Textures added since loading keep the pixel data flag's default, so nifly would leave
+  out their pixel data ref (see `SourceTextureFactory`).
+- **Fix:** Clears the flag on every texture in files from 10.0.1.4 on for the save, then restores
+  each one's value.
+- **nifly code:** [Objects.cpp:281-288][src-tex]
+- **Evidence:** As for `SourceTextureFactory`.
+
+## Documentation and tests
+
+- **Docs describe the bindings, not nifly:** public docs in `src/` never mention nifly or C++,
+  so the crate reads as one library.
+- **Generated docs, checked by tests:**
+  - Each module ends with its type hierarchy (`tests/it/type_hierarchy.rs`).
+  - Each type's page lists its supertypes, its subtypes and every `View`/`Edit` method that
+    works on it (`docs/types/*.md`, `tests/it/type_docs.rs`).
+  - These tests fail when the docs are stale and regenerate them with an environment variable.
+- **One test per method:** each exposed method has an integration test in `tests/it/`,
+  against `assets/*.nif` and nifly's own test files. The fixes above are tested by saving,
+  reloading and comparing.
+
+## Fixes to suggest upstream
+
+Each workaround above patches a nifly bug from outside. Fixed in nifly, the workaround could go,
+and other nifly users would get the fix too. The bugs backed only by nif.xml should be checked
+against real files from the affected games before they're reported.
+
+### `NiSourceTexture::Sync`
+
+- **Code:** [Objects.cpp:281-288][src-tex]
+- **Suggested fix:** From 10.0.1.4, sync the pixel data ref whenever the texture isn't external,
+  whatever `useInternal` holds.
+- **Removes:** `SourceTextureFactory`, `SourceTextureRestore`
+
+### `BSPackedCombinedSharedGeomDataExtra::Sync`
+
+- **Code:** [ExtraData.cpp:293-294][packed]
+- **Suggested fix:** Sync each object's data only up to its vertex description, as a separate struct
+  from `BSPackedGeomData`.
+- **Removes:** `PackedSharedGeomData` and its factory
+
+### `BSGeometryMeshData::Sync`
+
+- **Code:** [scale][geom-scale], [positions][geom-pos], [UVs][geom-uv]
+- **Suggested fix:** When writing: widen `scale` to cover the positions (or write a fitted value
+  without storing it), call `SetUVs` only when reading, and size each UV set and array from its own
+  count, not the 16-bit vertex count.
+- **Removes:** `Geometry`, `GeometryFactory`, `write_mesh_data`
+
+### `NiBlendInterpolator::GetChildRefs`, `GetChildIndices`
+
+- **Code:** [Animation.cpp:739-749][blend]
+- **Suggested fix:** Add each item's interpolator ref.
+- **Removes:** `BlendInterpolator` and its factory
+
+### `NiFloatExtraDataController::Sync`
+
+- **Code:** [Animation.cpp:459-461][float-ctrl]
+- **Suggested fix:** Sync the extra data name only from 10.2.0.0.
+- **Removes:** `FloatExtraDataController` and its factory
+
+### `NiSpotLight::Sync`
+
+- **Code:** [Objects.cpp:391][spot]
+- **Suggested fix:** Sync the inner angle only from 20.2.0.5.
+- **Removes:** `SpotLight` and its factory
+
+### `NiPSysEmitter::Sync`
+
+- **Code:** [Particles.cpp:962][emitter]
+- **Suggested fix:** Sync the radius variation only from 10.4.0.1.
+- **Removes:** `Emitter<_>`
+
+### `NiPSysRotationModifier::Sync`
+
+- **Code:** [Particles.cpp:524-533][rotation]
+- **Suggested fix:** Sync the speed variation, angle, angle variation and random speed sign only
+  from 20.0.0.2.
+- **Removes:** `RotationModifier`
+
+### `NiMeshPSysData::Sync`
+
+- **Code:** [Particles.cpp:372-375][mesh-psys]
+- **Suggested fix:** Sync the pool fields only from 10.2.0.0.
+- **Removes:** `MeshPSysData`
+
+### `NiSequence::Sync`
+
+- **Code:** [Animation.cpp:945-953][sequence]
+- **Suggested fix:** Before 10.1.0.104, sync the accumulation root name and text keys ref after the
+  name.
+- **Removes:** `Sequence`, `ControllerSequence`
+
+### `BSAnimNote::Sync`
+
+- **Code:** [Animation.cpp:983-986][anim-note]
+- **Suggested fix:** Sync gain and state only for look IK notes.
+- **Removes:** `AnimNote`
+
+### `BSLightingShaderProperty::Sync`
+
+- **Code:** [Shaders.cpp:412-421][shader-type]
+- **Suggested fix:** Read with `>= 3`, like the write. When writing, convert a local copy of the
+  type, and pick the type-specific fields by the unconverted type.
+- **Removes:** `fix_read_lighting_shader_types`, `LightingTypeRestore`, and the documented Fallout
+  76 and Starfield save bug
+
+### `NiGeometryData::Sync`
+
+- **Code:** [Geometry.cpp:55-57][tangent]
+- **Suggested fix:** For Oblivion, write the data flags with the tangent bit cleared, without
+  clearing it in memory.
+- **Removes:** `TangentFlagRestore`
 
 [nif.xml]: https://github.com/niftools/nifxml/blob/develop/nif.xml
 [x-src-tex]: https://github.com/niftools/nifxml/blob/292bb9403cbf4052c58d66e80906b6bde1700779/nif.xml#L5121-L5126
@@ -191,38 +432,3 @@ adjusted value without storing it, as `write_mesh_data` does with the mesh scale
 [mesh-psys]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Particles.cpp#L372-L375
 [shader-type]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Shaders.cpp#L412-L421
 [shader-fields]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Shaders.cpp#L534
-
-## Documentation and tests
-
-- **Docs describe the bindings, not nifly:** public docs in `src/` never mention nifly or C++,
-  so the crate reads as one library.
-- **Generated docs, checked by tests:**
-  - Each module ends with its type hierarchy (`tests/it/type_hierarchy.rs`).
-  - Each type's page lists its supertypes, its subtypes and every `View`/`Edit` method that
-    works on it (`docs/types/*.md`, `tests/it/type_docs.rs`).
-  - These tests fail when the docs are stale and regenerate them with an environment variable.
-- **One test per method:** each exposed method has an integration test in `tests/it/`,
-  against `assets/*.nif` and nifly's own test files. The fixes above are tested by saving,
-  reloading and comparing.
-
-## Fixes to suggest upstream
-
-Each workaround above patches a nifly bug from outside. Fixed in nifly, the workaround could go,
-and other nifly users would get the fix too. The bugs backed only by nif.xml should be checked
-against real files from the affected games before they're reported.
-
-| nifly code | Suggested fix | Removes |
-|---|---|---|
-| `NiSourceTexture::Sync` ([Objects.cpp:281-288][src-tex]) | From 10.0.1.4, sync the pixel data ref whenever the texture isn't external, whatever `useInternal` holds. | `SourceTextureFactory`, `SourceTextureRestore` |
-| `BSPackedCombinedSharedGeomDataExtra::Sync` ([ExtraData.cpp:293-294][packed]) | Sync each object's data only up to its vertex description, as a separate struct from `BSPackedGeomData`. | `PackedSharedGeomData` and its factory |
-| `BSGeometryMeshData::Sync` ([scale][geom-scale], [positions][geom-pos], [UVs][geom-uv]) | When writing: widen `scale` to cover the positions (or write a fitted value without storing it), call `SetUVs` only when reading, and size each UV set and array from its own count, not the 16-bit vertex count. | `Geometry`, `GeometryFactory`, `write_mesh_data` |
-| `NiBlendInterpolator::GetChildRefs`, `GetChildIndices` ([Animation.cpp:739-749][blend]) | Add each item's interpolator ref. | `BlendInterpolator` and its factory |
-| `NiFloatExtraDataController::Sync` ([Animation.cpp:459-461][float-ctrl]) | Sync the extra data name only from 10.2.0.0. | `FloatExtraDataController` and its factory |
-| `NiSpotLight::Sync` ([Objects.cpp:391][spot]) | Sync the inner angle only from 20.2.0.5. | `SpotLight` and its factory |
-| `NiPSysEmitter::Sync` ([Particles.cpp:962][emitter]) | Sync the radius variation only from 10.4.0.1. | `Emitter<_>` |
-| `NiPSysRotationModifier::Sync` ([Particles.cpp:524-533][rotation]) | Sync the speed variation, angle, angle variation and random speed sign only from 20.0.0.2. | `RotationModifier` |
-| `NiMeshPSysData::Sync` ([Particles.cpp:372-375][mesh-psys]) | Sync the pool fields only from 10.2.0.0. | `MeshPSysData` |
-| `NiSequence::Sync` ([Animation.cpp:945-953][sequence]) | Before 10.1.0.104, sync the accumulation root name and text keys ref after the name. | `Sequence`, `ControllerSequence` |
-| `BSAnimNote::Sync` ([Animation.cpp:983-986][anim-note]) | Sync gain and state only for look IK notes. | `AnimNote` |
-| `BSLightingShaderProperty::Sync` ([Shaders.cpp:412-421][shader-type]) | Read with `>= 3`, like the write. When writing, convert a local copy of the type, and pick the type-specific fields by the unconverted type. | `fix_read_lighting_shader_types`, `LightingTypeRestore`, and the documented Fallout 76 and Starfield save bug |
-| `NiGeometryData::Sync` ([Geometry.cpp:55-57][tangent]) | For Oblivion, write the data flags with the tangent bit cleared, without clearing it in memory. | `TangentFlagRestore` |
