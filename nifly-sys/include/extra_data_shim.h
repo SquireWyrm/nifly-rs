@@ -100,7 +100,7 @@ inline uint64_t vertex_desc_bits(const nifly::VertexDesc& d) {
 }
 
 inline void set_vertex_desc_bits(nifly::VertexDesc& d, uint64_t bits) {
-    std::memcpy(&d, &bits, sizeof bits);
+    std::memcpy(static_cast<void*>(&d), &bits, sizeof bits);
 }
 
 NIFLY_RS_EXTRA_DATA(BSFurnitureMarker, NiExtraData, bs_furniture_marker)

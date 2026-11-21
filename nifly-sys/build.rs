@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn main() {
     let nifly_dir = PathBuf::from("vendor/nifly");
@@ -7,20 +7,24 @@ fn main() {
     let nifly_inc = nifly_dir.join("include");
     let nifly_ext = nifly_dir.join("external"); // Required for half.hpp and Miniball.hpp
 
-    let mut cpp_files = vec![];
-    for entry in fs::read_dir(&nifly_src).expect("Failed to read nifly/src") {
-        let path = entry.unwrap().path();
-        if path.extension().and_then(|s| s.to_str()) == Some("cpp") {
-            cpp_files.push(path);
-        }
-    }
-
-    for entry in fs::read_dir("src").expect("Failed to read src") {
-        let path = entry.unwrap().path();
-        if path.extension().and_then(|s| s.to_str()) == Some("cpp") {
-            cpp_files.push(path);
-        }
-    }
+    let cpp_files_in = |dir: &Path| -> Vec<PathBuf> {
+        let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("Failed to read {dir:?}: {e}"));
+        entries
+            .map(|entry| entry.unwrap().path())
+            .filter(|path| path.extension().and_then(|s| s.to_str()) == Some("cpp"))
+            .collect()
+    };
+    let common = |build: &mut cc::Build| {
+        build
+            .include(&nifly_inc)
+            .include(&nifly_ext)
+            .std("c++17")
+            .flag_if_supported("/bigobj")
+            .flag_if_supported("/EHsc")
+            // As nifly's own build: no fused multiply-adds, which round differently, so computed
+            // values such as bounds match across compilers. MSVC doesn't fuse by default.
+            .flag_if_supported("-ffp-contract=off");
+    };
 
     let bridge_files = [
         "src/animation.rs",
@@ -42,18 +46,21 @@ fn main() {
         "src/write_bridge.rs",
     ];
 
-    cxx_build::bridges(bridge_files)
-        .files(&cpp_files)
-        .include("include")
-        .include(&nifly_inc)
-        .include(&nifly_ext)
-        .std("c++17")
-        .flag_if_supported("/bigobj")
-        .flag_if_supported("/EHsc")
-        // As nifly's own build: no fused multiply-adds, which round differently, so computed
-        // values such as bounds match across compilers. MSVC doesn't fuse by default.
-        .flag_if_supported("-ffp-contract=off")
-        .compile("nifly-bridge");
+    // The bridges and shims. Built first, so it comes before nifly on the link line.
+    let mut bridge = cxx_build::bridges(bridge_files);
+    common(&mut bridge);
+    // Declares the Vec specializations before any shim uses them (see the header). Not for
+    // nifly's sources, whose `using namespace nifly` clashes with its declarations.
+    if bridge.get_compiler().is_like_msvc() {
+        bridge.flag("/FIrust_vec.h");
+    } else {
+        bridge.flag("-include").flag("rust_vec.h");
+    }
+    bridge.files(cpp_files_in(Path::new("src"))).include("include").compile("nifly-bridge");
+
+    let mut nifly = cc::Build::new();
+    common(&mut nifly);
+    nifly.cpp(true).files(cpp_files_in(&nifly_src)).compile("nifly");
 
     build_deps::rerun_if_changed_paths("src/*").unwrap();
     build_deps::rerun_if_changed_paths("src").unwrap();

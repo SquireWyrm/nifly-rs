@@ -194,8 +194,10 @@ inline void set_skin_instance_scales(
     rust::Slice<const Vec3> scales
 ) {
     inst.scales.clear();
-    for (const auto& v : scales)
-        inst.scales.push_back(nifly::Vector3(v.x, v.y, v.z));
+    for (const auto& v : scales) {
+        nifly::Vector3 scale(v.x, v.y, v.z);
+        inst.scales.push_back(scale);
+    }
 }
 
 // The skeleton root pointer's block index of an NiSkinInstance or
@@ -457,7 +459,7 @@ inline uint64_t skin_partition_vertex_desc(const nifly::NiSkinPartition& part) {
 
 inline void
 set_skin_partition_vertex_desc(nifly::NiSkinPartition& part, uint64_t bits) {
-    std::memcpy(&part.vertexDesc, &bits, sizeof bits);
+    std::memcpy(static_cast<void*>(&part.vertexDesc), &bits, sizeof bits);
 }
 
 inline uint64_t skin_partition_block_vertex_desc(
@@ -477,7 +479,11 @@ inline bool set_skin_partition_block_vertex_desc(
 ) {
     if (index >= part.partitions.size())
         return false;
-    std::memcpy(&part.partitions[index].vertexDesc, &bits, sizeof bits);
+    std::memcpy(
+        static_cast<void*>(&part.partitions[index].vertexDesc),
+        &bits,
+        sizeof bits
+    );
     return true;
 }
 

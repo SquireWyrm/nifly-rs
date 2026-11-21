@@ -95,7 +95,7 @@ set_bs_tri_shape_vertex_flags(nifly::BSTriShape& s, uint16_t flags, bool sse) {
         s.SetVertexColors(true);
     uint64_t bits = bs_tri_shape_vertex_desc(s);
     bits = (bits & ~(uint64_t(0xFFFF) << 44)) | (uint64_t(flags) << 44);
-    std::memcpy(&s.vertexDesc, &bits, sizeof bits);
+    std::memcpy(static_cast<void*>(&s.vertexDesc), &bits, sizeof bits);
     return true;
 }
 

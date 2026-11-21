@@ -339,7 +339,7 @@ inline bool set_bone_lod_groups(
         NiBlockPtrArray<NiNode> nodes;
         for (uint32_t id : g.nodes)
             nodes.AddBlockRef(id);
-        c->boneArrays.push_back(std::move(nodes));
+        c->boneArrays.push_back(nodes);
     }
     c->numLODs = static_cast<uint32_t>(groups.size());
     return true;

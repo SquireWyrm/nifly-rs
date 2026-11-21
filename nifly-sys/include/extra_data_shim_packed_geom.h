@@ -174,7 +174,7 @@ inline bool set_packed_shared_objects(
         set_vertex_desc_bits(d.vertexDesc, o.vertex_desc);
         d.combined.resize(static_cast<uint32_t>(o.instance_count));
         std::memcpy(
-            d.combined.data(),
+            static_cast<void*>(d.combined.data()),
             f,
             o.instance_count * 18 * sizeof(float)
         );

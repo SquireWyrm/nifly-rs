@@ -14,7 +14,7 @@ cargo nextest run --workspace --features mint   # also the mint conversions
 cargo nextest run set_shape_order::         # one test module (tests/it/<name>.rs)
 cargo nextest run shader::shader_hierarchy  # one test
 cargo test --doc                            # doc tests, which nextest skips
-cargo clippy --all-targets                  # the build.rs `&bridge_files` warning is known
+cargo clippy --all-targets
 RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace
 UPDATE_HIERARCHY=1 cargo nextest run type_hierarchy::   # regenerate the module type hierarchies
 UPDATE_TYPE_DOCS=1 cargo nextest run type_docs::   # regenerate docs/types/
@@ -54,6 +54,8 @@ It holds meshes extracted from Skyrim and is gitignored for legal reasons. Never
 - Types shared across bridges are aliased (`type NiShape = crate::geometry::ffi::NiShape;`).
 - Shims are header-only `inline` functions in `nifly-sys/include/*_shim.h`, namespace `nifly_rs`.
 - Large shims are split into parts, kept flat in `include/`. `<area>_shim.h` is the header bridges and other shims include. It holds the casts, shared macros and helpers, then includes its parts `<area>_shim_<topic>.h` at the end, in dependency order, inside `// clang-format off/on` so include sorting can't reorder them. Each part includes its umbrella and holds whole items moved from it. `#undef`s of shared macros go after the part includes. The only `.cpp` files are `src/read_bridge.cpp`, `src/write_bridge.cpp` and `src/private_access.cpp`, which reaches private fields that have no accessors (`NiPathInterpolator`) through explicit template instantiation, once for the whole program.
+- `include/rust_vec.h` declares `rust::Vec<T>`'s constructor for every shared struct a bridge puts in a `Vec`; GCC rejects the generated definitions otherwise, since inline shims use them first. Add new ones there. `build.rs` force-includes it into the bridge build only; vendored nifly is built as a separate library.
+- GCC doesn't bind temporaries to nifly's non-const `NiVector::push_back(T&)`, which MSVC allows: push a named value.
 - nifly methods that are non-const but only read are wrapped with `const_cast`.
 - Lists of pointers become count + getter shims or `rust::Vec`. Strings become `rust::Slice<const uint8_t>`, or `UniquePtr<CxxVector<CxxString>>` for lists.
 - Upstream methods that are templates (e.g. `FindBlockByName<T>`) can't be bound and are reimplemented in Rust.
