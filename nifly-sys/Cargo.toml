@@ -2,12 +2,19 @@
 name = "nifly-sys"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.88"
 description = "Raw cxx bindings to the nifly C++ NIF library, built from source"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/SquireWyrm/nifly-rs"
+readme = "README.md"
+keywords = ["nif", "bethesda", "gamebryo", "ffi"]
+categories = ["external-ffi-bindings"]
+# Two copies of nifly's C++ in one build would clash at link time.
+links = "nifly"
 # The vendored nifly is a git submodule, which packaging leaves out unless listed here.
 include = [
     "/build.rs",
+    "/README.md",
     "/src/**",
     "/include/**",
     "/vendor/nifly/src/**",

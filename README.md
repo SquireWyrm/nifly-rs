@@ -46,4 +46,4 @@ assistant, directed and reviewed by the maintainer.
 
 ## License
 
-GPL-3.0-or-later, like nifly, which is built into the crate.
+GPL-3.0-or-later. nifly, which is built into the crate, is licensed under the GPL v3.

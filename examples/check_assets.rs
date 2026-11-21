@@ -710,8 +710,14 @@ fn first_difference(before: &[String], after: &[String]) -> Option<String> {
             // Show the line's start and the text around the first differing character.
             let at = a.bytes().zip(b.bytes()).take_while(|(x, y)| x == y).count();
             let window = |s: &str| {
-                let start = s.floor_char_boundary(at.saturating_sub(40));
-                let end = s.ceil_char_boundary((at + 60).min(s.len()));
+                let mut start = at.saturating_sub(40).min(s.len());
+                while !s.is_char_boundary(start) {
+                    start -= 1;
+                }
+                let mut end = (at + 60).min(s.len());
+                while !s.is_char_boundary(end) {
+                    end += 1;
+                }
                 s[start..end].to_owned()
             };
             let head: String = a.chars().take(40).collect();

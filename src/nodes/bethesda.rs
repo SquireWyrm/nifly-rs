@@ -162,7 +162,7 @@ fn matrices_from_ffi(flat: &[f32]) -> Vec<[[f32; 4]; 4]> {
     flat.as_chunks::<16>()
         .0
         .iter()
-        .map(|m| *m.as_chunks::<4>().0.as_array().unwrap())
+        .map(|m| <[[f32; 4]; 4]>::try_from(m.as_chunks::<4>().0).unwrap())
         .collect()
 }
 
