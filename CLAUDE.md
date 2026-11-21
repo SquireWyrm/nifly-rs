@@ -20,6 +20,8 @@ UPDATE_HIERARCHY=1 cargo nextest run type_hierarchy::   # regenerate the module 
 UPDATE_TYPE_DOCS=1 cargo nextest run type_docs::   # regenerate docs/types/
 ./scripts/format.ps1 [-Check]               # clang-format the shims (non-vendored C/C++)
 cargo run --example stats assets/Suzanne.nif
+cargo run --example simple|convert|skinning [-- <path>]   # API tours; outputs go to the temp dir
+cargo run --example create
 cargo run --release --example check_assets [-- --verbose] [--sample-size 0.01] [path]   # defaults to external_assets/; sample big folders
 ```
 
