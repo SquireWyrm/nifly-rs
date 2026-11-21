@@ -102,7 +102,7 @@ The fix uses replacement classes:
 - They override `Clone_impl`, so cloned blocks stay replacements.
 
 Each entry's **Evidence** says how the bug was established:
-- **Real files:** seen when loading and saving nifly's own test files.
+- **Real files:** seen in nifly's own test files or in game files.
 - **Built files:** seen when saving and reloading files the tests build, with no real file at
   hand.
 - **nif.xml:** nifly's code disagrees with [nif.xml], the community's reverse-engineered format
@@ -136,7 +136,11 @@ Replaces `BSPackedCombinedSharedGeomDataExtra`.
 - **Fix:** `PackedSharedGeomData` reads and writes each object's data only up to its vertex
   description, the shared block's layout.
 - **nifly code:** [ExtraData.cpp:293-294][packed], reading [vertices][packed-data]
-- **Evidence:** [nif.xml][x-packed] only. Not tried on Fallout 4 or 76 precombined meshes.
+- **Evidence:** [nif.xml][x-packed], and real files: Fallout 4's precombined meshes, 120,387 of
+  whose 124,871 files have this block. With the fix, a random 625-file sample passes
+  `check_assets`. Without it, that run aborted when nifly tried to allocate 17.9 GB for a misread
+  count. Of 30 files loaded one at a time, 6 threw on load and 24 loaded with garbage after the
+  first object (for example, a shape's texture path read as missing). Not tried on Fallout 76.
 
 #### `GeometryFactory`
 
@@ -296,6 +300,33 @@ Kind: adjusts for the save.
 - **nifly code:** [Objects.cpp:281-288][src-tex]
 - **Evidence:** As for `SourceTextureFactory`.
 
+## Known issues
+
+### Saving fills in geometry for shapes stored without it
+
+Found with `check_assets` on Fallout 4's precombined meshes. Left to upstream on purpose: the files
+still load and the saves reload, so it's documented (on `NifFile::finalize_data` and `save`)
+rather than worked around. See [the suggested fix](#bstrishapecalcdatasizes).
+
+- **Problem:** a precombined mesh's `BSTriShape`s and `BSMeshLODTriShape`s keep their geometry in
+  the `.csg` file. They store their vertex and triangle counts, a `dataSize` of 0, and no vertex
+  data or triangles, so loading [skips both][tri-read]. Every save runs `FinalizeData`, which
+  [recomputes `dataSize`][tri-finalize] from the counts ([vertex size × vertices + 6 ×
+  triangles][tri-calc]). It's then nonzero, so the save writes that many zeroed vertices and
+  triangles into each shape.
+- **Effect:** each precombined mesh saved grows, by 518 KB in one file with 12 shapes. Its shapes
+  then claim their own geometry: every vertex at the origin and every triangle `(0, 0, 0)`. A
+  game that takes a nonzero `dataSize` to mean the geometry is in the file would draw nothing
+  for those shapes; that hasn't been checked in the game.
+- **Evidence:** real files. In a sampled precombined mesh, the saved shapes grew by exactly the
+  computed amount (+432,356 bytes over 7 `BSMeshLODTriShape`s, +85,552 over 5 `BSTriShape`s).
+  [nif.xml][x-tri-size] also treats `dataSize` as computed from the counts, so it doesn't
+  describe these files either.
+- **Not done here:** a replacement for each `BSTriShape` type could note, on load, a shape stored
+  with counts but no data, and write it with a `dataSize` of 0. It isn't needed for reading or
+  writing files safely, and would have to decide what happens when a caller sets vertices on
+  such a shape.
+
 ## Documentation and tests
 
 - **Docs describe the bindings, not nifly:** public docs in `src/` never mention nifly or C++,
@@ -395,6 +426,13 @@ against real files from the affected games before they're reported.
 - **Removes:** `fix_read_lighting_shader_types`, `LightingTypeRestore`, and the documented Fallout
   76 and Starfield save bug
 
+### `BSTriShape::CalcDataSizes`
+
+- **Code:** [Geometry.cpp:1145][tri-calc], called on save by [`FinalizeData`][tri-finalize]
+- **Suggested fix:** Keep a `dataSize` of 0 for a shape that was read without vertex data, as
+  precombined meshes store them.
+- **Removes:** the [known issue](#saving-fills-in-geometry-for-shapes-stored-without-it)
+
 ### `NiGeometryData::Sync`
 
 - **Code:** [Geometry.cpp:55-57][tangent]
@@ -432,3 +470,7 @@ against real files from the affected games before they're reported.
 [mesh-psys]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Particles.cpp#L372-L375
 [shader-type]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Shaders.cpp#L412-L421
 [shader-fields]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Shaders.cpp#L534
+[tri-read]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Geometry.cpp#L505-L511
+[tri-finalize]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/NifFile.cpp#L2090-L2098
+[tri-calc]: https://github.com/ousnius/nifly/blob/68bb80893a65b1f17393bb21c9ad803add2594d8/src/Geometry.cpp#L1145
+[x-tri-size]: https://github.com/niftools/nifxml/blob/292bb9403cbf4052c58d66e80906b6bde1700779/nif.xml#L8251-L8254

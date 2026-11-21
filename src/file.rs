@@ -402,7 +402,8 @@ impl NifFile {
     /// the default options it also optimizes the file and sorts the blocks into a logical order,
     /// so block indices, and with them the results of [`block`](Self::block) and
     /// [`bone_ids`](View::bone_ids), can change. Disable
-    /// [`SaveOptions::sort_blocks`] to keep the block order.
+    /// [`SaveOptions::sort_blocks`] to keep the block order. Finalizing also fills in geometry
+    /// for shapes stored without it, such as Fallout 4's precombined meshes.
     ///
     /// Writer errors are returned as [`Error::Io`] with the writer's original [`io::Error`].
     pub fn save(
@@ -528,6 +529,11 @@ impl NifFile {
 
     /// Updates the sizes and counts saving writes. Skinned `BSTriShape`s copy their mesh data
     /// back to their skin partitions. Run by [`save`](Self::save).
+    ///
+    /// A `BSTriShape` stored with vertex and triangle counts but no vertex data, as Fallout 4's
+    /// precombined meshes store theirs, gets a data size for those counts. Saving then writes
+    /// that many zeroed vertices and triangles into the shape, which grows the file and makes
+    /// the shape claim geometry of its own.
     pub fn finalize_data(&mut self) {
         ffi::NifFile::FinalizeData(self.inner.pin_mut());
     }

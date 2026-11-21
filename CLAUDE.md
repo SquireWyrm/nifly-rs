@@ -20,7 +20,7 @@ UPDATE_HIERARCHY=1 cargo nextest run type_hierarchy::   # regenerate the module 
 UPDATE_TYPE_DOCS=1 cargo nextest run type_docs::   # regenerate docs/types/
 ./scripts/format.ps1 [-Check]               # clang-format the shims (non-vendored C/C++)
 cargo run --example stats assets/Suzanne.nif
-cargo run --release --example check_assets [-- --verbose] [path]   # defaults to external_assets/
+cargo run --release --example check_assets [-- --verbose] [--sample-size 0.01] [path]   # defaults to external_assets/; sample big folders
 ```
 
 ## `external_assets/` is off-limits for commits
@@ -132,6 +132,7 @@ Public docs in `src/` describe the bindings' own behaviour, as if nifly and the 
 - Load runs `PrepareData`, which normalizes texture paths.
 - Save may optimize (drops unreferenced blocks and empty refs) and sort blocks, which changes block indices. It also rebuilds the string table.
 - `DeleteNode` leaves `NiSkinData` out of sync.
+- `FinalizeData` (run by every save) recomputes each `BSTriShape`'s data size from its counts, so shapes stored without vertex data (Fallout 4 precombined meshes) are saved with zeroed vertices and triangles. Documented, left to upstream on purpose (DESIGN.md, Known issues).
 - `optimize_for` and `set_shape_order` replace and re-sort blocks.
 - `NiSourceTexture` mishandles embedded textures' pixel data ref from 10.0.1.4 on. `load_nif` swaps in a replacement factory (`SourceTextureFactory`) and `save_nif` uses `SourceTextureRestore`, both in `nif_file_shim.h`.
 - `BSPackedCombinedSharedGeomDataExtra` reads each object's vertices and triangles, which only the baked `BSPackedCombinedGeomDataExtra` stores. `load_nif` registers `PackedSharedGeomDataFactory` and `assign_packed_shared_geom` creates `PackedSharedGeomData`s, which use the shared layout (`extra_data_shim_packed_geom.h`).
