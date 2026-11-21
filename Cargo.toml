@@ -2,6 +2,7 @@
 name = "nifly"
 version = "0.1.0"
 edition = "2024"
+authors = ["SquireWyrm"]
 rust-version = "1.88"
 description = "Read, edit and write NIF files from Bethesda's games, Morrowind to Starfield"
 license = "GPL-3.0-or-later"
